@@ -27,7 +27,7 @@ export default function SavedPage() {
             {error instanceof Error ? error.message : 'Impossible de charger les éléments sauvegardés.'}
           </p>
           <Button
-            className="mt-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            className="mt-4 bg-orange-500 text-white hover:bg-orange-600"
             onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
           >
             Retour
@@ -37,7 +37,7 @@ export default function SavedPage() {
         <GlassCard className="p-8 text-center">
           <p className="text-sm text-stone-500">Aucun élément sauvegardé.</p>
           <Button
-            className="mt-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            className="mt-4 bg-orange-500 text-white hover:bg-orange-600"
             onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
           >
             Explorer
