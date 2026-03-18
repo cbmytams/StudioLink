@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 type Mission = {
   id: string
@@ -52,9 +52,9 @@ function mapApplicationStatus(status: string | null): Application['status'] {
 }
 
 function statusBadgeClass(status: Mission['status']): string {
-  if (status === 'open') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+  if (status === 'open') return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
   if (status === 'draft') return 'bg-stone-100 text-stone-600 border border-stone-200';
-  if (status === 'completed') return 'bg-blue-100 text-blue-700 border border-blue-200';
+  if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
   return 'bg-red-100 text-red-700 border border-red-200';
 }
 
@@ -183,12 +183,12 @@ export default function StudioDashboard() {
             <p className="text-sm text-black/55">{missions?.length ?? 0} mission(s) publiée(s)</p>
           </div>
 
-          <GradientButton
+          <Button
             onClick={() => navigate('/studio/create-mission')}
             className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
           >
             + Créer une mission
-          </GradientButton>
+          </Button>
         </header>
 
         {error ? (
