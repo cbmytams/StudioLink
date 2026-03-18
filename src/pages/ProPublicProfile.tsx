@@ -20,6 +20,7 @@ export function ProPublicProfile() {
   const [proProfile, setProProfile] = useState<ProProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,18 +32,23 @@ export function ProPublicProfile() {
 
       setLoading(true);
       setNotFound(false);
+      setError(null);
 
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, username, bio, city, daily_rate, skills, type')
-        .eq('id', proId)
-        .eq('type', 'pro')
-        .single();
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, bio, city, daily_rate, skills, type')
+          .eq('id', proId)
+          .eq('type', 'pro')
+          .single();
 
-      if (!data) {
-        setNotFound(true);
-      } else {
-        setProProfile(data as unknown as ProProfile);
+        if (!data) {
+          setNotFound(true);
+        } else {
+          setProProfile(data as unknown as ProProfile);
+        }
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger ce profil.');
       }
       setLoading(false);
     };
@@ -95,6 +101,12 @@ export function ProPublicProfile() {
         >
           ← Retour
         </button>
+
+        {error ? (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </p>
+        ) : null}
 
         <header className="mt-6">
           <div className="flex items-start gap-4">
