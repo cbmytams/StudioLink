@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUnreadCount } from '@/hooks/useNotifications';
-import { useConversations } from '@/hooks/useMessages';
+import { useUnreadConversationCount } from '@/hooks/useMessages';
 
 interface BottomNavProps {
   userType: 'studio' | 'pro';
@@ -14,7 +14,7 @@ export function BottomNav({ userType }: BottomNavProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { unreadCount } = useUnreadCount(session?.user?.id);
-  const { data: conversations = [] } = useConversations(session?.user?.id);
+  const { data: unreadMessages = 0 } = useUnreadConversationCount(session?.user?.id);
 
   const studioTabs = [
     { icon: Home, label: 'Missions', path: '/studio/dashboard' },
@@ -62,9 +62,9 @@ export function BottomNav({ userType }: BottomNavProps) {
               >
                 {tab.label}
               </span>
-              {tab.path === '/chat' && conversations.length > 0 ? (
+              {tab.path === '/chat' && unreadMessages > 0 ? (
                 <span className="absolute top-2 right-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-500 text-white text-[10px] leading-4 text-center">
-                  {conversations.length > 9 ? '9+' : conversations.length}
+                  {unreadMessages > 9 ? '9+' : unreadMessages}
                 </span>
               ) : null}
               {tab.path.includes('/profile') && unreadCount > 0 ? (
