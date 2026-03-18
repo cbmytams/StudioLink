@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUp, Info, Paperclip } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -54,9 +55,11 @@ export default function ChatPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [sendingFile, setSendingFile] = useState(false);
+  const [isPeerTyping, setIsPeerTyping] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const typingTimerRef = useRef<number | null>(null);
   const activeTab = searchParams.get('tab') === 'files' ? 'files' : 'messages';
 
   const {
@@ -91,6 +94,41 @@ export default function ChatPage() {
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [activeTab, messages]);
+
+  useEffect(() => {
+    if (!selectedConversationId || !userId || !supabase) return;
+
+    const channel = supabase
+      .channel(`typing:${selectedConversationId}`)
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        const senderId = (payload as { senderId?: string }).senderId;
+        if (!senderId || senderId === userId) return;
+        setIsPeerTyping(true);
+        if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+        typingTimerRef.current = window.setTimeout(() => setIsPeerTyping(false), 1200);
+      })
+      .subscribe();
+
+    return () => {
+      if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+      setIsPeerTyping(false);
+      void channel.unsubscribe();
+    };
+  }, [selectedConversationId, userId]);
+
+  useEffect(() => {
+    if (!selectedConversationId || !userId || !supabase || !draft.trim()) return;
+    const channel = supabase.channel(`typing:${selectedConversationId}`);
+    void channel.subscribe((status) => {
+      if (status !== 'SUBSCRIBED') return;
+      void channel.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { senderId: userId },
+      });
+      void channel.unsubscribe();
+    });
+  }, [draft, selectedConversationId, userId]);
 
   const fileMessages = useMemo(
     () => messages.filter((message) => Boolean(message.file_url)),
@@ -278,6 +316,9 @@ export default function ChatPage() {
                     </div>
                   );
                 })}
+                {isPeerTyping ? (
+                  <p className="text-xs text-stone-500">en train d&apos;écrire...</p>
+                ) : null}
                 <div ref={endRef} />
               </div>
             )
