@@ -15,6 +15,7 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   disabled?: boolean;
   required?: boolean;
   autoCapitalize?: string;
+  maxLength?: number;
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>;
 }
 
