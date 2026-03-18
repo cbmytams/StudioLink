@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
-import Navbar from '@/components/layout/Navbar';
 
 const CATEGORIES = [
   'Photographie',
@@ -37,7 +36,7 @@ export default function CreateMission() {
   const [skillInput, setSkillInput] = useState('');
 
   const baseInputClass =
-    'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400';
+    'w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400';
 
   const validateStepOne = () => {
     if (!title.trim()) {
@@ -173,28 +172,27 @@ export default function CreateMission() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-6 text-sm text-white/70 transition-colors hover:text-white"
+          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
         >
           ← Retour au dashboard
         </button>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <div className="w-full h-1 bg-white/10 rounded-full mb-6">
+        <div className="bg-white/60 border border-white/50 rounded-2xl p-6">
+          <div className="w-full h-1 bg-black/10 rounded-full mb-6">
             <div
-              className="h-1 bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full transition-all duration-300"
+              className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
               style={{ width: step === 1 ? '50%' : '100%' }}
             />
           </div>
-          <p className="text-white/40 text-sm mb-4">Étape {step} sur 2</p>
+          <p className="text-black/45 text-sm mb-4">Étape {step} sur 2</p>
 
           <h1 className="text-2xl font-semibold mb-1">Créer une mission</h1>
-          <p className="text-sm text-white/60 mb-6">
+          <p className="text-sm text-black/55 mb-6">
             {step === 1 ? 'Renseigne les informations principales' : 'Ajoute les conditions de mission'}
           </p>
 
@@ -219,20 +217,20 @@ export default function CreateMission() {
                 <select
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+                  className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
                 >
-                  <option value="" className="bg-[#0D0D0F] text-white/80">
+                  <option value="" className="bg-[#f4ece4] text-stone-500">
                     Choisir une catégorie
                   </option>
                   {CATEGORIES.map((item) => (
-                    <option key={item} value={item} className="bg-[#0D0D0F] text-white">
+                    <option key={item} value={item} className="bg-[#f4ece4] text-stone-900">
                       {item}
                     </option>
                   ))}
                 </select>
 
                 <div>
-                  <p className="mb-2 text-sm text-white/70">Type de mission</p>
+                  <p className="mb-2 text-sm text-black/60">Type de mission</p>
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { key: 'on_site' as const, label: 'Sur place' },
@@ -245,8 +243,8 @@ export default function CreateMission() {
                         onClick={() => setMissionType(option.key)}
                         className={`rounded-xl px-3 py-2 text-sm transition-colors ${
                           missionType === option.key
-                            ? 'bg-violet-600 text-white'
-                            : 'bg-white/5 text-white/75 hover:bg-white/10'
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white/70 text-black/70 hover:bg-white'
                         }`}
                       >
                         {option.label}
@@ -294,7 +292,7 @@ export default function CreateMission() {
                     {requiredSkills.map((skill) => (
                       <span
                         key={skill}
-                        className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white"
+                        className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1 text-xs text-black/80"
                       >
                         {skill}
                         <button
@@ -302,14 +300,14 @@ export default function CreateMission() {
                           onClick={() =>
                             setRequiredSkills((prev) => prev.filter((item) => item !== skill))
                           }
-                          className="text-white/70 hover:text-white"
+                          className="text-black/60 hover:text-black"
                         >
                           ×
                         </button>
                       </span>
                     ))}
                   </div>
-                  <p className="mt-2 text-xs text-white/50">{requiredSkills.length}/10 compétences</p>
+                  <p className="mt-2 text-xs text-black/45">{requiredSkills.length}/10 compétences</p>
                 </div>
               </>
             )}
@@ -321,7 +319,7 @@ export default function CreateMission() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-xl border border-white/20 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/10"
+                  className="rounded-xl border border-black/10 bg-white/70 px-4 py-2.5 text-sm text-black/80 transition hover:bg-white"
                 >
                   ← Retour
                 </button>
@@ -329,7 +327,7 @@ export default function CreateMission() {
               <GradientButton
                 type="submit"
                 disabled={loading}
-                className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
               >
                 {loading ? (
                   <>
