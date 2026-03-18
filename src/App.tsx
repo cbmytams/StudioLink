@@ -27,6 +27,7 @@ const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
 const ProDashboardPage = lazy(() => import('@/pages/ProDashboard'));
 const ProApplicationsPage = lazy(() => import('@/pages/ProApplications'));
 const ProProfilePage = lazy(() => import('@/pages/ProProfile'));
+const CalendarPage = lazy(() => import('@/pages/CalendarPage'));
 const ChatWrapperPage = lazy(() => import('@/components/ChatWrapper'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
@@ -237,6 +238,7 @@ export default function App() {
             <Route path="/studio/missions/:id/applications" element={<ManageApplicationsPage />} />
             <Route path="/studio/profile" element={<StudioProfilePage />} />
             <Route path="/studio/settings" element={<StudioProfilePage />} />
+            <Route path="/studio/calendrier" element={<CalendarPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedTypes={['pro']}><ProLayout /></ProtectedRoute>}>
@@ -247,6 +249,7 @@ export default function App() {
             <Route path="/pro/profile/:id" element={<ProProfilePage />} />
             <Route path="/pro/settings" element={<ProProfilePage />} />
             <Route path="/pro/missions/:id" element={<MissionDetailPage />} />
+            <Route path="/pro/calendrier" element={<CalendarPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
