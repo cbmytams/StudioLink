@@ -257,7 +257,7 @@ export default function AdminPage() {
           <Button
             onClick={() => void handleCreate()}
             disabled={creating}
-            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            className="bg-orange-500 text-white hover:bg-orange-600"
           >
             {creating ? (
               <>
