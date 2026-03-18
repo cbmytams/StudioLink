@@ -192,7 +192,9 @@ export default function App() {
             path="/mission/:missionId"
             element={(
               <ProtectedRoute requiredType="pro">
-                <MissionDetailPage />
+                <ProLayout>
+                  <MissionDetailPage />
+                </ProLayout>
               </ProtectedRoute>
             )}
           />
@@ -210,7 +212,9 @@ export default function App() {
             path="/pro/public/:proId"
             element={(
               <ProtectedRoute requiredType="studio">
-                <ProPublicProfilePage />
+                <StudioLayout>
+                  <ProPublicProfilePage />
+                </StudioLayout>
               </ProtectedRoute>
             )}
           />
