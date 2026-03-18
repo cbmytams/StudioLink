@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { CreateMissionInput, MissionRecord, MissionStatus } from '@/types/backend';
 import type { Mission as LegacyMission } from '@/types/mission';
 

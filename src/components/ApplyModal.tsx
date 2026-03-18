@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { TextInput } from '@/components/ui/TextInput';
 import { useCreateApplication } from '@/hooks/useApplications';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 
 interface ApplyModalProps {
   isOpen: boolean;

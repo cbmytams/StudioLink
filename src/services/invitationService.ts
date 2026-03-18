@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { InvitationValidationResult, UserType } from '@/types/backend';
 
 const FALLBACK_CODES: Record<string, UserType> = {

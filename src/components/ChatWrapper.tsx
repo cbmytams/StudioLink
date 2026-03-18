@@ -1,4 +1,4 @@
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import StudioLayout from '@/layouts/StudioLayout';
 import ProLayout from '@/layouts/ProLayout';
 import ChatPage from '@/pages/ChatPage';

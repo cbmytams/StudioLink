@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Clock, Folder, MapPin, MessageCircle, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { useMissions } from '@/hooks/useMissions';
 import { useMyApplications } from '@/hooks/useApplications';
 import { useProProfile } from '@/hooks/useProfile';

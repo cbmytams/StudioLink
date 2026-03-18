@@ -1,4 +1,4 @@
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { useSavedItems } from '@/hooks/useSaved';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';

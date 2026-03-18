@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import Navbar from '@/components/layout/Navbar';
 
 type ProProfile = {
@@ -298,6 +298,15 @@ export default function ManageApplications() {
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{displayName}</p>
+                    {application.pro_id ? (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/pro/public/${application.pro_id}`)}
+                        className="text-violet-400 text-xs hover:underline mt-0.5"
+                      >
+                        Voir le profil complet →
+                      </button>
+                    ) : null}
                     {application.profiles?.city ? (
                       <p className="text-sm text-white/60">{application.profiles.city}</p>
                     ) : null}

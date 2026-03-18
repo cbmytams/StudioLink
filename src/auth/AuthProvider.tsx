@@ -17,7 +17,7 @@ import {
   signInPassword as signInPasswordService,
   signOut as signOutService,
 } from '@/services/authService';
-import { hasSupabaseConfig } from '@/lib/supabaseClient';
+import { hasSupabaseConfig } from '@/lib/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 

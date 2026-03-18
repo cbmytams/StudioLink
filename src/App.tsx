@@ -5,20 +5,18 @@ import {
   Route,
   Routes,
 } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Toaster } from '@/components/ui/Toast';
 import StudioLayout from '@/layouts/StudioLayout';
 import ProLayout from '@/layouts/ProLayout';
 
-const LoginPage = lazy(() => import('@/pages/Login'));
-const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
+const LoginPage = lazy(() => import('@/pages/LoginPage'));
+const HomePage = lazy(() => import('@/pages/HomePage'));
 const InvitationLandingPage = lazy(() => import('@/pages/InvitationLanding'));
-const SignupPage = lazy(() => import('@/pages/Signup'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallback'));
-const StudioOnboardingPage = lazy(() => import('@/pages/StudioOnboarding'));
-const ProOnboardingPage = lazy(() => import('@/pages/ProOnboarding'));
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
 const StudioDashboardPage = lazy(() => import('@/pages/StudioDashboard'));
 const CreateMissionPage = lazy(() => import('@/pages/CreateMission'));
 const MissionDetailPage = lazy(() => import('@/pages/MissionDetail'));
@@ -28,34 +26,13 @@ const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
 const ProDashboardPage = lazy(() => import('@/pages/ProDashboard'));
 const ProApplicationsPage = lazy(() => import('@/pages/ProApplications'));
 const ProProfilePage = lazy(() => import('@/pages/ProProfile'));
+const ProPublicProfilePage = lazy(() => import('@/pages/ProPublicProfile'));
 const CalendarPage = lazy(() => import('@/pages/CalendarPage'));
 const ChatWrapperPage = lazy(() => import('@/components/ChatWrapper'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
-
-function AuthRootRedirect() {
-  const { session, profile, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!session || !profile) {
-    return <Navigate to="/invitation" replace />;
-  }
-
-  if (!profile.onboarding_complete) {
-    return (
-      <Navigate
-        to={profile.user_type === 'studio' ? '/onboarding/studio' : '/onboarding/pro'}
-        replace
-      />
-    );
-  }
-
-  return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed'} replace />;
-}
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
@@ -121,7 +98,7 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/" element={<AuthRootRedirect />} />
+          <Route path="/" element={<HomePage />} />
           <Route
             path="/login"
             element={(
@@ -134,7 +111,7 @@ export default function App() {
             path="/invitation"
             element={(
               <PublicOnlyRoute>
-                <InvitationPage />
+                <InvitationLandingPage />
               </PublicOnlyRoute>
             )}
           />
@@ -146,21 +123,13 @@ export default function App() {
               </PublicOnlyRoute>
             )}
           />
-          <Route
-            path="/signup"
-            element={(
-              <PublicOnlyRoute>
-                <SignupPage />
-              </PublicOnlyRoute>
-            )}
-          />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           <Route
             path="/onboarding/studio"
             element={(
               <OnboardingRoute type="studio">
-                <StudioOnboardingPage />
+                <OnboardingPage />
               </OnboardingRoute>
             )}
           />
@@ -168,7 +137,7 @@ export default function App() {
             path="/onboarding/pro"
             element={(
               <OnboardingRoute type="pro">
-                <ProOnboardingPage />
+                <OnboardingPage />
               </OnboardingRoute>
             )}
           />
@@ -222,7 +191,7 @@ export default function App() {
           <Route
             path="/missions/:id/applications"
             element={(
-              <ProtectedRoute allowedTypes={['studio']}>
+              <ProtectedRoute requiredType="studio">
                 <RoleLayout>
                   <ManageApplicationsPage />
                 </RoleLayout>
@@ -230,27 +199,30 @@ export default function App() {
             )}
           />
           <Route
-            path="/admin"
+            path="/pro/public/:proId"
             element={(
-              <ProtectedRoute>
-                <AdminPage />
+              <ProtectedRoute requiredType="studio">
+                <ProPublicProfilePage />
               </ProtectedRoute>
             )}
           />
+          <Route path="/admin" element={<AdminPage />} />
 
-          <Route element={<ProtectedRoute allowedTypes={['studio']}><StudioLayout /></ProtectedRoute>}>
+          <Route element={<ProtectedRoute requiredType="studio"><StudioLayout /></ProtectedRoute>}>
             <Route path="/studio/dashboard" element={<StudioDashboardPage />} />
             <Route path="/studio/missions" element={<StudioDashboardPage />} />
+            <Route path="/studio/create-mission" element={<CreateMissionPage />} />
             <Route path="/studio/missions/create" element={<CreateMissionPage />} />
             <Route path="/studio/missions/:id" element={<MissionDetailPage />} />
             <Route path="/studio/missions/:id/edit" element={<CreateMissionPage />} />
+            <Route path="/studio/applications/:missionId" element={<ManageApplicationsPage />} />
             <Route path="/studio/missions/:id/applications" element={<ManageApplicationsPage />} />
             <Route path="/studio/profile" element={<StudioProfilePage />} />
             <Route path="/studio/settings" element={<StudioProfilePage />} />
             <Route path="/studio/calendrier" element={<CalendarPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedTypes={['pro']}><ProLayout /></ProtectedRoute>}>
+          <Route element={<ProtectedRoute requiredType="pro"><ProLayout /></ProtectedRoute>}>
             <Route path="/pro/feed" element={<ProFeedPage />} />
             <Route path="/pro/dashboard" element={<ProDashboardPage />} />
             <Route path="/pro/applications" element={<ProApplicationsPage />} />
@@ -261,7 +233,7 @@ export default function App() {
             <Route path="/pro/calendrier" element={<CalendarPage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       <Toaster />

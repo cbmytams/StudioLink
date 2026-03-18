@@ -1,7 +1,22 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
-export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey)
+
+const fallbackUrl = 'https://example.supabase.co'
+const fallbackAnonKey = 'public-anon-key'
+
+export const supabase: SupabaseClient = createClient<Database>(
+  hasSupabaseConfig ? supabaseUrl : fallbackUrl,
+  hasSupabaseConfig ? supabaseAnonKey : fallbackAnonKey,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  },
 )

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { profileService } from '@/services/profileService';
 import type { Profile, ProProfileRecord, StudioProfileRecord } from '@/types/backend';
 import { useToast } from '@/components/ui/Toast';

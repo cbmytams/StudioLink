@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 
 interface FileUploadProps {
   bucket: string;

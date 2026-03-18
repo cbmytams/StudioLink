@@ -3,7 +3,7 @@ import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { useCreateReview } from '@/hooks/useReviews';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 
 interface ReviewModalProps {
   isOpen: boolean;

@@ -1,52 +1,40 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import React, { type ReactNode } from 'react';
 
-interface ErrorBoundaryProps {
-  children: ReactNode;
-}
+type Props = { children: ReactNode };
+type State = { hasError: boolean; errorMessage: string };
 
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
+export class ErrorBoundary extends React.Component {
+  declare props: Props;
+  state: State;
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  declare props: Readonly<ErrorBoundaryProps>;
-
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
   }
 
-  public componentDidCatch(_error: Error, _errorInfo: ErrorInfo): void {}
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, errorMessage: error.message };
+  }
 
-  public render() {
-    if (!this.state.hasError) {
-      return this.props.children;
-    }
-
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-sm border border-stone-200 flex flex-col items-center text-center gap-3">
-          <AlertTriangle className="text-orange-500" size={28} />
-          <h1 className="text-xl font-semibold text-stone-900">Une erreur est survenue</h1>
-          {process.env.NODE_ENV === 'development' && this.state.error ? (
-            <p className="text-sm text-stone-600 break-words">{this.state.error.message}</p>
-          ) : null}
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#0D0D0F] text-white flex flex-col items-center justify-center text-center px-4">
+          <p className="text-5xl mb-4">⚠️</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Une erreur est survenue</h1>
+          <p className="text-white/40 text-sm mb-8">{this.state.errorMessage}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-2 rounded-lg bg-orange-500 px-4 py-2.5 min-h-[44px] text-sm font-semibold text-white"
+            className="bg-white/10 text-white px-6 py-3 rounded-xl"
           >
-            Recharger
+            Recharger la page
           </button>
         </div>
-      </div>
-    );
+      );
+    }
+
+    return this.props.children;
   }
 }
 

@@ -1,6 +1,6 @@
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { useUnreadCount } from '@/hooks/useNotifications';
 
 interface NotificationBellProps {

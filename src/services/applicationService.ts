@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { ApplicationRecord, ApplicationStatus, CreateApplicationInput } from '@/types/backend';
 
 function ensureClient() {

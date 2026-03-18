@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
 
 type AuthMode = 'signin' | 'signup';

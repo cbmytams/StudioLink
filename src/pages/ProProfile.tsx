@@ -1,7 +1,7 @@
 import { type KeyboardEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
 import Navbar from '@/components/layout/Navbar';
 

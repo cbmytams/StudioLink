@@ -1,355 +1,338 @@
-import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, UserX, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/supabase/auth';
+import { Button as GradientButton } from '@/components/ui/Button';
 
-type InvitationType = 'studio' | 'pro';
-type InvitationStatus = 'available' | 'used';
-type Validity = 7 | 30 | 90 | 'unlimited';
-
-interface InvitationCode {
-  id: string;
-  code: string;
-  type: InvitationType;
-  status: InvitationStatus;
-  expiresAt: string;
-  createdAt: string;
+type Invitation = {
+  id: string
+  code: string
+  type: 'studio' | 'pro'
+  email: string | null
+  used: boolean
+  expires_at: string | null
+  created_at: string
 }
 
-interface RegisteredUser {
-  id: string;
-  name: string;
-  avatar: string;
-  type: InvitationType;
-  joinedAt: string;
+type InvitationRow = {
+  id: string
+  code: string
+  type: 'studio' | 'pro'
+  email?: string | null
+  used?: boolean
+  used_by?: string | null
+  expires_at?: string | null
+  created_at: string
 }
 
-interface ActiveMission {
-  id: string;
-  title: string;
-  studio: string;
-  serviceType: string;
-  countdown: string;
-  candidatesCount: number;
-}
+function mapRowToInvitation(row: InvitationRow): Invitation {
+  const dynamicRow = row as unknown as Record<string, unknown>;
+  const usedBy = typeof dynamicRow.used_by === 'string' ? dynamicRow.used_by : null;
 
-const INITIAL_INVITATION_CODES: InvitationCode[] = [
-  { id: 'code-1', code: 'STUDIO7A2B', type: 'studio', status: 'available', expiresAt: '24 mars 2026', createdAt: '17 mars 2026' },
-  { id: 'code-2', code: 'PRO8K1Z', type: 'pro', status: 'used', expiresAt: '17 avril 2026', createdAt: '10 mars 2026' },
-  { id: 'code-3', code: 'STUDIOADM9', type: 'studio', status: 'available', expiresAt: 'Illimité', createdAt: '2 mars 2026' },
-  { id: 'code-4', code: 'PROLIVE5', type: 'pro', status: 'used', expiresAt: '7 avril 2026', createdAt: '8 mars 2026' },
-  { id: 'code-5', code: 'STUDIOLINK3', type: 'studio', status: 'available', expiresAt: '16 juin 2026', createdAt: '16 mars 2026' },
-  { id: 'code-6', code: 'PROPARIS2', type: 'pro', status: 'available', expiresAt: '24 mars 2026', createdAt: '17 mars 2026' }
-];
-
-const REGISTERED_USERS: RegisteredUser[] = [
-  { id: 'u-1', name: 'Studio Grande Armée', avatar: 'https://picsum.photos/seed/studio-ga/80/80', type: 'studio', joinedAt: '12 mars 2026' },
-  { id: 'u-2', name: 'Studio Pigalle Records', avatar: 'https://picsum.photos/seed/studio-pr/80/80', type: 'studio', joinedAt: '9 mars 2026' },
-  { id: 'u-3', name: 'Studio Opéra', avatar: 'https://picsum.photos/seed/studio-op/80/80', type: 'studio', joinedAt: '2 mars 2026' },
-  { id: 'u-4', name: 'La Fabrique 18', avatar: 'https://picsum.photos/seed/studio-lf/80/80', type: 'studio', joinedAt: '26 février 2026' },
-  { id: 'u-5', name: 'Alexandre M.', avatar: 'https://i.pravatar.cc/80?img=3', type: 'pro', joinedAt: '14 mars 2026' },
-  { id: 'u-6', name: 'Sarah K.', avatar: 'https://i.pravatar.cc/80?img=5', type: 'pro', joinedAt: '13 mars 2026' },
-  { id: 'u-7', name: 'Karim D.', avatar: 'https://i.pravatar.cc/80?img=8', type: 'pro', joinedAt: '11 mars 2026' },
-  { id: 'u-8', name: 'Jules T.', avatar: 'https://i.pravatar.cc/80?img=11', type: 'pro', joinedAt: '7 mars 2026' },
-  { id: 'u-9', name: 'Maya R.', avatar: 'https://i.pravatar.cc/80?img=21', type: 'pro', joinedAt: '4 mars 2026' },
-  { id: 'u-10', name: 'Nassim B.', avatar: 'https://i.pravatar.cc/80?img=33', type: 'pro', joinedAt: '28 février 2026' }
-];
-
-const ACTIVE_MISSIONS: ActiveMission[] = [
-  { id: 'm-1', title: 'Mixage EP 5 titres', studio: 'Studio Grande Armée', serviceType: 'Mixage', countdown: 'Expire dans 2h', candidatesCount: 12 },
-  { id: 'm-2', title: 'Enregistrement Voix Lead', studio: 'Studio Pigalle Records', serviceType: 'Enregistrement', countdown: 'Expire dans 9h', candidatesCount: 5 },
-  { id: 'm-3', title: 'Toplining Pop', studio: 'Studio Opéra', serviceType: 'Toplining', countdown: 'Expire dans 22h', candidatesCount: 8 },
-  { id: 'm-4', title: 'Beatmaking Afrobeat', studio: 'Studio Grande Armée', serviceType: 'Beatmaking', countdown: 'Expire dans 1j 4h', candidatesCount: 18 }
-];
-
-function generateCode(type: InvitationType) {
-  const prefix = type === 'studio' ? 'STUDIO' : 'PRO';
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let suffix = '';
-  for (let i = 0; i < 6; i += 1) {
-    suffix += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return `${prefix}${suffix}`;
-}
-
-function getExpirationLabel(validity: Validity) {
-  if (validity === 'unlimited') return 'Illimité';
-  const date = new Date();
-  date.setDate(date.getDate() + validity);
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return {
+    id: row.id,
+    code: row.code,
+    type: row.type,
+    email: typeof dynamicRow.email === 'string' ? dynamicRow.email : null,
+    used: typeof dynamicRow.used === 'boolean' ? dynamicRow.used : usedBy !== null,
+    expires_at: row.expires_at ?? null,
+    created_at: row.created_at,
+  };
 }
 
 export default function AdminPage() {
-  const [codes, setCodes] = useState<InvitationCode[]>(INITIAL_INVITATION_CODES);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [countToGenerate, setCountToGenerate] = useState(6);
-  const [targetType, setTargetType] = useState<InvitationType>('studio');
-  const [validity, setValidity] = useState<Validity>(30);
+  const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
+  const user = session?.user ?? null;
 
-  const usedCount = useMemo(() => codes.filter((c) => c.status === 'used').length, [codes]);
-  const availableCount = useMemo(() => codes.filter((c) => c.status === 'available').length, [codes]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newType, setNewType] = useState<'studio' | 'pro'>('pro');
+  const [newEmail, setNewEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const generateCodes = () => {
-    const nowLabel = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-    const expiresAt = getExpirationLabel(validity);
-    const newCodes: InvitationCode[] = Array.from({ length: countToGenerate }, (_, index) => ({
-      id: `code-generated-${Date.now()}-${index}`,
-      code: generateCode(targetType),
-      type: targetType,
-      status: 'available',
-      expiresAt,
-      createdAt: nowLabel
-    }));
+  useEffect(() => {
+    if (authLoading) return;
 
-    setCodes((prev) => [...newCodes, ...prev]);
-    setIsModalOpen(false);
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL ?? '').trim().toLowerCase();
+    const currentEmail = (user.email ?? '').trim().toLowerCase();
+
+    if (!adminEmail || currentEmail !== adminEmail) {
+      navigate('/', { replace: true });
+      return;
+    }
+
+    setIsAuthorized(true);
+  }, [authLoading, navigate, user]);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchInvitations = async () => {
+      if (!isAuthorized) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const expected = await supabase
+          .from('invitations')
+          .select('id, code, type, email, used, expires_at, created_at')
+          .order('created_at', { ascending: false });
+
+        let data = expected.data as unknown as InvitationRow[] | null;
+        let fetchError = expected.error;
+
+        if (fetchError) {
+          const fallback = await supabase
+            .from('invitations')
+            .select('id, code, type, used_by, expires_at, created_at')
+            .order('created_at', { ascending: false });
+          data = fallback.data as unknown as InvitationRow[] | null;
+          fetchError = fallback.error;
+        }
+
+        if (fetchError) {
+          setError(fetchError.message);
+          return;
+        }
+
+        if (!active) return;
+        setInvitations((data ?? []).map(mapRowToInvitation));
+      } catch (fetchErr) {
+        if (!active) return;
+        setError(fetchErr instanceof Error ? fetchErr.message : 'Impossible de charger les invitations');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void fetchInvitations();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthorized]);
+
+  const handleCreate = async () => {
+    setCreating(true);
+    setError(null);
+
+    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    try {
+      const expected = await supabase
+        .from('invitations')
+        .insert({
+          code,
+          type: newType,
+          email: newEmail.trim() || null,
+          used: false,
+          expires_at,
+          created_at: new Date().toISOString(),
+        } as never)
+        .select()
+        .single();
+
+      let data = expected.data as unknown as InvitationRow | null;
+      let insertError = expected.error;
+
+      if (insertError) {
+        const fallback = await supabase
+          .from('invitations')
+          .insert({
+            code,
+            type: newType,
+            expires_at,
+            created_at: new Date().toISOString(),
+          } as never)
+          .select()
+          .single();
+
+        data = fallback.data as unknown as InvitationRow | null;
+        insertError = fallback.error;
+      }
+
+      if (insertError || !data) {
+        setError(insertError?.message ?? "Impossible de créer l'invitation");
+        return;
+      }
+
+      setInvitations((prev) => [mapRowToInvitation(data), ...prev]);
+      setNewEmail('');
+    } catch (createErr) {
+      setError(createErr instanceof Error ? createErr.message : "Impossible de créer l'invitation");
+    } finally {
+      setCreating(false);
+    }
   };
 
+  const handleCopy = async (code: string) => {
+    try {
+      const url = `${window.location.origin}/invite/${code}`;
+      await navigator.clipboard.writeText(url);
+      setCopySuccess(code);
+      window.setTimeout(() => setCopySuccess(null), 2000);
+    } catch (copyErr) {
+      setError(copyErr instanceof Error ? copyErr.message : 'Impossible de copier le lien');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setError(null);
+    try {
+      const { error: deleteError } = await supabase
+        .from('invitations')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        setError(deleteError.message);
+        return;
+      }
+
+      setInvitations((prev) => prev.filter((invitation) => invitation.id !== id));
+    } catch (deleteErr) {
+      setError(deleteErr instanceof Error ? deleteErr.message : 'Impossible de supprimer cette invitation');
+    }
+  };
+
+  const summary = useMemo(() => `${invitations.length} invitation(s) créées`, [invitations.length]);
+
+  if (authLoading || !isAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#f6f7f8] text-[#111827]">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-10">
-        <header className="mb-8 md:mb-10">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">Admin Panel</h1>
-          <p className="text-sm text-[#4b5563] mt-1">
-            Gestion des invitations, utilisateurs et missions en cours.
-          </p>
+    <div className="min-h-screen bg-[#0D0D0F] text-white">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold">Panel Admin</h1>
+          <p className="text-sm text-white/60 mt-1">{summary}</p>
         </header>
 
-        <section className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm mb-6 md:mb-8">
-          <div className="p-5 md:p-6 border-b border-[#eef0f2] flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Codes d&apos;invitation</h2>
-              <p className="text-xs text-[#6b7280] mt-1">
-                {availableCount} disponibles · {usedCount} utilisés
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111827] text-white text-sm font-medium hover:bg-black transition-colors"
-            >
-              <Plus size={16} />
-              Générer des codes
-            </button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-[#6b7280] border-b border-[#eef0f2]">
-                  <th className="px-5 py-3 font-semibold">Code</th>
-                  <th className="px-5 py-3 font-semibold">Type</th>
-                  <th className="px-5 py-3 font-semibold">Statut</th>
-                  <th className="px-5 py-3 font-semibold">Expire le</th>
-                  <th className="px-5 py-3 font-semibold">Créé le</th>
-                </tr>
-              </thead>
-              <tbody>
-                {codes.map((code) => (
-                  <motion.tr
-                    key={code.id}
-                    layout
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="border-b border-[#f1f5f9] last:border-0"
-                  >
-                    <td className="px-5 py-3 text-sm font-mono font-semibold text-[#111827]">{code.code}</td>
-                    <td className="px-5 py-3">
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wide",
-                        code.type === 'studio' ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f3e8ff] text-[#7e22ce]"
-                      )}>
-                        {code.type === 'studio' ? 'Studio' : 'Pro'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-full text-[11px] font-semibold",
-                        code.status === 'available' ? "bg-[#dcfce7] text-[#166534]" : "bg-[#f3f4f6] text-[#374151]"
-                      )}>
-                        {code.status === 'available' ? 'Disponible' : 'Utilisé'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-sm text-[#374151]">{code.expiresAt}</td>
-                    <td className="px-5 py-3 text-sm text-[#374151]">{code.createdAt}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm mb-6 md:mb-8">
-          <div className="p-5 md:p-6 border-b border-[#eef0f2]">
-            <h2 className="text-lg font-semibold">Utilisateurs inscrits</h2>
-          </div>
-
-          <div className="divide-y divide-[#f1f5f9]">
-            {REGISTERED_USERS.map((user) => (
-              <div key={user.id} className="px-5 md:px-6 py-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-10 h-10 rounded-full object-cover border border-[#e5e7eb]"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#111827] truncate">{user.name}</p>
-                    <p className="text-xs text-[#6b7280]">Inscrit le {user.joinedAt}</p>
-                  </div>
-                  <span className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide",
-                    user.type === 'studio' ? "bg-[#e0f2fe] text-[#0369a1]" : "bg-[#f3e8ff] text-[#7e22ce]"
-                  )}>
-                    {user.type}
-                  </span>
-                </div>
-
+        <section className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+          <div className="mb-4">
+            <p className="text-sm text-white/70 mb-2">Type d&apos;invitation</p>
+            <div className="grid grid-cols-2 gap-2 max-w-xs">
+              {(['studio', 'pro'] as const).map((type) => (
                 <button
+                  key={type}
                   type="button"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[#dc2626] hover:text-[#b91c1c] transition-colors shrink-0"
+                  onClick={() => setNewType(type)}
+                  className={`rounded-xl px-3 py-2 text-sm transition-colors ${
+                    newType === type
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-white/5 text-white/75 hover:bg-white/10'
+                  }`}
                 >
-                  <UserX size={14} />
-                  Suspendre
+                  {type === 'studio' ? 'Studio' : 'Pro'}
                 </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
+          <div className="mb-4">
+            <input
+              value={newEmail}
+              onChange={(event) => setNewEmail(event.target.value)}
+              placeholder="Email destinataire (optionnel)"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400"
+            />
+          </div>
+
+          <GradientButton
+            onClick={() => void handleCreate()}
+            disabled={creating}
+            className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+          >
+            {creating ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block mr-2" />
+                Génération...
+              </>
+            ) : (
+              'Générer un lien'
+            )}
+          </GradientButton>
+
+          {error ? <p className="text-red-400 text-sm mt-3">{error}</p> : null}
         </section>
 
-        <section className="bg-white border border-[#e5e7eb] rounded-2xl shadow-sm">
-          <div className="p-5 md:p-6 border-b border-[#eef0f2]">
-            <h2 className="text-lg font-semibold">Missions en cours</h2>
-          </div>
+        <section className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          {loading ? (
+            <div className="p-8 text-center">
+              <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block" />
+            </div>
+          ) : invitations.length === 0 ? (
+            <p className="p-8 text-center text-white/45">Aucune invitation pour le moment.</p>
+          ) : (
+            <div className="divide-y divide-white/10">
+              {invitations.map((invitation) => {
+                const isExpired = Boolean(
+                  invitation.expires_at && new Date(invitation.expires_at) < new Date(),
+                );
+                const statusNode = invitation.used
+                  ? <span className="text-red-400">Utilisée</span>
+                  : isExpired
+                    ? <span className="text-white/30">Expirée</span>
+                    : <span className="text-green-400">Active</span>;
 
-          <div className="divide-y divide-[#f1f5f9]">
-            {ACTIVE_MISSIONS.map((mission) => (
-              <div key={mission.id} className="px-5 md:px-6 py-4 grid grid-cols-1 md:grid-cols-[2fr_1.4fr_1fr_1fr_auto] gap-2 md:gap-4 items-center">
-                <div>
-                  <p className="text-sm font-semibold text-[#111827]">{mission.title}</p>
-                  <p className="text-xs text-[#6b7280]">{mission.studio}</p>
-                </div>
-                <p className="text-sm text-[#374151]">{mission.serviceType}</p>
-                <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b7280]">
-                  <Clock size={13} />
-                  {mission.countdown}
-                </p>
-                <p className="text-xs text-[#6b7280]">{mission.candidatesCount} candidats</p>
-              </div>
-            ))}
-          </div>
+                return (
+                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto] gap-3 items-center">
+                    <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
+                      invitation.type === 'studio'
+                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30'
+                        : 'bg-violet-500/20 text-violet-300 border border-violet-400/30'
+                    }`}>
+                      {invitation.type}
+                    </span>
+
+                    <p className="font-mono text-sm">{invitation.code}</p>
+                    <p className="text-white/50 text-sm">{invitation.email || '-'}</p>
+                    <div className="text-sm">{statusNode}</div>
+                    <p className="text-sm text-white/60">
+                      {invitation.expires_at
+                        ? new Date(invitation.expires_at).toLocaleDateString('fr-FR')
+                        : 'Sans limite'}
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleCopy(invitation.code)}
+                        className="text-sm text-violet-300 hover:text-violet-200 transition-colors"
+                      >
+                        {copySuccess === invitation.code ? '✓ Copié !' : 'Copier le lien'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(invitation.id)}
+                        className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-xl p-5 md:p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-semibold">Générer des codes</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-[#f3f4f6] hover:bg-[#e5e7eb] transition-colors flex items-center justify-center"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-2">Nombre de codes</label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setCountToGenerate((prev) => Math.max(1, prev - 1))}
-                      className="w-9 h-9 rounded-full bg-[#f3f4f6] hover:bg-[#e5e7eb] transition-colors text-lg"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={countToGenerate}
-                      onChange={(e) => {
-                        const raw = Number(e.target.value) || 1;
-                        setCountToGenerate(Math.max(1, Math.min(50, raw)));
-                      }}
-                      className="w-20 h-9 text-center rounded-lg border border-[#d1d5db] bg-white text-sm font-semibold"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCountToGenerate((prev) => Math.min(50, prev + 1))}
-                      className="w-9 h-9 rounded-full bg-[#f3f4f6] hover:bg-[#e5e7eb] transition-colors text-lg"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-2">Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['studio', 'pro'] as InvitationType[]).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setTargetType(type)}
-                        className={cn(
-                          "h-10 rounded-lg border text-sm font-medium transition-colors",
-                          targetType === type
-                            ? "bg-[#111827] text-white border-[#111827]"
-                            : "bg-white border-[#d1d5db] text-[#374151] hover:bg-[#f9fafb]"
-                        )}
-                      >
-                        {type === 'studio' ? 'Studio' : 'Pro'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-2">Durée de validité</label>
-                  <select
-                    value={validity}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setValidity(value === 'unlimited' ? 'unlimited' : (Number(value) as 7 | 30 | 90));
-                    }}
-                    className="w-full h-10 rounded-lg border border-[#d1d5db] px-3 text-sm"
-                  >
-                    <option value={7}>7 jours</option>
-                    <option value={30}>30 jours</option>
-                    <option value={90}>90 jours</option>
-                    <option value="unlimited">Illimité</option>
-                  </select>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={generateCodes}
-                  className="mt-2 h-11 rounded-xl bg-[#111827] text-white text-sm font-semibold hover:bg-black transition-colors"
-                >
-                  Générer
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

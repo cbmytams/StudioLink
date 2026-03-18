@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { CreateReviewInput, ReviewRecord } from '@/types/backend';
 
 function ensureClient() {

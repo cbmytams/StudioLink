@@ -5,7 +5,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import type { UserType } from '@/types/backend';
 
 type OnboardingType = 'studio' | 'pro';
@@ -210,6 +210,14 @@ export default function OnboardingPage() {
       if (upsertError) {
         setError(upsertError.message);
         return;
+      }
+
+      const invitationCode = sessionStorage.getItem('invitationCode');
+      if (invitationCode) {
+        await supabase
+          .from('invitations')
+          .update({ used: true } as never)
+          .eq('code', invitationCode);
       }
 
       sessionStorage.removeItem('invitationCode');

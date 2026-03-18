@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Bell, CheckCircle2, MessageSquare, XCircle, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthProvider';
+import { useAuth } from '@/lib/supabase/auth';
 import { useMarkAllRead, useMarkAsRead, useNotifications } from '@/hooks/useNotifications';
 import { NotificationSkeleton } from '@/components/skeletons/NotificationSkeleton';
 import { GlassCard } from '@/components/ui/GlassCard';

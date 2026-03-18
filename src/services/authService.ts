@@ -1,5 +1,5 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { Profile, UserType } from '@/types/backend';
 
 interface SignUpWithPasswordParams {

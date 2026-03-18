@@ -1,5 +1,5 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase/client';
 import type { ConversationRecord, MessageRecord } from '@/types/backend';
 
 function ensureClient() {
