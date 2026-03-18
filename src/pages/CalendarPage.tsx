@@ -294,7 +294,7 @@ export default function CalendarPage() {
 
   if (loadingCalendar) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] flex items-center justify-center pb-20">
+      <div className="app-shell flex items-center justify-center pb-20">
         <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
       </div>
     );
@@ -302,7 +302,7 @@ export default function CalendarPage() {
 
   if (calendarError) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] pb-20 px-4 pt-10">
+      <div className="app-shell pb-20 px-4 pt-10">
         <div className="mx-auto max-w-3xl rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 text-sm">
           {calendarError instanceof Error ? calendarError.message : 'Impossible de charger le calendrier.'}
         </div>
@@ -417,7 +417,7 @@ export default function CalendarPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] pb-20 pt-safe">
+    <div className="app-shell pb-20 pt-safe">
       <header className="sticky top-0 z-30 flex flex-col gap-6 bg-[#f4ece4]/90 px-4 py-6 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-light tracking-tight">Calendrier</h1>
