@@ -178,7 +178,8 @@ export default function AdminPage() {
 
   const handleCopy = async (code: string) => {
     try {
-      const url = `${window.location.origin}/invite/${code}`;
+      const appUrl = (import.meta.env.VITE_APP_URL ?? window.location.origin).replace(/\/$/, '');
+      const url = `${appUrl}/invite/${code}`;
       await navigator.clipboard.writeText(url);
       setCopySuccess(code);
       window.setTimeout(() => setCopySuccess(null), 2000);
