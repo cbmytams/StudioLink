@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button as GradientButton } from '@/components/ui/Button';
+import Navbar from '@/components/layout/Navbar';
 
 type Mission = {
   id: string
@@ -167,7 +168,8 @@ export default function StudioDashboard() {
   if (loadingMissions) {
     return (
       <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-8">
+        <Navbar />
+        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 pt-4 pb-8">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         </div>
       </div>
@@ -176,7 +178,8 @@ export default function StudioDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <div className="mx-auto max-w-5xl px-4 py-8 pb-20">
+      <Navbar />
+      <div className="mx-auto max-w-5xl px-4 pt-4 pb-8">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">Bonjour, {companyName} 👋</h1>
