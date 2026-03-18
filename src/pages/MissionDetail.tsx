@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { Helmet } from 'react-helmet-async';
 
 type Mission = {
   id: string
@@ -192,6 +193,13 @@ export default function MissionDetail() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>{`Mission ${mission.title} — StudioLink`}</title>
+        <meta
+          name="description"
+          content={mission.description ? mission.description.slice(0, 160) : 'Détails de mission sur StudioLink.'}
+        />
+      </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
