@@ -181,7 +181,9 @@ export default function StudioDashboard() {
             ? 'in_progress'
             : status === 'completed'
               ? 'completed'
-              : status;
+              : status === 'closed'
+                ? 'cancelled'
+                : status;
 
       const { error: updateError } = await supabase
         .from('missions')
