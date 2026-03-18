@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 type Mission = {
   id: string
   title: string
-  status: 'draft' | 'open' | 'closed' | 'completed'
+  status: 'draft' | 'open' | 'in_progress' | 'closed' | 'completed'
   created_at: string
   deadline: string | null
   budget_min: number | null
@@ -41,6 +41,7 @@ type ApplicationRow = {
 function mapMissionStatus(status: string | null): Mission['status'] {
   if (status === 'draft') return 'draft';
   if (status === 'open' || status === 'published' || status === 'selecting') return 'open';
+  if (status === 'in_progress' || status === 'filled') return 'in_progress';
   if (status === 'completed' || status === 'rated') return 'completed';
   return 'closed';
 }
@@ -54,6 +55,7 @@ function mapApplicationStatus(status: string | null): Application['status'] {
 function statusBadgeClass(status: Mission['status']): string {
   if (status === 'open') return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
   if (status === 'draft') return 'bg-stone-100 text-stone-600 border border-stone-200';
+  if (status === 'in_progress') return 'bg-blue-100 text-blue-700 border border-blue-200';
   if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
   return 'bg-red-100 text-red-700 border border-red-200';
 }
@@ -61,6 +63,7 @@ function statusBadgeClass(status: Mission['status']): string {
 function statusLabel(status: Mission['status']): ReactNode {
   if (status === 'open') return 'Ouverte';
   if (status === 'draft') return 'Brouillon';
+  if (status === 'in_progress') return 'En cours';
   if (status === 'completed') return 'Terminée';
   return 'Clôturée';
 }
@@ -72,6 +75,7 @@ export default function StudioDashboard() {
   const [missions, setMissions] = useState<Mission[] | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingMissions, setLoadingMissions] = useState(true);
+  const [statusActionMissionId, setStatusActionMissionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -152,7 +156,9 @@ export default function StudioDashboard() {
   const stats = useMemo(() => {
     const missionList = missions ?? [];
     return {
-      activeMissions: missionList.filter((mission) => mission.status === 'open').length,
+      activeMissions: missionList.filter(
+        (mission) => mission.status === 'open' || mission.status === 'in_progress',
+      ).length,
       applicationsCount: applications.length,
       pendingApplications: applications.filter((application) => application.status === 'pending').length,
       closedMissions: missionList.filter(
@@ -163,6 +169,42 @@ export default function StudioDashboard() {
 
   const recentMissions = useMemo(() => (missions ?? []).slice(0, 5), [missions]);
   const companyName = (profile as { company_name?: string } | null)?.company_name ?? 'Studio';
+
+  const updateMissionStatus = async (missionId: string, status: Mission['status']) => {
+    setStatusActionMissionId(missionId);
+    setError(null);
+    try {
+      const dbStatus =
+        status === 'open'
+          ? 'published'
+          : status === 'in_progress'
+            ? 'in_progress'
+            : status === 'completed'
+              ? 'completed'
+              : status;
+
+      const { error: updateError } = await supabase
+        .from('missions')
+        .update({ status: dbStatus } as never)
+        .eq('id', missionId);
+
+      if (updateError) throw updateError;
+
+      setMissions((previous) =>
+        (previous ?? []).map((mission) =>
+          mission.id === missionId ? { ...mission, status } : mission,
+        ),
+      );
+    } catch (statusError) {
+      setError(
+        statusError instanceof Error
+          ? statusError.message
+          : 'Impossible de mettre à jour le statut de la mission.',
+      );
+    } finally {
+      setStatusActionMissionId(null);
+    }
+  };
 
   if (loadingMissions) {
     return (
@@ -181,6 +223,13 @@ export default function StudioDashboard() {
           <div>
             <h1 className="app-title">Bonjour, {companyName} 👋</h1>
             <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
+            <button
+              type="button"
+              onClick={() => navigate('/studio/search-pros')}
+              className="mt-2 text-sm text-orange-600 hover:underline"
+            >
+              Trouver des pros →
+            </button>
           </div>
 
           <Button
@@ -264,6 +313,36 @@ export default function StudioDashboard() {
                         >
                           Voir les candidatures
                         </button>
+                        {mission.status === 'draft' ? (
+                          <button
+                            type="button"
+                            disabled={statusActionMissionId === mission.id}
+                            onClick={() => void updateMissionStatus(mission.id, 'open')}
+                            className="rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-orange-600 disabled:opacity-60"
+                          >
+                            Publier
+                          </button>
+                        ) : null}
+                        {mission.status === 'open' ? (
+                          <button
+                            type="button"
+                            disabled={statusActionMissionId === mission.id}
+                            onClick={() => void updateMissionStatus(mission.id, 'closed')}
+                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-60"
+                          >
+                            Clôturer
+                          </button>
+                        ) : null}
+                        {mission.status === 'in_progress' ? (
+                          <button
+                            type="button"
+                            disabled={statusActionMissionId === mission.id}
+                            onClick={() => void updateMissionStatus(mission.id, 'completed')}
+                            className="rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:opacity-60"
+                          >
+                            Marquer terminée
+                          </button>
+                        ) : null}
                       </div>
                     );
                   })}
