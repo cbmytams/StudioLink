@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import { Helmet } from 'react-helmet-async';
 
 type Mission = {
   id: string
@@ -228,6 +229,13 @@ export default function StudioDashboard() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>StudioLink — Tableau de bord Studio</title>
+        <meta
+          name="description"
+          content="Gérez vos missions, vos candidatures et vos actions studio depuis votre tableau de bord StudioLink."
+        />
+      </Helmet>
       <div className="app-container-wide">
         <header className="app-header">
           <div className="flex items-center gap-3">
