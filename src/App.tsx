@@ -93,6 +93,14 @@ function RoleLayout({ children }: { children: ReactNode }) {
   return <ProLayout>{children}</ProLayout>;
 }
 
+function RoleMissionPage() {
+  const { profile } = useAuth();
+  if (profile?.user_type === 'studio') {
+    return <ManageApplicationsPage />;
+  }
+  return <MissionDetailPage />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -183,7 +191,7 @@ export default function App() {
             element={(
               <ProtectedRoute>
                 <RoleLayout>
-                  <MissionDetailPage />
+                  <RoleMissionPage />
                 </RoleLayout>
               </ProtectedRoute>
             )}
@@ -225,7 +233,7 @@ export default function App() {
             <Route path="/studio/missions" element={<StudioDashboardPage />} />
             <Route path="/studio/create-mission" element={<CreateMissionPage />} />
             <Route path="/studio/missions/create" element={<CreateMissionPage />} />
-            <Route path="/studio/missions/:id" element={<MissionDetailPage />} />
+            <Route path="/studio/missions/:id" element={<ManageApplicationsPage />} />
             <Route path="/studio/missions/:id/edit" element={<CreateMissionPage />} />
             <Route path="/studio/applications/:missionId" element={<ManageApplicationsPage />} />
             <Route path="/studio/missions/:id/applications" element={<ManageApplicationsPage />} />
