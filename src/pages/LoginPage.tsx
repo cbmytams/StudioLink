@@ -5,12 +5,14 @@ import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/Toast';
 
 type AuthMode = 'signin' | 'signup';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { session, profile, loading: authLoading, signInPassword } = useAuth();
+  const { showToast } = useToast();
 
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
@@ -69,6 +71,7 @@ export default function LoginPage() {
     try {
       if (mode === 'signin') {
         await signInPassword(email.trim(), password);
+        showToast({ title: 'Connexion réussie', variant: 'default' });
         return;
       }
 
@@ -76,6 +79,11 @@ export default function LoginPage() {
       const invitationType = sessionStorage.getItem('invitationType');
       if (!invitationCode || !invitationType) {
         setError("Invitation requise. Reviens à la page d'invitation.");
+        showToast({
+          title: 'Invitation requise',
+          description: "Reviens à la page d'invitation.",
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -85,6 +93,11 @@ export default function LoginPage() {
       });
       if (signUpError) {
         setError(signUpError.message);
+        showToast({
+          title: 'Création impossible',
+          description: signUpError.message,
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -96,6 +109,11 @@ export default function LoginPage() {
 
         if (invitationError) {
           setError(invitationError.message);
+          showToast({
+            title: 'Création impossible',
+            description: invitationError.message,
+            variant: 'destructive',
+          });
           return;
         }
       }
@@ -104,12 +122,18 @@ export default function LoginPage() {
       sessionStorage.removeItem('invitationType');
       sessionStorage.removeItem('invitationEmail');
       setSuccessMessage('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.');
+      showToast({ title: 'Compte créé', description: 'Vérifie ta boîte mail.', variant: 'default' });
       setPassword('');
       setConfirmPassword('');
     } catch (submitError) {
       const message =
         submitError instanceof Error ? submitError.message : 'Une erreur est survenue.';
       setError(message);
+      showToast({
+        title: isSignIn ? 'Connexion impossible' : 'Création impossible',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
