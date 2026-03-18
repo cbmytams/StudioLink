@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import Navbar from '@/components/layout/Navbar';
 
 type ProProfile = {
   full_name: string | null
@@ -66,14 +65,14 @@ function normalizeApplicationStatus(status: string | null): Application['status'
 
 function missionStatusClass(status: string): string {
   return status === 'closed'
-    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-    : 'bg-green-500/20 text-green-400 border border-green-500/30';
+    ? 'bg-red-100 text-red-700 border border-red-200'
+    : 'bg-green-100 text-green-700 border border-green-200';
 }
 
 function applicationStatusClass(status: Application['status']): string {
-  if (status === 'accepted') return 'bg-green-500/20 text-green-400';
-  if (status === 'rejected') return 'bg-red-500/20 text-red-400';
-  return 'bg-yellow-500/20 text-yellow-400';
+  if (status === 'accepted') return 'bg-green-100 text-green-700';
+  if (status === 'rejected') return 'bg-red-100 text-red-700';
+  return 'bg-yellow-100 text-yellow-700';
 }
 
 export default function ManageApplications() {
@@ -245,23 +244,21 @@ export default function ManageApplications() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <Navbar />
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 pt-4 pb-8">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 pb-24">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="mx-auto max-w-4xl px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="mx-auto max-w-4xl px-4 py-8 pb-24">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-4 text-sm text-white/70 transition-colors hover:text-white"
+          className="mb-4 text-sm text-black/60 transition-colors hover:text-black"
         >
           ← Mes missions
         </button>
@@ -273,7 +270,7 @@ export default function ManageApplications() {
               {(mission?.status ?? 'open') === 'closed' ? 'Clôturée' : 'Ouverte'}
             </span>
           </div>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-black/55">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
         </header>
@@ -281,7 +278,7 @@ export default function ManageApplications() {
         {error ? <p className="text-red-400 text-center">{error}</p> : null}
 
         {!error && applications.length === 0 ? (
-          <p className="text-center text-white/40 py-10">Aucune candidature reçue pour l&apos;instant.</p>
+          <p className="text-center text-black/45 py-10">Aucune candidature reçue pour l&apos;instant.</p>
         ) : null}
 
         <div className="space-y-3">
@@ -294,7 +291,7 @@ export default function ManageApplications() {
             const isCurrentAction = actionLoading === application.id;
 
             return (
-              <div key={application.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <div key={application.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{displayName}</p>
@@ -302,13 +299,13 @@ export default function ManageApplications() {
                       <button
                         type="button"
                         onClick={() => navigate(`/pro/public/${application.pro_id}`)}
-                        className="text-violet-400 text-xs hover:underline mt-0.5 block"
+                        className="text-orange-600 text-xs hover:underline mt-0.5 block"
                       >
                         Voir le profil complet →
                       </button>
                     ) : null}
                     {application.profiles?.city ? (
-                      <p className="text-sm text-white/60">{application.profiles.city}</p>
+                      <p className="text-sm text-black/55">{application.profiles.city}</p>
                     ) : null}
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${applicationStatusClass(application.status)}`}>
@@ -325,7 +322,7 @@ export default function ManageApplications() {
                     {application.profiles.skills.slice(0, 4).map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85"
+                        className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
                       >
                         {skill}
                       </span>
@@ -334,14 +331,14 @@ export default function ManageApplications() {
                 ) : null}
 
                 {application.cover_letter ? (
-                  <p className="text-sm text-white/70 mt-2">{application.cover_letter}</p>
+                  <p className="text-sm text-black/70 mt-2">{application.cover_letter}</p>
                 ) : null}
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <p className="text-white/80">
+                  <p className="text-black/80">
                     Tarif proposé : {application.proposed_rate ? `${application.proposed_rate}€/j` : 'Non renseigné'}
                   </p>
-                  <p className="text-white/55">
+                  <p className="text-black/55">
                     {new Date(application.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
@@ -367,7 +364,7 @@ export default function ManageApplications() {
                       type="button"
                       onClick={() => void handleReject(application.id)}
                       disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-500/40 bg-transparent px-4 text-sm font-medium text-red-300 transition hover:bg-red-500/10 disabled:opacity-60"
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-300 bg-white px-4 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-60"
                     >
                       Rejeter ✗
                     </button>
