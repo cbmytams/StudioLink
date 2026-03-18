@@ -146,15 +146,15 @@ export default function ProFeed() {
         if (publishedResult.error) throw publishedResult.error;
         if (selectingResult.error) throw selectingResult.error;
 
-        let missionRows = [
-          ...(publishedResult.data ?? []),
-          ...(selectingResult.data ?? []),
+        let missionRows: MissionRow[] = [
+          ...((publishedResult.data ?? []) as MissionRow[]),
+          ...((selectingResult.data ?? []) as MissionRow[]),
         ];
 
         if (missionRows.length === 0) {
           const openResult = await fetchByStatus('open');
           if (!openResult.error) {
-            missionRows = openResult.data ?? [];
+            missionRows = (openResult.data ?? []) as MissionRow[];
           }
         }
 
