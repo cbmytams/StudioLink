@@ -99,7 +99,7 @@ export default function StudioDashboard() {
 
         if (missionError) throw missionError;
 
-        const normalizedMissions: Mission[] = (missionRows as MissionRow[] | null ?? []).map((mission) => ({
+        const normalizedMissions: Mission[] = (missionRows as unknown as MissionRow[] | null ?? []).map((mission) => ({
           id: mission.id,
           title: mission.title,
           status: mapMissionStatus(mission.status),
