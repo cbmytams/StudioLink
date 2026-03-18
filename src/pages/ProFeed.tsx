@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { GradientButton } from '@/components/ui/GradientButton';
+import { Button } from '@/components/ui/Button';
 
 const CATEGORIES = [
   'Photographie',
@@ -312,7 +312,7 @@ export default function ProFeed() {
                   {alreadyApplied ? (
                     <span className="text-green-400 text-sm">✓ Candidature envoyée</span>
                   ) : (
-                    <GradientButton
+                    <Button
                       onClick={(event) => {
                         event.stopPropagation();
                         navigate(`/mission/${mission.id}`);
@@ -320,7 +320,7 @@ export default function ProFeed() {
                       className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
                     >
                       Postuler →
-                    </GradientButton>
+                    </Button>
                   )}
                 </div>
               </article>
