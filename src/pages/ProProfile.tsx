@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/auth/AuthProvider';
 import { Button as GradientButton } from '@/components/ui/Button';
+import Navbar from '@/components/layout/Navbar';
 
 type EditableProfile = {
   full_name?: string | null
@@ -157,7 +158,8 @@ export default function ProProfile() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-20">
+      <Navbar />
+      <div className="max-w-2xl mx-auto px-4 pt-4 pb-8">
         <button
           type="button"
           onClick={() => navigate('/pro/dashboard')}
