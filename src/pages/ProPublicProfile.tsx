@@ -110,7 +110,7 @@ export function ProPublicProfile() {
 
         <header className="mt-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-violet-600 flex items-center justify-center text-2xl font-semibold">
+            <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-2xl font-semibold text-white">
               {proProfile.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
             <div>
