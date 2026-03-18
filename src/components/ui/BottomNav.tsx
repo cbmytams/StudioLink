@@ -1,4 +1,4 @@
-import { Home, Plus, MessageCircle, User, Zap, List, Calendar } from 'lucide-react';
+import { Home, Plus, MessageCircle, User, Zap, List } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/auth/AuthProvider';
