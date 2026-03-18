@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import type { UserType } from '@/types/backend';
+import { profileService } from '@/services/profileService';
 
 type OnboardingType = 'studio' | 'pro';
 
@@ -46,6 +47,8 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [skillsInput, setSkillsInput] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const [studioData, setStudioData] = useState<StudioFormState>({
     company_name: '',
@@ -181,10 +184,16 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
+      let avatarUrl: string | null = null;
+      if (avatarFile) {
+        avatarUrl = await profileService.uploadAvatar(user.id, avatarFile);
+      }
+
       const payload: Record<string, string | number | boolean | null | string[]> = {
         id: user.id,
         type: invitationType,
         onboarding_completed: true,
+        avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       };
 
@@ -222,6 +231,7 @@ export default function OnboardingPage() {
 
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
+      sessionStorage.removeItem('invitationEmail');
       navigate(invitationType === 'studio' ? '/studio/dashboard' : '/pro/feed');
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : 'Une erreur est survenue.';
@@ -277,12 +287,37 @@ export default function OnboardingPage() {
     }
 
     return (
-      <div className="space-y-2 text-sm text-white/80">
+      <div className="space-y-3 text-sm text-white/80">
         <p><span className="text-white/60">Nom du studio :</span> {studioData.company_name || '—'}</p>
         <p><span className="text-white/60">Site web :</span> {studioData.website || '—'}</p>
         <p><span className="text-white/60">Bio :</span> {studioData.bio || '—'}</p>
         <p><span className="text-white/60">Email contact :</span> {studioData.contact_email || '—'}</p>
         <p><span className="text-white/60">Téléphone :</span> {studioData.phone || '—'}</p>
+        <div className="pt-2">
+          <label htmlFor="onboarding-avatar-studio" className="mb-2 block text-xs text-white/60">
+            Avatar (optionnel)
+          </label>
+          <input
+            id="onboarding-avatar-studio"
+            type="file"
+            accept="image/*"
+            onChange={(event) => {
+              const nextFile = event.target.files?.[0] ?? null;
+              setAvatarFile(nextFile);
+              if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+              if (nextFile) setAvatarPreview(URL.createObjectURL(nextFile));
+              else setAvatarPreview(null);
+            }}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/15 file:px-2 file:py-1 file:text-xs file:text-white"
+          />
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt="Aperçu avatar"
+              className="mt-2 h-14 w-14 rounded-full object-cover border border-white/20"
+            />
+          ) : null}
+        </div>
       </div>
     );
   };
@@ -362,13 +397,38 @@ export default function OnboardingPage() {
     }
 
     return (
-      <div className="space-y-2 text-sm text-white/80">
+      <div className="space-y-3 text-sm text-white/80">
         <p><span className="text-white/60">Nom complet :</span> {proData.full_name || '—'}</p>
         <p><span className="text-white/60">Username :</span> {proData.username || '—'}</p>
         <p><span className="text-white/60">Bio :</span> {proData.bio || '—'}</p>
         <p><span className="text-white/60">Compétences :</span> {proData.skills.join(', ') || '—'}</p>
         <p><span className="text-white/60">Ville :</span> {proData.city || '—'}</p>
         <p><span className="text-white/60">Tarif :</span> {proData.daily_rate || '—'}</p>
+        <div className="pt-2">
+          <label htmlFor="onboarding-avatar-pro" className="mb-2 block text-xs text-white/60">
+            Avatar (optionnel)
+          </label>
+          <input
+            id="onboarding-avatar-pro"
+            type="file"
+            accept="image/*"
+            onChange={(event) => {
+              const nextFile = event.target.files?.[0] ?? null;
+              setAvatarFile(nextFile);
+              if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+              if (nextFile) setAvatarPreview(URL.createObjectURL(nextFile));
+              else setAvatarPreview(null);
+            }}
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/15 file:px-2 file:py-1 file:text-xs file:text-white"
+          />
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt="Aperçu avatar"
+              className="mt-2 h-14 w-14 rounded-full object-cover border border-white/20"
+            />
+          ) : null}
+        </div>
       </div>
     );
   };
