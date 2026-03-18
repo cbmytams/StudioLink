@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Login from "./pages/Login";
 import InvitationPage from "./pages/InvitationPage";
 import StudioOnboarding from "./pages/StudioOnboarding";
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="/pro/profil" element={<ProProfile />} />
         </Route>
       </Routes>
+      <SpeedInsights />
     </BrowserRouter>
   );
 }
