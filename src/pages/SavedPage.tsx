@@ -16,8 +16,9 @@ export default function SavedPage() {
   } = useSavedItems(userId);
 
   return (
-    <main className="min-h-screen p-4 pb-24 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Éléments sauvegardés</h1>
+    <main className="app-shell">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
+      <h1 className="text-3xl font-semibold tracking-tight mb-4">Éléments sauvegardés</h1>
       {isLoading ? (
         <div className="animate-pulse h-24 rounded-xl bg-stone-100" />
       ) : isError ? (
@@ -46,7 +47,7 @@ export default function SavedPage() {
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.id}>
-              <GlassCard className="p-4">
+              <GlassCard className="p-4 rounded-2xl">
                 <p className="text-sm font-medium">{item.item_type}</p>
                 <p className="text-xs text-stone-500 break-all">{item.item_id}</p>
               </GlassCard>
@@ -54,6 +55,7 @@ export default function SavedPage() {
           ))}
         </div>
       )}
+      </div>
     </main>
   );
 }
