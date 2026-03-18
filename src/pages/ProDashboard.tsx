@@ -233,8 +233,8 @@ export default function ProDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 pb-24">
+      <div className="app-shell">
+        <div className="app-container flex min-h-screen items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -242,38 +242,38 @@ export default function ProDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container">
         <header className="mb-5">
-          <h1 className="text-2xl font-semibold">Bonjour, {greetingName} 👋</h1>
-          <p className="text-sm text-black/55">{applications.length} candidature(s) envoyée(s)</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Bonjour, {greetingName} 👋</h1>
+          <p className="text-sm app-muted">{applications.length} candidature(s) envoyée(s)</p>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
 
         <section className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+          <div className="app-card-soft p-4">
             <p className="text-2xl font-bold">{stats.totalApplications}</p>
-            <p className="text-sm text-black/55">Candidatures envoyées</p>
+            <p className="text-sm app-muted">Candidatures envoyées</p>
           </div>
-          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+          <div className="app-card-soft p-4">
             <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-            <p className="text-sm text-black/55">En attente</p>
+            <p className="text-sm app-muted">En attente</p>
           </div>
-          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+          <div className="app-card-soft p-4">
             <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
-            <p className="text-sm text-black/55">Acceptées</p>
+            <p className="text-sm app-muted">Acceptées</p>
           </div>
-          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+          <div className="app-card-soft p-4">
             <p className="text-2xl font-bold">{stats.bookingsCount}</p>
-            <p className="text-sm text-black/55">Missions bookées</p>
+            <p className="text-sm app-muted">Missions bookées</p>
           </div>
         </section>
 
         <div className="mb-5">
           <Button
             onClick={() => navigate('/pro/feed')}
-            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            className="bg-orange-500 text-white hover:bg-orange-600"
           >
             Voir les missions disponibles →
           </Button>
@@ -306,7 +306,7 @@ export default function ProDashboard() {
 
         {activeTab === 'applications' ? (
           applications.length === 0 ? (
-            <div className="text-center text-black/45 py-8">
+            <div className="text-center app-muted py-8">
               Tu n&apos;as encore postulé à aucune mission.
               <br />
               <button
@@ -319,7 +319,7 @@ export default function ProDashboard() {
           ) : (
             <div className="space-y-3">
               {applications.map((application) => (
-                <article key={application.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
+                <article key={application.id} className="app-card-soft p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold">{application.missions?.title ?? 'Mission supprimée'}</p>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(application.status)}`}>
@@ -331,7 +331,7 @@ export default function ProDashboard() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-black/55">
+                  <p className="text-sm app-muted">
                     {application.missions?.profiles?.company_name ?? 'Studio inconnu'}
                   </p>
 
@@ -346,9 +346,9 @@ export default function ProDashboard() {
 
                   <p className="mt-2 text-sm text-orange-700">{budgetText(application.missions)}</p>
                   {application.proposed_rate ? (
-                    <p className="mt-1 text-sm text-black/60">Tarif proposé : {application.proposed_rate}€/j</p>
+                  <p className="mt-1 text-sm text-stone-600">Tarif proposé : {application.proposed_rate}€/j</p>
                   ) : null}
-                  <p className="mt-1 text-xs text-black/45">
+                  <p className="mt-1 text-xs app-muted">
                     Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </article>
@@ -356,19 +356,19 @@ export default function ProDashboard() {
             </div>
           )
         ) : bookings.length === 0 ? (
-          <p className="text-center text-black/45 py-8">Aucun booking confirmé pour l&apos;instant.</p>
+          <p className="text-center app-muted py-8">Aucun booking confirmé pour l&apos;instant.</p>
         ) : (
           <div className="space-y-3">
             {bookings.map((booking) => (
-              <article key={booking.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
+              <article key={booking.id} className="app-card-soft p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="font-semibold">{booking.missions?.title ?? 'Mission'}</p>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${bookingStatusClass(booking.status)}`}>
                     {booking.status}
                   </span>
                 </div>
-                <p className="text-sm text-black/55">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
-                <p className="mt-1 text-xs text-black/45">
+                <p className="text-sm app-muted">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
+                <p className="mt-1 text-xs app-muted">
                   Booking du {new Date(booking.created_at).toLocaleDateString('fr-FR')}
                 </p>
               </article>
