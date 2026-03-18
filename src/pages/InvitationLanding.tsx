@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase/client'
 import { Button as GradientButton } from '@/components/ui/Button'
+import { Helmet } from 'react-helmet-async'
 
 type Invitation = {
   id: string
@@ -106,6 +107,18 @@ export default function InvitationLanding() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] flex items-center justify-center">
+      <Helmet>
+        <title>Invitation — StudioLink</title>
+        <meta
+          name="description"
+          content="Valide ton lien d'invitation StudioLink pour rejoindre la plateforme."
+        />
+        <meta property="og:title" content="Invitation — StudioLink" />
+        <meta
+          property="og:description"
+          content="Valide ton invitation et crée ton compte StudioLink."
+        />
+      </Helmet>
       <div className="max-w-md w-full mx-auto px-4">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           {state === 'loading' ? (
