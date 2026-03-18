@@ -14,6 +14,18 @@ export function useConversations(userId?: string) {
   });
 }
 
+export function useUnreadConversationCount(userId?: string) {
+  return useQuery({
+    queryKey: ['messages', 'unread-count', userId],
+    queryFn: async () => {
+      if (!userId) return 0;
+      return messageService.getUnreadConversationCount(userId);
+    },
+    enabled: Boolean(userId),
+    refetchInterval: 15000,
+  });
+}
+
 export function useMessages(conversationId?: string) {
   return useQuery({
     queryKey: ['messages', conversationId],
