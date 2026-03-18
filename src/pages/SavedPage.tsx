@@ -183,35 +183,37 @@ export default function SavedPage() {
         ) : (
           <div className="space-y-3">
             {missions.map((mission) => (
-              <GlassCard key={mission.id} className="rounded-2xl p-4">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-stone-900">
-                    {mission.title ?? 'Mission sans titre'}
+              <div key={mission.id}>
+                <GlassCard className="rounded-2xl p-4">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-stone-900">
+                      {mission.title ?? 'Mission sans titre'}
+                    </p>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(mission.status)}`}>
+                      {statusLabel(mission.status)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-500">
+                    {mission.category ?? 'Catégorie non renseignée'} · {mission.mission_type ?? 'Type non renseigné'}
                   </p>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(mission.status)}`}>
-                    {statusLabel(mission.status)}
-                  </span>
-                </div>
-                <p className="text-xs text-stone-500">
-                  {mission.category ?? 'Catégorie non renseignée'} · {mission.mission_type ?? 'Type non renseigné'}
-                </p>
-                <p className="mt-2 text-sm text-orange-700">{budgetText(mission)}</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <Button
-                    className="bg-orange-500 text-white hover:bg-orange-600"
-                    onClick={() => navigate(`/mission/${mission.id}`)}
-                  >
-                    Voir la mission
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => void handleRemove(mission.id)}
-                    className="min-h-[44px] rounded-lg border border-orange-200 bg-orange-50 px-4 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
-                  >
-                    Retirer
-                  </button>
-                </div>
-              </GlassCard>
+                  <p className="mt-2 text-sm text-orange-700">{budgetText(mission)}</p>
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      className="bg-orange-500 text-white hover:bg-orange-600"
+                      onClick={() => navigate(`/mission/${mission.id}`)}
+                    >
+                      Voir la mission
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => void handleRemove(mission.id)}
+                      className="min-h-[44px] rounded-lg border border-orange-200 bg-orange-50 px-4 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                </GlassCard>
+              </div>
             ))}
           </div>
         )}
