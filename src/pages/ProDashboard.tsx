@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { ReviewModal } from '@/components/ReviewModal';
+import { Helmet } from 'react-helmet-async';
 
 type MissionRef = {
   id: string
@@ -247,6 +248,13 @@ export default function ProDashboard() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>StudioLink — Tableau de bord Pro</title>
+        <meta
+          name="description"
+          content="Suivez vos candidatures, vos missions acceptées et vos bookings depuis votre tableau de bord pro."
+        />
+      </Helmet>
       <div className="app-container">
         <header className="mb-5">
           <div className="flex items-center gap-3">
