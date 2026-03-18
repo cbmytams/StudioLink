@@ -135,7 +135,7 @@ export function ProPublicProfile() {
               {proProfile.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">
+              <h1 className="app-title text-2xl">
                 {proProfile.full_name ?? proProfile.username ?? 'Anonyme'}
               </h1>
               {proProfile.username ? (
@@ -171,7 +171,7 @@ export function ProPublicProfile() {
                   {proProfile.skills.map((skill) => (
                     <span
                       key={skill}
-                      className="bg-white/80 border border-white/50 text-black/75 text-xs px-2 py-1 rounded-full"
+                      className="app-chip"
                     >
                       {skill}
                     </span>
