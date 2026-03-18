@@ -166,8 +166,8 @@ export default function StudioDashboard() {
 
   if (loadingMissions) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-8 pb-24">
+      <div className="app-shell">
+        <div className="app-container-wide flex min-h-screen items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -175,17 +175,17 @@ export default function StudioDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="mx-auto max-w-5xl px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container-wide">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Bonjour, {companyName} 👋</h1>
-            <p className="text-sm text-black/55">{missions?.length ?? 0} mission(s) publiée(s)</p>
+            <h1 className="text-3xl font-semibold tracking-tight">Bonjour, {companyName} 👋</h1>
+            <p className="text-sm app-muted">{missions?.length ?? 0} mission(s) publiée(s)</p>
           </div>
 
           <Button
             onClick={() => navigate('/studio/create-mission')}
-            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            className="bg-orange-500 text-white hover:bg-orange-600"
           >
             + Créer une mission
           </Button>
@@ -196,32 +196,32 @@ export default function StudioDashboard() {
         ) : (
           <>
             <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+              <div className="app-card-soft p-4">
                 <p className="text-2xl font-bold">{stats.activeMissions}</p>
-                <p className="text-sm text-black/55">Missions actives</p>
+                <p className="text-sm app-muted">Missions actives</p>
               </div>
-              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+              <div className="app-card-soft p-4">
                 <p className="text-2xl font-bold">{stats.applicationsCount}</p>
-                <p className="text-sm text-black/55">Candidatures reçues</p>
+                <p className="text-sm app-muted">Candidatures reçues</p>
               </div>
-              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+              <div className="app-card-soft p-4">
                 <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-                <p className="text-sm text-black/55">En attente</p>
+                <p className="text-sm app-muted">En attente</p>
               </div>
-              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
+              <div className="app-card-soft p-4">
                 <p className="text-2xl font-bold">{stats.closedMissions}</p>
-                <p className="text-sm text-black/55">Missions clôturées</p>
+                <p className="text-sm app-muted">Missions clôturées</p>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-white/50 bg-white/60 p-4">
+            <section className="app-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Missions récentes</h2>
-                <span className="text-xs text-black/45">5 plus récentes</span>
+                <span className="text-xs app-muted">5 plus récentes</span>
               </div>
 
               {recentMissions.length === 0 ? (
-                <div className="text-center text-black/45 py-8">
+                <div className="text-center app-muted py-8">
                   Aucune mission publiée pour l&apos;instant.
                   <br />
                   <button
@@ -241,14 +241,14 @@ export default function StudioDashboard() {
                     return (
                       <div
                         key={mission.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/70 p-4"
+                        className="app-card-soft flex flex-wrap items-center justify-between gap-3 p-4"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">{mission.title}</p>
-                          <p className="text-xs text-black/45">
+                          <p className="text-xs app-muted">
                             Créée le {new Date(mission.created_at).toLocaleDateString('fr-FR')}
                           </p>
-                          <p className="text-xs text-black/55 mt-1">
+                          <p className="text-xs app-muted mt-1">
                             {candidateCount} candidature{candidateCount > 1 ? 's' : ''}
                           </p>
                         </div>
