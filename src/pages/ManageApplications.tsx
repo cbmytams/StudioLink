@@ -237,8 +237,7 @@ export default function ManageApplications() {
           .eq('id', targetMissionId);
         if (fallbackMissionUpdate.error) {
           const lastFallbackMissionUpdate = await supabase
-            .from('missions');
-          const lastFallbackMissionUpdate = await lastFallbackMissionUpdate
+            .from('missions')
             .update({ status: 'published' as never })
             .eq('id', targetMissionId);
           if (lastFallbackMissionUpdate.error) throw lastFallbackMissionUpdate.error;
