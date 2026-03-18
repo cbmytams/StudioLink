@@ -24,9 +24,9 @@ type Mission = {
 type ApplicationStatus = 'idle' | 'submitting' | 'submitted' | 'already_applied' | 'error'
 
 function missionTypeBadgeClass(type: string): string {
-  if (type === 'on_site') return 'bg-orange-500/20 text-orange-300 border border-orange-400/30';
-  if (type === 'hybrid') return 'bg-violet-500/20 text-violet-300 border border-violet-400/30';
-  return 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30';
+  if (type === 'on_site') return 'bg-orange-100 text-orange-700 border border-orange-200';
+  if (type === 'hybrid') return 'bg-purple-100 text-purple-700 border border-purple-200';
+  return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
 }
 
 function missionTypeLabel(type: string): string {
@@ -160,103 +160,103 @@ export default function MissionDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
       </div>
     );
   }
 
   if (notFound || !mission) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center px-4">
-        <p className="text-white/50">Mission introuvable.</p>
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center px-4">
+        <p className="text-black/55">Mission introuvable.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         <button
           type="button"
           onClick={() => navigate('/pro/feed')}
-          className="text-white/50 hover:text-white text-sm mb-6 flex items-center gap-1"
+          className="text-black/60 hover:text-black text-sm mb-6 flex items-center gap-1"
         >
           ← Retour au feed
         </button>
 
         <header>
           <h1 className="text-3xl font-bold mb-1">{mission.title}</h1>
-          <p className="text-white/50 text-sm">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
+          <p className="text-black/55 text-sm">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{mission.category}</span>
+            <span className="text-xs bg-white/80 border border-white/50 px-2 py-0.5 rounded-full">{mission.category}</span>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
               {missionTypeLabel(mission.mission_type)}
             </span>
             {mission.status !== 'open' ? (
-              <span className="rounded-full bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1 text-xs font-medium">
+              <span className="rounded-full bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 text-xs font-medium">
                 Mission fermée
               </span>
             ) : null}
           </div>
         </header>
 
-        <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-6">
+        <section className="bg-white/70 border border-white/50 rounded-xl p-5 mt-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Budget</p>
-              <p className="text-white/80">{budgetText(mission)}</p>
+              <p className="text-black/45 text-xs uppercase tracking-wider mb-1">Budget</p>
+              <p className="text-black/80">{budgetText(mission)}</p>
             </div>
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Localisation</p>
-              <p className="text-white/80">{mission.location ?? 'Non précisée'}</p>
+              <p className="text-black/45 text-xs uppercase tracking-wider mb-1">Localisation</p>
+              <p className="text-black/80">{mission.location ?? 'Non précisée'}</p>
             </div>
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Date de début</p>
-              <p className="text-white/80">
+              <p className="text-black/45 text-xs uppercase tracking-wider mb-1">Date de début</p>
+              <p className="text-black/80">
                 {mission.start_date ? new Date(mission.start_date).toLocaleDateString('fr-FR') : 'À définir'}
               </p>
             </div>
             <div>
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Durée</p>
-              <p className="text-white/80">
+              <p className="text-black/45 text-xs uppercase tracking-wider mb-1">Durée</p>
+              <p className="text-black/80">
                 {mission.duration_days ? `${mission.duration_days} jour(s)` : 'Non précisée'}
               </p>
             </div>
             <div className="sm:col-span-2">
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Publiée le</p>
-              <p className="text-white/80">{new Date(mission.created_at).toLocaleDateString('fr-FR')}</p>
+              <p className="text-black/45 text-xs uppercase tracking-wider mb-1">Publiée le</p>
+              <p className="text-black/80">{new Date(mission.created_at).toLocaleDateString('fr-FR')}</p>
             </div>
           </div>
         </section>
 
         {mission.description ? (
-          <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-4">
-            <h2 className="text-sm font-semibold text-white mb-2">Description</h2>
-            <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+          <section className="bg-white/70 border border-white/50 rounded-xl p-5 mt-4">
+            <h2 className="text-sm font-semibold text-black mb-2">Description</h2>
+            <p className="text-black/70 text-sm leading-relaxed whitespace-pre-wrap">
               {mission.description}
             </p>
           </section>
         ) : null}
 
-        <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-4">
-          <h2 className="text-sm font-semibold text-white mb-3">Postuler à cette mission</h2>
+        <section className="bg-white/70 border border-white/50 rounded-xl p-5 mt-4">
+          <h2 className="text-sm font-semibold text-black mb-3">Postuler à cette mission</h2>
 
           {applicationStatus === 'already_applied' ? (
             <div className="text-center py-4">
               <p className="text-green-400 font-medium">✓ Tu as déjà postulé à cette mission</p>
-              <p className="text-white/40 text-sm mt-1">Ta candidature est en cours de traitement.</p>
+              <p className="text-black/45 text-sm mt-1">Ta candidature est en cours de traitement.</p>
             </div>
           ) : null}
 
           {applicationStatus === 'submitted' ? (
             <div className="text-center py-4">
               <p className="text-green-400 font-medium">✓ Candidature envoyée !</p>
-              <p className="text-white/40 text-sm mt-1">Le studio a été notifié.</p>
+              <p className="text-black/45 text-sm mt-1">Le studio a été notifié.</p>
               <button
                 type="button"
                 onClick={() => navigate('/pro/dashboard')}
-                className="text-violet-400 underline text-sm mt-3 block mx-auto"
+                className="text-orange-600 underline text-sm mt-3 block mx-auto"
               >
                 Voir mes candidatures
               </button>
@@ -264,14 +264,14 @@ export default function MissionDetail() {
           ) : null}
 
           {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status !== 'open' ? (
-            <p className="text-white/40 text-sm text-center py-4">
+            <p className="text-black/45 text-sm text-center py-4">
               Cette mission n&apos;accepte plus de candidatures.
             </p>
           ) : null}
 
           {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status === 'open' ? (
             <div>
-              <label className="text-sm text-white/80 block mb-2" htmlFor="cover-letter">
+              <label className="text-sm text-black/80 block mb-2" htmlFor="cover-letter">
                 Ton message au studio *
               </label>
               <textarea
@@ -281,11 +281,11 @@ export default function MissionDetail() {
                 value={coverLetter}
                 onChange={(event) => setCoverLetter(event.target.value)}
                 placeholder="Présente-toi et explique pourquoi tu es le bon profil..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                className="w-full glass-input rounded-xl px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400"
               />
-              <p className="text-xs text-white/30 text-right mt-1">{coverLetter.length}/500</p>
+              <p className="text-xs text-black/40 text-right mt-1">{coverLetter.length}/500</p>
 
-              <label className="text-sm text-white/80 block mt-4 mb-2" htmlFor="proposed-rate">
+              <label className="text-sm text-black/80 block mt-4 mb-2" htmlFor="proposed-rate">
                 Ton tarif journalier (€)
               </label>
               <input
@@ -294,7 +294,7 @@ export default function MissionDetail() {
                 value={proposedRate}
                 onChange={(event) => setProposedRate(event.target.value)}
                 placeholder="ex: 300"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
+                className="w-full glass-input rounded-xl px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400"
               />
 
               {formError ? <p className="text-red-400 text-xs mt-2">{formError}</p> : null}
@@ -303,6 +303,7 @@ export default function MissionDetail() {
                 <GradientButton
                   onClick={handleApply}
                   disabled={applicationStatus === 'submitting'}
+                  className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
                 >
                   {applicationStatus === 'submitting' ? 'Envoi...' : 'Envoyer ma candidature'}
                 </GradientButton>
