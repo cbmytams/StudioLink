@@ -80,7 +80,9 @@ export function ProPublicProfile() {
     proProfile?.bio ||
     proProfile?.city ||
     proProfile?.daily_rate ||
-    (proProfile?.skills?.length ?? 0) > 0,
+    (proProfile?.skills?.length ?? 0) > 0 ||
+    portfolioItems.length > 0 ||
+    reviews.length > 0,
   );
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
