@@ -86,12 +86,16 @@ export default function ChatPage() {
     );
     if (!hasUnreadFromOther) return;
 
-    void supabase
-      .from('messages')
-      .update({ read: true })
-      .eq('conversation_id', selectedConversationId)
-      .neq('sender_id', userId)
-      .eq('read', false);
+    const markRead = async () => {
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', selectedConversationId)
+        .neq('sender_id', userId)
+        .eq('read', false);
+    };
+
+    void markRead();
   }, [messages, selectedConversationId, userId]);
 
   useEffect(() => {
