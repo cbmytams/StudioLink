@@ -46,7 +46,8 @@ function budgetText(mission: Mission): string {
 }
 
 export default function MissionDetail() {
-  const { missionId } = useParams<{ missionId: string }>();
+  const { missionId, id } = useParams<{ missionId?: string; id?: string }>();
+  const targetMissionId = missionId ?? id ?? '';
   const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id ?? '';
@@ -63,7 +64,7 @@ export default function MissionDetail() {
     let active = true;
 
     const fetchMission = async () => {
-      if (!missionId) {
+      if (!targetMissionId) {
         if (!active) return;
         setNotFound(true);
         setLoading(false);
@@ -83,7 +84,7 @@ export default function MissionDetail() {
             created_at, studio_id,
             profiles:studio_id (company_name)
           `)
-          .eq('id', missionId)
+          .eq('id', targetMissionId)
           .single();
 
         if (!active) return;
@@ -100,7 +101,7 @@ export default function MissionDetail() {
           const { data: existing } = await supabase
             .from('applications')
             .select('id')
-            .eq('mission_id', missionId)
+            .eq('mission_id', targetMissionId)
             .eq('pro_id', userId)
             .maybeSingle();
 
@@ -122,10 +123,10 @@ export default function MissionDetail() {
     return () => {
       active = false;
     };
-  }, [missionId, userId]);
+  }, [targetMissionId, userId]);
 
   const handleApply = async () => {
-    if (!missionId || !userId || applicationStatus === 'submitting') return;
+    if (!targetMissionId || !userId || applicationStatus === 'submitting') return;
 
     if (coverLetter.trim().length < 20) {
       setFormError('Message trop court (minimum 20 caractères)');
@@ -142,7 +143,7 @@ export default function MissionDetail() {
     const { error } = await supabase
       .from('applications')
       .insert({
-        mission_id: missionId,
+        mission_id: targetMissionId,
         pro_id: userId,
         cover_letter: coverLetter.trim(),
         proposed_rate: proposedRate ? Number(proposedRate) : null,
