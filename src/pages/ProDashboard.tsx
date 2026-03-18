@@ -362,12 +362,14 @@ export default function ProDashboard() {
                   >
                     Voir la mission →
                   </button>
-                  {(application.status === 'accepted' && application.missions?.status === 'completed') ? (
+                  {(application.status === 'accepted'
+                    && application.missions?.status === 'completed'
+                    && application.missions?.studio_id) ? (
                     <button
                       type="button"
                       onClick={() => setReviewTarget({
                         missionId: application.mission_id,
-                        revieweeId: application.missions?.studio_id,
+                        revieweeId: application.missions.studio_id,
                       })}
                       className="text-orange-600 text-xs hover:underline mt-2 block"
                     >
