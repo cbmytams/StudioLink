@@ -43,3 +43,21 @@ export async function validateInvitationCode(code: string): Promise<InvitationVa
     message: row?.message ?? 'Code invalide ou expiré',
   };
 }
+
+export async function consumeInvitationCode(code: string, userId: string): Promise<void> {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) {
+    throw new Error("Code d'invitation requis");
+  }
+  if (!supabase) {
+    return;
+  }
+
+  const { error } = await supabase.rpc('consume_invitation_code', {
+    p_code: normalized,
+    p_user_id: userId,
+  });
+  if (error) {
+    throw error;
+  }
+}
