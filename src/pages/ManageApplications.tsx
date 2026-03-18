@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { ReviewModal } from '@/components/ReviewModal';
 
 type ProProfile = {
   full_name: string | null
@@ -24,7 +25,7 @@ type Application = {
 type Mission = {
   id: string
   title: string
-  status: string
+  status: 'open' | 'in_progress' | 'completed' | 'closed'
   deadline: string | null
   budget_min: number | null
   budget_max: number | null
@@ -51,6 +52,8 @@ type ApplicationRow = {
 
 function normalizeMissionStatus(status: string | null): string {
   if (status === 'open' || status === 'published' || status === 'selecting') return 'open';
+  if (status === 'in_progress' || status === 'filled') return 'in_progress';
+  if (status === 'completed' || status === 'rated') return 'completed';
   if (status === 'closed' || status === 'filled' || status === 'cancelled' || status === 'expired') {
     return 'closed';
   }
@@ -64,6 +67,8 @@ function normalizeApplicationStatus(status: string | null): Application['status'
 }
 
 function missionStatusClass(status: string): string {
+  if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
+  if (status === 'in_progress') return 'bg-blue-100 text-blue-700 border border-blue-200';
   return status === 'closed'
     ? 'bg-red-100 text-red-700 border border-red-200'
     : 'bg-green-100 text-green-700 border border-green-200';
@@ -85,7 +90,10 @@ export default function ManageApplications() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     let active = true;
@@ -156,6 +164,7 @@ export default function ManageApplications() {
           profiles: application.profiles,
         }));
         setApplications(mappedApplications);
+        setCurrentPage(1);
       } catch (fetchError) {
         if (!active) return;
         setError(fetchError instanceof Error ? fetchError.message : 'Erreur de chargement');
@@ -219,21 +228,20 @@ export default function ManageApplications() {
 
       const missionUpdate = await supabase
         .from('missions')
-        .update({ status: 'filled' })
+        .update({ status: 'in_progress' as never })
         .eq('id', targetMissionId);
       if (missionUpdate.error) {
         const fallbackMissionUpdate = await supabase
           .from('missions')
-          .update({ status: 'in_progress' as never })
+          .update({ status: 'filled' as never })
           .eq('id', targetMissionId);
         if (fallbackMissionUpdate.error) {
           const lastFallbackMissionUpdate = await supabase
-            .from('missions')
-            .update({ status: 'closed' as never })
+            .from('missions');
+          const lastFallbackMissionUpdate = await lastFallbackMissionUpdate
+            .update({ status: 'published' as never })
             .eq('id', targetMissionId);
-          if (lastFallbackMissionUpdate.error) {
-            throw lastFallbackMissionUpdate.error;
-          }
+          if (lastFallbackMissionUpdate.error) throw lastFallbackMissionUpdate.error;
         }
       }
 
@@ -246,13 +254,45 @@ export default function ManageApplications() {
               : item,
         ),
       );
-      setMission((prev) => (prev ? { ...prev, status: 'closed' } : prev));
+      setMission((prev) => (prev ? { ...prev, status: 'in_progress' } : prev));
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature");
     } finally {
       setActionLoading(null);
     }
   };
+
+  const handleMarkCompleted = async () => {
+    if (!targetMissionId) return;
+    setActionLoading(`mission:${targetMissionId}`);
+    setError(null);
+    try {
+      const update = await supabase
+        .from('missions')
+        .update({ status: 'completed' as never })
+        .eq('id', targetMissionId);
+
+      if (update.error) {
+        const fallback = await supabase
+          .from('missions')
+          .update({ status: 'rated' as never })
+          .eq('id', targetMissionId);
+        if (fallback.error) throw fallback.error;
+      }
+
+      setMission((prev) => (prev ? { ...prev, status: 'completed' } : prev));
+    } catch (completeError) {
+      setError(
+        completeError instanceof Error ? completeError.message : 'Impossible de terminer la mission.',
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(applications.length / PAGE_SIZE));
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const paginatedApplications = applications.slice(start, start + PAGE_SIZE);
 
   const handleReject = async (applicationId: string) => {
     setActionLoading(applicationId);
@@ -299,12 +339,28 @@ export default function ManageApplications() {
           <div className="mb-2 flex items-center gap-3">
             <h1 className="app-title text-2xl">{mission?.title ?? 'Candidatures'}</h1>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionStatusClass(mission?.status ?? 'open')}`}>
-              {(mission?.status ?? 'open') === 'closed' ? 'Clôturée' : 'Ouverte'}
+              {(mission?.status ?? 'open') === 'closed'
+                ? 'Clôturée'
+                : (mission?.status ?? 'open') === 'in_progress'
+                  ? 'En cours'
+                  : (mission?.status ?? 'open') === 'completed'
+                    ? 'Terminée'
+                    : 'Ouverte'}
             </span>
           </div>
           <p className="app-subtitle mt-0">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
+          {mission?.status === 'in_progress' ? (
+            <button
+              type="button"
+              onClick={() => void handleMarkCompleted()}
+              disabled={actionLoading === `mission:${targetMissionId}`}
+              className="mt-3 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-500 disabled:opacity-60"
+            >
+              Marquer comme terminée
+            </button>
+          ) : null}
         </header>
 
         {error ? <p className="text-red-400 text-center">{error}</p> : null}
@@ -314,7 +370,7 @@ export default function ManageApplications() {
         ) : null}
 
         <div className="app-list">
-          {applications.map((application) => {
+          {paginatedApplications.map((application) => {
             const displayName =
               application.profiles?.full_name ??
               application.profiles?.username ??
@@ -408,11 +464,51 @@ export default function ManageApplications() {
                     Rejeter ✗
                   </button>
                 </div>
+                {mission?.status === 'completed' && application.status === 'accepted' && application.pro_id ? (
+                  <button
+                    type="button"
+                    onClick={() => setReviewTarget({ missionId: targetMissionId, revieweeId: application.pro_id })}
+                    className="mt-3 text-sm font-medium text-orange-600 hover:underline"
+                  >
+                    Laisser un avis
+                  </button>
+                ) : null}
               </div>
             );
           })}
         </div>
+        {applications.length > PAGE_SIZE ? (
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
+            >
+              ← Précédent
+            </button>
+            <p className="text-xs app-muted">
+              Page {currentPage} / {totalPages}
+            </p>
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
+            >
+              Suivant →
+            </button>
+          </div>
+        ) : null}
       </div>
+      {reviewTarget ? (
+        <ReviewModal
+          isOpen={Boolean(reviewTarget)}
+          missionId={reviewTarget.missionId}
+          revieweeId={reviewTarget.revieweeId}
+          onClose={() => setReviewTarget(null)}
+        />
+      ) : null}
     </div>
   );
 }
