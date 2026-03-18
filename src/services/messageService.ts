@@ -21,6 +21,22 @@ export const messageService = {
     return (data ?? []) as ConversationRecord[];
   },
 
+  async getUnreadConversationCount(userId: string): Promise<number> {
+    const client = ensureClient();
+    const conversations = await this.getConversations(userId);
+    if (conversations.length === 0) return 0;
+    const conversationIds = conversations.map((conversation) => conversation.id);
+    const { data, error } = await client
+      .from('messages')
+      .select('conversation_id,sender_id,read')
+      .in('conversation_id', conversationIds)
+      .eq('read', false)
+      .neq('sender_id', userId);
+    if (error) throw error;
+    const ids = new Set((data ?? []).map((row) => row.conversation_id as string));
+    return ids.size;
+  },
+
   async getMessages(conversationId: string): Promise<MessageRecord[]> {
     const client = ensureClient();
     const { data, error } = await client
