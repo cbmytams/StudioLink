@@ -134,7 +134,7 @@ export default function ChatPage() {
   const activeConversation = conversations.find((conversation) => conversation.id === selectedConversationId);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f4ece4]">
+    <div className="app-shell flex flex-col">
       <header className="sticky top-0 z-40 border-b border-black/5 bg-[#f4ece4]/85 px-4 py-3 backdrop-blur-md">
         <div className="mb-3 flex items-center justify-between">
           <button
