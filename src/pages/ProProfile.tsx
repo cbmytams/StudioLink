@@ -156,12 +156,12 @@ export default function ProProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container-compact">
         <button
           type="button"
           onClick={() => navigate('/pro/dashboard')}
-          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
+          className="mb-6 text-sm app-muted transition-colors hover:text-black"
         >
           ← Dashboard
         </button>
@@ -215,7 +215,7 @@ export default function ProProfile() {
               <Button
                 disabled={saving}
                 onClick={() => void handleSave()}
-                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+                className="bg-orange-500 text-white hover:bg-orange-600"
               >
                 {saving ? (
                   <>
@@ -242,28 +242,28 @@ export default function ProProfile() {
             hasAnyInfo ? (
               <>
                 {bio.trim() ? (
-                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <section className="app-card-soft p-4">
                     <h2 className="mb-2 text-sm font-semibold text-black/80">Bio</h2>
                     <p className="text-sm text-black/70">{bio}</p>
                   </section>
                 ) : null}
 
                 {city.trim() ? (
-                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <section className="app-card-soft p-4">
                     <h2 className="mb-2 text-sm font-semibold text-black/80">Ville</h2>
                     <p className="text-sm text-black/70">{city}</p>
                   </section>
                 ) : null}
 
                 {dailyRate.trim() ? (
-                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <section className="app-card-soft p-4">
                     <h2 className="mb-2 text-sm font-semibold text-black/80">Tarif journalier</h2>
                     <p className="text-sm text-black/70">{dailyRate}€/j</p>
                   </section>
                 ) : null}
 
                 {skills.length > 0 ? (
-                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <section className="app-card-soft p-4">
                     <h2 className="mb-2 text-sm font-semibold text-black/80">Compétences</h2>
                     <div className="flex flex-wrap gap-2">
                       {skills.map((skill) => (
@@ -284,7 +284,7 @@ export default function ProProfile() {
               </p>
             )
           ) : (
-            <section className="bg-white/70 border border-white/50 rounded-xl p-4 space-y-4">
+            <section className="app-card-soft p-4 space-y-4">
               <div>
                 <input
                   value={fullName}
