@@ -66,7 +66,7 @@ export function ProPublicProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center">
+      <div className="app-shell flex items-center justify-center">
         <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
       </div>
     );
@@ -74,8 +74,8 @@ export function ProPublicProfile() {
 
   if (error && !proProfile && !notFound) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="app-shell">
+        <div className="app-container-compact">
           <div className="text-center py-16">
             <p className="text-4xl mb-4">⚠️</p>
             <p className="text-red-500">{error}</p>
@@ -94,11 +94,11 @@ export function ProPublicProfile() {
 
   if (notFound || !proProfile) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="app-shell">
+        <div className="app-container-compact">
           <div className="text-center py-16">
             <p className="text-4xl mb-4">👤</p>
-            <p className="text-black/45">Profil introuvable.</p>
+            <p className="app-muted">Profil introuvable.</p>
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -113,12 +113,12 @@ export function ProPublicProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container-compact">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="text-black/60 hover:text-black text-sm mb-6 flex items-center gap-1 transition-colors"
+          className="text-sm app-muted hover:text-black mb-6 flex items-center gap-1 transition-colors"
         >
           ← Retour
         </button>
@@ -139,10 +139,10 @@ export function ProPublicProfile() {
                 {proProfile.full_name ?? proProfile.username ?? 'Anonyme'}
               </h1>
               {proProfile.username ? (
-                <p className="text-black/45 text-sm">@{proProfile.username}</p>
+                <p className="app-muted text-sm">@{proProfile.username}</p>
               ) : null}
               {proProfile.city ? (
-                <p className="text-black/55 text-sm mt-1">{proProfile.city}</p>
+                <p className="text-sm app-muted mt-1">{proProfile.city}</p>
               ) : null}
             </div>
           </div>
@@ -151,22 +151,22 @@ export function ProPublicProfile() {
         {hasAnyInfo ? (
           <>
             {proProfile.bio ? (
-              <section className="bg-white/70 border border-white/50 rounded-xl p-4 mt-4">
-                <p className="text-xs text-black/45 uppercase tracking-wider mb-1">À propos</p>
+              <section className="app-card-soft p-4 mt-4">
+                <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">À propos</p>
                 <p className="text-sm text-black/70">{proProfile.bio}</p>
               </section>
             ) : null}
 
             {proProfile.daily_rate ? (
-              <section className="bg-white/70 border border-white/50 rounded-xl p-4 mt-4">
-                <p className="text-xs text-black/45 uppercase tracking-wider mb-1">Tarif journalier</p>
+              <section className="app-card-soft p-4 mt-4">
+                <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">Tarif journalier</p>
                 <p className="text-orange-700 font-medium">{proProfile.daily_rate}€/j</p>
               </section>
             ) : null}
 
             {proProfile.skills?.length ? (
-              <section className="bg-white/70 border border-white/50 rounded-xl p-4 mt-4">
-                <p className="text-xs text-black/45 uppercase tracking-wider mb-2">Compétences</p>
+              <section className="app-card-soft p-4 mt-4">
+                <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Compétences</p>
                 <div className="flex flex-wrap gap-2">
                   {proProfile.skills.map((skill) => (
                     <span
@@ -181,7 +181,7 @@ export function ProPublicProfile() {
             ) : null}
           </>
         ) : (
-          <p className="text-black/45 text-sm mt-6">Ce profil est incomplet.</p>
+          <p className="app-muted text-sm mt-6">Ce profil est incomplet.</p>
         )}
       </div>
     </div>
