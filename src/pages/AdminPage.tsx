@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 type Invitation = {
   id: string
@@ -43,6 +44,7 @@ function mapRowToInvitation(row: InvitationRow): Invitation {
 export default function AdminPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const user = session?.user ?? null;
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -163,14 +165,19 @@ export default function AdminPage() {
       }
 
       if (insertError || !data) {
-        setError(insertError?.message ?? "Impossible de créer l'invitation");
+        const message = insertError?.message ?? "Impossible de créer l'invitation";
+        setError(message);
+        showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
         return;
       }
 
       setInvitations((prev) => [mapRowToInvitation(data), ...prev]);
       setNewEmail('');
+      showToast({ title: 'Invitation générée', variant: 'default' });
     } catch (createErr) {
-      setError(createErr instanceof Error ? createErr.message : "Impossible de créer l'invitation");
+      const message = createErr instanceof Error ? createErr.message : "Impossible de créer l'invitation";
+      setError(message);
+      showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
     } finally {
       setCreating(false);
     }
@@ -183,8 +190,11 @@ export default function AdminPage() {
       await navigator.clipboard.writeText(url);
       setCopySuccess(code);
       window.setTimeout(() => setCopySuccess(null), 2000);
+      showToast({ title: 'Lien copié', variant: 'default' });
     } catch (copyErr) {
-      setError(copyErr instanceof Error ? copyErr.message : 'Impossible de copier le lien');
+      const message = copyErr instanceof Error ? copyErr.message : 'Impossible de copier le lien';
+      setError(message);
+      showToast({ title: 'Copie impossible', description: message, variant: 'destructive' });
     }
   };
 
@@ -198,12 +208,16 @@ export default function AdminPage() {
 
       if (deleteError) {
         setError(deleteError.message);
+        showToast({ title: 'Suppression impossible', description: deleteError.message, variant: 'destructive' });
         return;
       }
 
       setInvitations((prev) => prev.filter((invitation) => invitation.id !== id));
+      showToast({ title: 'Invitation supprimée', variant: 'default' });
     } catch (deleteErr) {
-      setError(deleteErr instanceof Error ? deleteErr.message : 'Impossible de supprimer cette invitation');
+      const message = deleteErr instanceof Error ? deleteErr.message : 'Impossible de supprimer cette invitation';
+      setError(message);
+      showToast({ title: 'Suppression impossible', description: message, variant: 'destructive' });
     }
   };
 
