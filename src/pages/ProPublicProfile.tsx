@@ -72,6 +72,26 @@ export function ProPublicProfile() {
     );
   }
 
+  if (error && !proProfile && !notFound) {
+    return (
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="text-center py-16">
+            <p className="text-4xl mb-4">⚠️</p>
+            <p className="text-red-500">{error}</p>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="text-orange-600 underline text-sm mt-4 block mx-auto"
+            >
+              Retour
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (notFound || !proProfile) {
     return (
       <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
