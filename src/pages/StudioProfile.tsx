@@ -145,7 +145,7 @@ export default function StudioProfile() {
           ← Dashboard
         </button>
 
-        <header className="mb-5 flex items-start justify-between gap-3">
+        <header className="app-header items-start mb-5">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-600 text-lg font-semibold">
               {companyName.trim().charAt(0).toUpperCase() || '?'}
