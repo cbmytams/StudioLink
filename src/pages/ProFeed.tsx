@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { GradientButton } from '@/components/ui/GradientButton';
 import Navbar from '@/components/layout/Navbar';
 
 const CATEGORIES = [
@@ -98,12 +98,6 @@ export default function ProFeed() {
 
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [filterType, setFilterType] = useState<string>('');
-
-  const [applyingTo, setApplyingTo] = useState<Mission | null>(null);
-  const [coverLetter, setCoverLetter] = useState('');
-  const [proposedRate, setProposedRate] = useState('');
-  const [applyLoading, setApplyLoading] = useState(false);
-  const [applyError, setApplyError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -202,53 +196,6 @@ export default function ProFeed() {
     [filterCategory, filterType, missions],
   );
 
-  const openApplyModal = (mission: Mission) => {
-    setApplyingTo(mission);
-    setApplyError(null);
-    setCoverLetter('');
-    setProposedRate('');
-  };
-
-  const closeApplyModal = () => {
-    setApplyingTo(null);
-    setApplyError(null);
-    setCoverLetter('');
-    setProposedRate('');
-  };
-
-  const handleApply = async () => {
-    const userId = session?.user?.id;
-    if (!applyingTo || !userId) return;
-
-    setApplyLoading(true);
-    setApplyError(null);
-
-    try {
-      const { error: insertError } = await supabase
-        .from('applications')
-        .insert({
-          mission_id: applyingTo.id,
-          pro_id: userId,
-          status: 'pending',
-          cover_letter: coverLetter.trim() || null,
-          proposed_rate: proposedRate ? Number(proposedRate) : null,
-          created_at: new Date().toISOString(),
-        } as never);
-
-      if (insertError) {
-        setApplyError(insertError.message);
-        return;
-      }
-
-      setMyApplicationIds((prev) => (prev.includes(applyingTo.id) ? prev : [...prev, applyingTo.id]));
-      closeApplyModal();
-    } catch (submitError) {
-      setApplyError(submitError instanceof Error ? submitError.message : "Impossible d'envoyer la candidature");
-    } finally {
-      setApplyLoading(false);
-    }
-  };
-
   const profileName = (profile as { full_name?: string | null; username?: string | null; display_name?: string | null } | null);
   const greetingName =
     profileName?.full_name ??
@@ -326,7 +273,7 @@ export default function ProFeed() {
               <article
                 key={mission.id}
                 className="bg-white/5 border border-white/10 rounded-xl p-5"
-                onClick={() => navigate(`/pro/missions/${mission.id}`)}
+                onClick={() => navigate(`/mission/${mission.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="font-semibold text-lg">{mission.title}</h2>
@@ -369,10 +316,9 @@ export default function ProFeed() {
                     <span className="text-green-400 text-sm">✓ Candidature envoyée</span>
                   ) : (
                     <GradientButton
-                      className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
                       onClick={(event) => {
                         event.stopPropagation();
-                        openApplyModal(mission);
+                        navigate(`/mission/${mission.id}`);
                       }}
                     >
                       Postuler →
@@ -384,57 +330,6 @@ export default function ProFeed() {
           })}
         </div>
       </div>
-
-      {applyingTo ? (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm px-4">
-          <div className="mx-auto mt-24 w-full max-w-lg rounded-2xl border border-white/10 bg-[#1a1a2e] p-6">
-            <h3 className="text-xl font-semibold">{applyingTo.title}</h3>
-            <p className="mt-1 text-sm text-white/60">Envoie ta candidature au studio</p>
-
-            <textarea
-              rows={4}
-              value={coverLetter}
-              onChange={(event) => setCoverLetter(event.target.value)}
-              placeholder="Décris pourquoi tu es le bon profil..."
-              className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
-            />
-
-            <input
-              type="number"
-              value={proposedRate}
-              onChange={(event) => setProposedRate(event.target.value)}
-              placeholder="Ton tarif journalier (€)"
-              className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
-            />
-
-            {applyError ? <p className="text-red-400 text-sm mt-3">{applyError}</p> : null}
-
-            <div className="mt-5 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={closeApplyModal}
-                className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10"
-              >
-                Annuler
-              </button>
-              <GradientButton
-                disabled={applyLoading}
-                onClick={() => void handleApply()}
-                className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
-              >
-                {applyLoading ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block mr-2" />
-                    Envoi...
-                  </>
-                ) : (
-                  'Envoyer ma candidature'
-                )}
-              </GradientButton>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
