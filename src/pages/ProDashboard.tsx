@@ -244,27 +244,27 @@ export default function ProDashboard() {
   return (
     <div className="app-shell">
       <div className="app-container">
-        <header className="mb-5">
-          <h1 className="text-3xl font-semibold tracking-tight">Bonjour, {greetingName} 👋</h1>
-          <p className="text-sm app-muted">{applications.length} candidature(s) envoyée(s)</p>
+        <header className="app-header block mb-5">
+          <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
+          <p className="app-subtitle">{applications.length} candidature(s) envoyée(s)</p>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
 
-        <section className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div className="app-card-soft p-4">
+        <section className="app-stats-grid mb-5">
+          <div className="app-stat-card">
             <p className="text-2xl font-bold">{stats.totalApplications}</p>
             <p className="text-sm app-muted">Candidatures envoyées</p>
           </div>
-          <div className="app-card-soft p-4">
+          <div className="app-stat-card">
             <p className="text-2xl font-bold">{stats.pendingApplications}</p>
             <p className="text-sm app-muted">En attente</p>
           </div>
-          <div className="app-card-soft p-4">
+          <div className="app-stat-card">
             <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
             <p className="text-sm app-muted">Acceptées</p>
           </div>
-          <div className="app-card-soft p-4">
+          <div className="app-stat-card">
             <p className="text-2xl font-bold">{stats.bookingsCount}</p>
             <p className="text-sm app-muted">Missions bookées</p>
           </div>
@@ -317,7 +317,7 @@ export default function ProDashboard() {
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="app-list">
               {applications.map((application) => (
                 <article key={application.id} className="app-card-soft p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -336,10 +336,10 @@ export default function ProDashboard() {
                   </p>
 
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
+                    <span className="app-chip">
                       {application.missions?.category ?? 'Catégorie inconnue'}
                     </span>
-                    <span className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
+                    <span className="app-chip">
                       {application.missions?.mission_type ?? 'Type inconnu'}
                     </span>
                   </div>
@@ -358,7 +358,7 @@ export default function ProDashboard() {
         ) : bookings.length === 0 ? (
           <p className="text-center app-muted py-8">Aucun booking confirmé pour l&apos;instant.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="app-list">
             {bookings.map((booking) => (
               <article key={booking.id} className="app-card-soft p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
