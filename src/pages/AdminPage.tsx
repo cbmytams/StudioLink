@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 type Invitation = {
   id: string
@@ -210,23 +210,23 @@ export default function AdminPage() {
 
   if (authLoading || !isAuthorized) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+    <div className="min-h-screen bg-[#0D0D0F] text-white">
       <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
         <header className="mb-6">
           <h1 className="text-2xl font-semibold">Panel Admin</h1>
-          <p className="text-sm text-black/55 mt-1">{summary}</p>
+          <p className="text-sm text-white/60 mt-1">{summary}</p>
         </header>
 
-        <section className="bg-white/70 border border-white/50 rounded-xl p-6 mb-6">
+        <section className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
           <div className="mb-4">
-            <p className="text-sm text-black/65 mb-2">Type d&apos;invitation</p>
+            <p className="text-sm text-white/70 mb-2">Type d&apos;invitation</p>
             <div className="grid grid-cols-2 gap-2 max-w-xs">
               {(['studio', 'pro'] as const).map((type) => (
                 <button
@@ -236,7 +236,7 @@ export default function AdminPage() {
                   className={`rounded-xl px-3 py-2 text-sm transition-colors ${
                     newType === type
                       ? 'bg-orange-500 text-white'
-                      : 'bg-white/80 text-black/75 hover:bg-white'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
                   }`}
                 >
                   {type === 'studio' ? 'Studio' : 'Pro'}
@@ -250,11 +250,11 @@ export default function AdminPage() {
               value={newEmail}
               onChange={(event) => setNewEmail(event.target.value)}
               placeholder="Email destinataire (optionnel)"
-              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/45 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
             />
           </div>
 
-          <GradientButton
+          <Button
             onClick={() => void handleCreate()}
             disabled={creating}
             className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
@@ -267,20 +267,20 @@ export default function AdminPage() {
             ) : (
               'Générer un lien'
             )}
-          </GradientButton>
+          </Button>
 
           {error ? <p className="text-red-400 text-sm mt-3">{error}</p> : null}
         </section>
 
-        <section className="bg-white/70 border border-white/50 rounded-xl overflow-hidden">
+        <section className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70 inline-block" />
+              <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/80 inline-block" />
             </div>
           ) : invitations.length === 0 ? (
-            <p className="p-8 text-center text-black/45">Aucune invitation pour le moment.</p>
+            <p className="p-8 text-center text-white/45">Aucune invitation pour le moment.</p>
           ) : (
-            <div className="divide-y divide-black/5">
+            <div className="divide-y divide-white/10">
               {invitations.map((invitation) => {
                 const isExpired = Boolean(
                   invitation.expires_at && new Date(invitation.expires_at) < new Date(),
@@ -288,7 +288,7 @@ export default function AdminPage() {
                 const statusNode = invitation.used
                   ? <span className="text-red-400">Utilisée</span>
                   : isExpired
-                    ? <span className="text-black/35">Expirée</span>
+                    ? <span className="text-white/35">Expirée</span>
                     : <span className="text-green-400">Active</span>;
 
                 return (
@@ -302,9 +302,9 @@ export default function AdminPage() {
                     </span>
 
                     <p className="font-mono text-sm">{invitation.code}</p>
-                    <p className="text-black/55 text-sm">{invitation.email || '-'}</p>
+                    <p className="text-white/55 text-sm">{invitation.email || '-'}</p>
                     <div className="text-sm">{statusNode}</div>
-                    <p className="text-sm text-black/55">
+                    <p className="text-sm text-white/55">
                       {invitation.expires_at
                         ? new Date(invitation.expires_at).toLocaleDateString('fr-FR')
                         : 'Sans limite'}
