@@ -180,7 +180,7 @@ export default function ManageApplications() {
     try {
       await supabase
         .from('applications')
-        .update({ status: 'accepted' })
+        .update({ status: 'accepted' } as never)
         .eq('id', application.id);
 
       await supabase
@@ -202,7 +202,7 @@ export default function ManageApplications() {
 
       await supabase
         .from('missions')
-        .update({ status: 'closed' })
+        .update({ status: 'closed' } as never)
         .eq('id', targetMissionId);
 
       setApplications((prev) =>
