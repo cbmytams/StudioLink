@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useReviews } from '@/hooks/useReviews';
+import { Helmet } from 'react-helmet-async';
 
 type ProProfile = {
   id: string
@@ -138,6 +139,18 @@ export function ProPublicProfile() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>{`${proProfile.full_name ?? proProfile.username ?? 'Profil Pro'} — StudioLink`}</title>
+        <meta
+          name="description"
+          content={proProfile.bio ? proProfile.bio.slice(0, 160) : 'Profil public professionnel sur StudioLink.'}
+        />
+        <meta property="og:title" content={`${proProfile.full_name ?? proProfile.username ?? 'Profil Pro'} — StudioLink`} />
+        <meta
+          property="og:description"
+          content={proProfile.bio ? proProfile.bio.slice(0, 160) : 'Profil public professionnel sur StudioLink.'}
+        />
+      </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
