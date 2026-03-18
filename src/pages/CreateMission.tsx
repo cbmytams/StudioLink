@@ -149,7 +149,7 @@ export default function CreateMission() {
         budget_max: budgetMax ? Number(budgetMax) : null,
         deadline: deadline || null,
         required_skills: requiredSkills,
-        status: 'open',
+        status: 'published',
         created_at: new Date().toISOString(),
       };
 
