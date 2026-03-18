@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
-import Navbar from '@/components/layout/Navbar';
 
 type MissionRef = {
   id: string
@@ -64,15 +63,15 @@ function normalizeApplicationStatus(status: string | null): Application['status'
 }
 
 function statusClass(status: Application['status']): string {
-  if (status === 'accepted') return 'bg-green-500/20 text-green-400';
-  if (status === 'rejected') return 'bg-red-500/20 text-red-400';
-  return 'bg-yellow-500/20 text-yellow-400';
+  if (status === 'accepted') return 'bg-green-100 text-green-700';
+  if (status === 'rejected') return 'bg-red-100 text-red-700';
+  return 'bg-yellow-100 text-yellow-700';
 }
 
 function bookingStatusClass(status: string): string {
   return status === 'confirmed'
-    ? 'bg-green-500/20 text-green-400'
-    : 'bg-white/15 text-white/70';
+    ? 'bg-green-100 text-green-700'
+    : 'bg-stone-100 text-stone-600';
 }
 
 function budgetText(mission: MissionRef | null): string {
@@ -234,62 +233,60 @@ export default function ProDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <Navbar />
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 pt-4 pb-8">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 pb-24">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
         <header className="mb-5">
           <h1 className="text-2xl font-semibold">Bonjour, {greetingName} 👋</h1>
-          <p className="text-sm text-white/60">{applications.length} candidature(s) envoyée(s)</p>
+          <p className="text-sm text-black/55">{applications.length} candidature(s) envoyée(s)</p>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
 
         <section className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
             <p className="text-2xl font-bold">{stats.totalApplications}</p>
-            <p className="text-sm text-white/60">Candidatures envoyées</p>
+            <p className="text-sm text-black/55">Candidatures envoyées</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
             <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-            <p className="text-sm text-white/60">En attente</p>
+            <p className="text-sm text-black/55">En attente</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
             <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
-            <p className="text-sm text-white/60">Acceptées</p>
+            <p className="text-sm text-black/55">Acceptées</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-xl border border-white/50 bg-white/60 p-4">
             <p className="text-2xl font-bold">{stats.bookingsCount}</p>
-            <p className="text-sm text-white/60">Missions bookées</p>
+            <p className="text-sm text-black/55">Missions bookées</p>
           </div>
         </section>
 
         <div className="mb-5">
           <GradientButton
             onClick={() => navigate('/pro/feed')}
-            className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
           >
             Voir les missions disponibles →
           </GradientButton>
         </div>
 
-        <div className="mb-4 flex gap-5 border-b border-white/10">
+        <div className="mb-4 flex gap-5 border-b border-black/10">
           <button
             type="button"
             onClick={() => setActiveTab('applications')}
             className={`pb-2 text-sm transition-colors ${
               activeTab === 'applications'
-                ? 'border-b-2 border-violet-500 text-white'
-                : 'text-white/40'
+                ? 'border-b-2 border-orange-500 text-black'
+                : 'text-black/45'
             }`}
           >
             Mes candidatures
@@ -299,8 +296,8 @@ export default function ProDashboard() {
             onClick={() => setActiveTab('bookings')}
             className={`pb-2 text-sm transition-colors ${
               activeTab === 'bookings'
-                ? 'border-b-2 border-violet-500 text-white'
-                : 'text-white/40'
+                ? 'border-b-2 border-orange-500 text-black'
+                : 'text-black/45'
             }`}
           >
             Mes bookings
@@ -309,12 +306,12 @@ export default function ProDashboard() {
 
         {activeTab === 'applications' ? (
           applications.length === 0 ? (
-            <div className="text-center text-white/40 py-8">
+            <div className="text-center text-black/45 py-8">
               Tu n&apos;as encore postulé à aucune mission.
               <br />
               <button
                 onClick={() => navigate('/pro/feed')}
-                className="text-violet-400 underline mt-2"
+                className="text-orange-600 underline mt-2"
               >
                 Découvrir les missions
               </button>
@@ -322,7 +319,7 @@ export default function ProDashboard() {
           ) : (
             <div className="space-y-3">
               {applications.map((application) => (
-                <article key={application.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <article key={application.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold">{application.missions?.title ?? 'Mission supprimée'}</p>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(application.status)}`}>
@@ -334,24 +331,24 @@ export default function ProDashboard() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-white/50">
+                  <p className="text-sm text-black/55">
                     {application.missions?.profiles?.company_name ?? 'Studio inconnu'}
                   </p>
 
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/80">
+                    <span className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
                       {application.missions?.category ?? 'Catégorie inconnue'}
                     </span>
-                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/80">
+                    <span className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
                       {application.missions?.mission_type ?? 'Type inconnu'}
                     </span>
                   </div>
 
-                  <p className="mt-2 text-sm text-violet-300">{budgetText(application.missions)}</p>
+                  <p className="mt-2 text-sm text-orange-700">{budgetText(application.missions)}</p>
                   {application.proposed_rate ? (
-                    <p className="mt-1 text-sm text-white/60">Tarif proposé : {application.proposed_rate}€/j</p>
+                    <p className="mt-1 text-sm text-black/60">Tarif proposé : {application.proposed_rate}€/j</p>
                   ) : null}
-                  <p className="mt-1 text-xs text-white/45">
+                  <p className="mt-1 text-xs text-black/45">
                     Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </article>
@@ -359,19 +356,19 @@ export default function ProDashboard() {
             </div>
           )
         ) : bookings.length === 0 ? (
-          <p className="text-center text-white/40 py-8">Aucun booking confirmé pour l&apos;instant.</p>
+          <p className="text-center text-black/45 py-8">Aucun booking confirmé pour l&apos;instant.</p>
         ) : (
           <div className="space-y-3">
             {bookings.map((booking) => (
-              <article key={booking.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <article key={booking.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="font-semibold">{booking.missions?.title ?? 'Mission'}</p>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${bookingStatusClass(booking.status)}`}>
                     {booking.status}
                   </span>
                 </div>
-                <p className="text-sm text-white/50">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
-                <p className="mt-1 text-xs text-white/45">
+                <p className="text-sm text-black/55">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
+                <p className="mt-1 text-xs text-black/45">
                   Booking du {new Date(booking.created_at).toLocaleDateString('fr-FR')}
                 </p>
               </article>
