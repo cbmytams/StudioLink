@@ -351,6 +351,13 @@ export default function ProDashboard() {
                   <p className="mt-1 text-xs app-muted">
                     Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/mission/${application.mission_id}`)}
+                    className="text-orange-500 text-xs hover:underline mt-1 block"
+                  >
+                    Voir la mission →
+                  </button>
                 </article>
               ))}
             </div>
