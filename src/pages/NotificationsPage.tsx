@@ -44,76 +44,76 @@ export default function NotificationsPage() {
   return (
     <main className="app-shell">
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
-      <header className="flex items-center justify-between mb-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
-        <button
-          type="button"
-          onClick={() => markAllRead.mutate()}
-          className="text-sm font-medium text-orange-600 min-h-[44px]"
-        >
-          Tout lire
-        </button>
-      </header>
+        <header className="mb-4 flex items-center justify-between">
+          <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
+          <button
+            type="button"
+            onClick={() => markAllRead.mutate()}
+            className="min-h-[44px] text-sm font-medium text-orange-600"
+          >
+            Tout lire
+          </button>
+        </header>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <NotificationSkeleton key={i} />
-          ))}
-        </div>
-      ) : isError ? (
-        <GlassCard className="p-8 text-center">
-          <p className="text-sm text-red-500">
-            {error instanceof Error ? error.message : 'Impossible de charger les notifications.'}
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
-          >
-            Retour à l’accueil
-          </button>
-        </GlassCard>
-      ) : notifications.length === 0 ? (
-        <GlassCard className="p-8 text-center">
-          <Bell size={20} className="mx-auto text-stone-400 mb-2" />
-          <p className="text-sm text-stone-500">Aucune notification</p>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
-          >
-            Retour à l’accueil
-          </button>
-        </GlassCard>
-      ) : (
-        <div className="space-y-3">
-          {notifications.map((item) => (
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <NotificationSkeleton key={i} />
+            ))}
+          </div>
+        ) : isError ? (
+          <GlassCard className="p-8 text-center">
+            <p className="text-sm text-red-500">
+              {error instanceof Error ? error.message : 'Impossible de charger les notifications.'}
+            </p>
             <button
-              key={item.id}
               type="button"
-              className={`w-full text-left rounded-2xl border p-4 min-h-[44px] transition-colors ${
-                item.read ? 'bg-white border-stone-200' : 'bg-orange-50 border-orange-200'
-              }`}
-              onClick={async () => {
-                if (!item.read) {
-                  await markAsRead.mutateAsync(item.id);
-                }
-                navigate(item.link || '/');
-              }}
+              onClick={() => navigate('/')}
+              className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
             >
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5">{iconForType(item.type)}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-stone-900">{item.title}</p>
-                  {item.body ? <p className="text-xs text-stone-600 mt-1">{item.body}</p> : null}
-                </div>
-                <span className="text-xs text-stone-500 whitespace-nowrap">{getRelativeTime(item.created_at)}</span>
-              </div>
+              Retour à l’accueil
             </button>
-          ))}
-        </div>
-      )}
+          </GlassCard>
+        ) : notifications.length === 0 ? (
+          <GlassCard className="p-8 text-center">
+            <Bell size={20} className="mx-auto mb-2 text-stone-400" />
+            <p className="text-sm text-stone-500">Aucune notification</p>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
+            >
+              Retour à l’accueil
+            </button>
+          </GlassCard>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`min-h-[44px] w-full rounded-2xl border p-4 text-left transition-colors ${
+                  item.read ? 'border-stone-200 bg-white' : 'border-orange-200 bg-orange-50'
+                }`}
+                onClick={async () => {
+                  if (!item.read) {
+                    await markAsRead.mutateAsync(item.id);
+                  }
+                  navigate(item.link || '/');
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">{iconForType(item.type)}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-stone-900">{item.title}</p>
+                    {item.body ? <p className="mt-1 text-xs text-stone-600">{item.body}</p> : null}
+                  </div>
+                  <span className="whitespace-nowrap text-xs text-stone-500">{getRelativeTime(item.created_at)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );
