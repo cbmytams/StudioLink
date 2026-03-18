@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { profileService } from '@/services/profileService';
+import { useToast } from '@/components/ui/Toast';
 
 type EditableProfile = {
   full_name?: string | null
@@ -33,6 +34,7 @@ type PortfolioItem = {
 export default function ProProfile() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const { showToast } = useToast();
 
   const user = session?.user ?? null;
   const profileData = (profile ?? null) as EditableProfile | null;
@@ -132,6 +134,11 @@ export default function ProProfile() {
   const handleSave = async () => {
     if (!user) {
       setError('Session invalide. Reconnecte-toi.');
+      showToast({
+        title: 'Session invalide',
+        description: 'Reconnecte-toi pour sauvegarder ton profil.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -162,16 +169,27 @@ export default function ProProfile() {
 
       if (updateError) {
         setError(updateError.message);
+        showToast({
+          title: 'Sauvegarde impossible',
+          description: updateError.message,
+          variant: 'destructive',
+        });
         return;
       }
 
       setSuccessMessage('Profil mis à jour ✓');
+      showToast({ title: 'Profil mis à jour', variant: 'default' });
       setIsEditing(false);
       setAvatarUrl(uploadedAvatarUrl);
       setAvatarFile(null);
       setAvatarPreview(null);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
+      showToast({
+        title: 'Sauvegarde impossible',
+        description: saveError instanceof Error ? saveError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -181,14 +199,29 @@ export default function ProProfile() {
     if (!user?.id) return;
     if (!portfolioTitle.trim() || !portfolioUrl.trim()) {
       setError('Titre et URL du portfolio requis');
+      showToast({
+        title: 'Validation',
+        description: 'Titre et URL du portfolio requis',
+        variant: 'destructive',
+      });
       return;
     }
     if (!/^https?:\/\//i.test(portfolioUrl.trim())) {
       setError("L'URL du portfolio doit commencer par http:// ou https://");
+      showToast({
+        title: 'Validation',
+        description: "L'URL du portfolio doit commencer par http:// ou https://",
+        variant: 'destructive',
+      });
       return;
     }
     if (portfolioItems.length >= 6) {
       setError('Maximum 6 items portfolio');
+      showToast({
+        title: 'Limite atteinte',
+        description: 'Maximum 6 items portfolio',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -211,12 +244,18 @@ export default function ProProfile() {
       setPortfolioTitle('');
       setPortfolioDescription('');
       setPortfolioUrl('');
+      showToast({ title: 'Élément portfolio ajouté', variant: 'default' });
     } catch (portfolioError) {
       setError(
         portfolioError instanceof Error
           ? portfolioError.message
           : "Impossible d'ajouter cet élément portfolio",
       );
+      showToast({
+        title: 'Ajout impossible',
+        description: portfolioError instanceof Error ? portfolioError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setPortfolioLoading(false);
     }
@@ -230,12 +269,18 @@ export default function ProProfile() {
         .eq('id', itemId);
       if (deleteError) throw deleteError;
       setPortfolioItems((prev) => prev.filter((item) => item.id !== itemId));
+      showToast({ title: 'Élément portfolio supprimé', variant: 'default' });
     } catch (portfolioError) {
       setError(
         portfolioError instanceof Error
           ? portfolioError.message
           : "Impossible de supprimer cet élément portfolio",
       );
+      showToast({
+        title: 'Suppression impossible',
+        description: portfolioError instanceof Error ? portfolioError.message : undefined,
+        variant: 'destructive',
+      });
     }
   };
 
