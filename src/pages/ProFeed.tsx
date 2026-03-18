@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { GradientButton } from '@/components/ui/GradientButton';
-import Navbar from '@/components/layout/Navbar';
 
 const CATEGORIES = [
   'Photographie',
@@ -61,9 +60,9 @@ function mapMissionType(value: string | null): Mission['mission_type'] {
 }
 
 function missionTypeBadgeClass(type: Mission['mission_type']): string {
-  if (type === 'on_site') return 'bg-orange-500/20 text-orange-300 border border-orange-400/30';
-  if (type === 'hybrid') return 'bg-violet-500/20 text-violet-300 border border-violet-400/30';
-  return 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30';
+  if (type === 'on_site') return 'bg-orange-100 text-orange-700 border border-orange-200';
+  if (type === 'hybrid') return 'bg-purple-100 text-purple-700 border border-purple-200';
+  return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
 }
 
 function missionTypeLabel(type: Mission['mission_type']): string {
@@ -205,22 +204,20 @@ export default function ProFeed() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <Navbar />
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 pt-4 pb-8">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 pb-24">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
         <header className="mb-5">
           <h1 className="text-2xl font-semibold">Bonjour, {greetingName} 👋</h1>
-          <p className="text-sm text-white/60">{filteredMissions.length} mission(s) disponible(s)</p>
+          <p className="text-sm text-black/55">{filteredMissions.length} mission(s) disponible(s)</p>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
@@ -229,13 +226,13 @@ export default function ProFeed() {
           <select
             value={filterCategory}
             onChange={(event) => setFilterCategory(event.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
           >
-            <option value="" className="bg-[#0D0D0F]">
+            <option value="" className="bg-[#f4ece4] text-stone-500">
               Toutes catégories
             </option>
             {CATEGORIES.map((category) => (
-              <option key={category} value={category} className="bg-[#0D0D0F]">
+              <option key={category} value={category} className="bg-[#f4ece4] text-stone-900">
                 {category}
               </option>
             ))}
@@ -244,23 +241,23 @@ export default function ProFeed() {
           <select
             value={filterType}
             onChange={(event) => setFilterType(event.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white"
+            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
           >
-            <option value="" className="bg-[#0D0D0F]">
+            <option value="" className="bg-[#f4ece4] text-stone-500">
               Tous types
             </option>
-            <option value="remote" className="bg-[#0D0D0F]">Remote</option>
-            <option value="on_site" className="bg-[#0D0D0F]">Sur site</option>
-            <option value="hybrid" className="bg-[#0D0D0F]">Hybride</option>
+            <option value="remote" className="bg-[#f4ece4] text-stone-900">Remote</option>
+            <option value="on_site" className="bg-[#f4ece4] text-stone-900">Sur site</option>
+            <option value="hybrid" className="bg-[#f4ece4] text-stone-900">Hybride</option>
           </select>
         </div>
 
         {!error && missions.length === 0 ? (
-          <p className="text-center text-white/40 py-10">Aucune mission disponible pour l&apos;instant.</p>
+          <p className="text-center text-black/45 py-10">Aucune mission disponible pour l&apos;instant.</p>
         ) : null}
 
         {!error && missions.length > 0 && filteredMissions.length === 0 ? (
-          <p className="text-center text-white/40 py-10">Aucune mission ne correspond à tes filtres.</p>
+          <p className="text-center text-black/45 py-10">Aucune mission ne correspond à tes filtres.</p>
         ) : null}
 
         <div className="flex flex-col gap-4">
@@ -272,7 +269,7 @@ export default function ProFeed() {
             return (
               <article
                 key={mission.id}
-                className="bg-white/5 border border-white/10 rounded-xl p-5"
+                className="bg-white/70 border border-white/50 rounded-xl p-5"
                 onClick={() => navigate(`/mission/${mission.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -282,16 +279,16 @@ export default function ProFeed() {
                   </span>
                 </div>
 
-                <p className="mt-1 text-sm text-white/50">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
+                <p className="mt-1 text-sm text-black/55">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
 
                 <div className="mt-2">
-                  <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{mission.category}</span>
+                  <span className="text-xs bg-white/80 border border-white/50 px-2 py-0.5 rounded-full">{mission.category}</span>
                 </div>
 
-                <p className="text-sm text-white/70 mt-2">{truncate(mission.description || '')}</p>
-                <p className="text-sm text-violet-300 mt-2">{budgetText(mission)}</p>
+                <p className="text-sm text-black/70 mt-2">{truncate(mission.description || '')}</p>
+                <p className="text-sm text-orange-700 mt-2">{budgetText(mission)}</p>
                 {mission.deadline ? (
-                  <p className="text-xs text-white/40 mt-1">
+                  <p className="text-xs text-black/45 mt-1">
                     Deadline : {new Date(mission.deadline).toLocaleDateString('fr-FR')}
                   </p>
                 ) : null}
@@ -299,12 +296,12 @@ export default function ProFeed() {
                 {(mission.required_skills ?? []).length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {visibleSkills.map((skill) => (
-                      <span key={skill} className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85">
+                      <span key={skill} className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
                         {skill}
                       </span>
                     ))}
                     {remainingSkills > 0 ? (
-                      <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/60">
+                      <span className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/55">
                         +{remainingSkills} autres
                       </span>
                     ) : null}
@@ -320,6 +317,7 @@ export default function ProFeed() {
                         event.stopPropagation();
                         navigate(`/mission/${mission.id}`);
                       }}
+                      className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
                     >
                       Postuler →
                     </GradientButton>
