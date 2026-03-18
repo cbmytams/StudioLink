@@ -64,11 +64,11 @@ export default function StudioSearchPros() {
   }, []);
 
   const allSkills = useMemo(
-    () => Array.from(
+    () => (Array.from(
       new Set(
-        pros.flatMap((pro) => pro.skills ?? []),
+        pros.flatMap((pro) => (pro.skills ?? []) as string[]),
       ),
-    ).sort((a, b) => a.localeCompare(b, 'fr')),
+    ) as string[]).sort((a, b) => a.localeCompare(b, 'fr')),
     [pros],
   );
 
@@ -218,4 +218,3 @@ export default function StudioSearchPros() {
     </div>
   );
 }
-
