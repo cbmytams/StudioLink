@@ -9,7 +9,6 @@ export type NotificationType =
   | 'application_accepted'
   | 'application_selected'
   | 'application_rejected'
-  | 'application_rejected'
   | 'new_message'
   | 'mission_completed';
 
