@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
-import Navbar from '@/components/layout/Navbar';
 
 type EditableStudioProfile = {
   company_name?: string | null
@@ -126,7 +125,7 @@ export default function StudioProfile() {
   };
 
   const baseInputClass =
-    'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/45 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400';
+    'w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400';
 
   const hasAnyInfo = Boolean(
     bio.trim() ||
@@ -136,13 +135,12 @@ export default function StudioProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-6 text-sm text-white/70 transition-colors hover:text-white"
+          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
         >
           ← Dashboard
         </button>
@@ -154,7 +152,7 @@ export default function StudioProfile() {
             </div>
             <div>
               <h1 className="text-xl font-semibold">{companyName || profileData?.company_name || 'Studio'}</h1>
-              <p className="text-sm text-white/55">Studio</p>
+              <p className="text-sm text-black/50">Studio</p>
             </div>
           </div>
 
@@ -167,7 +165,7 @@ export default function StudioProfile() {
                 setSuccessMessage(null);
                 setFieldErrors({});
               }}
-              className="rounded-xl bg-white/10 px-3 py-2 text-sm text-white/90 transition hover:bg-white/15"
+              className="rounded-xl bg-white/70 px-3 py-2 text-sm text-black/80 transition hover:bg-white"
             >
               Modifier le profil
             </button>
@@ -179,14 +177,14 @@ export default function StudioProfile() {
                   setIsEditing(false);
                   resetToProfile();
                 }}
-                className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                className="rounded-xl bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white"
               >
                 Annuler
               </button>
               <GradientButton
                 disabled={saving}
                 onClick={() => void handleSave()}
-                className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
               >
                 {saving ? (
                   <>
@@ -212,20 +210,20 @@ export default function StudioProfile() {
           hasAnyInfo ? (
             <div className="space-y-4">
               {bio.trim() ? (
-                <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-white/85">Bio</h2>
-                  <p className="text-sm text-white/75">{bio}</p>
+                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <h2 className="mb-2 text-sm font-semibold text-black/80">Bio</h2>
+                  <p className="text-sm text-black/70">{bio}</p>
                 </section>
               ) : null}
 
               {website.trim() ? (
-                <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-white/85">Site web</h2>
+                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <h2 className="mb-2 text-sm font-semibold text-black/80">Site web</h2>
                   <a
                     href={website}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm text-cyan-300 underline"
+                    className="text-sm text-orange-600 underline"
                   >
                     {website}
                   </a>
@@ -233,26 +231,26 @@ export default function StudioProfile() {
               ) : null}
 
               {contactEmail.trim() ? (
-                <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-white/85">Email de contact</h2>
-                  <p className="text-sm text-white/75">{contactEmail}</p>
+                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <h2 className="mb-2 text-sm font-semibold text-black/80">Email de contact</h2>
+                  <p className="text-sm text-black/70">{contactEmail}</p>
                 </section>
               ) : null}
 
               {phone.trim() ? (
-                <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <h2 className="mb-2 text-sm font-semibold text-white/85">Téléphone</h2>
-                  <p className="text-sm text-white/75">{phone}</p>
+                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                  <h2 className="mb-2 text-sm font-semibold text-black/80">Téléphone</h2>
+                  <p className="text-sm text-black/70">{phone}</p>
                 </section>
               ) : null}
             </div>
           ) : (
-            <p className="text-white/40 text-sm">
+            <p className="text-black/45 text-sm">
               Profil incomplet. Clique sur &quot;Modifier&quot; pour le compléter.
             </p>
           )
         ) : (
-          <section className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+          <section className="bg-white/70 border border-white/50 rounded-xl p-4 space-y-4">
             <div>
               <input
                 value={companyName}
