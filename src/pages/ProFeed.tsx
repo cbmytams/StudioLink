@@ -131,13 +131,36 @@ export default function ProFeed() {
             company_name
           )
         `;
-        const { data: missionRows, error: missionError } = await supabase
-          .from('missions')
-          .select(missionColumns)
-          .eq('status', 'open' as never)
-          .order('created_at', { ascending: false });
+        const fetchByStatus = async (status: string) =>
+          supabase
+            .from('missions')
+            .select(missionColumns)
+            .eq('status', status as never)
+            .order('created_at', { ascending: false });
 
-        if (missionError) throw missionError;
+        const [publishedResult, selectingResult] = await Promise.all([
+          fetchByStatus('published'),
+          fetchByStatus('selecting'),
+        ]);
+
+        if (publishedResult.error) throw publishedResult.error;
+        if (selectingResult.error) throw selectingResult.error;
+
+        let missionRows = [
+          ...(publishedResult.data ?? []),
+          ...(selectingResult.data ?? []),
+        ];
+
+        if (missionRows.length === 0) {
+          const openResult = await fetchByStatus('open');
+          if (!openResult.error) {
+            missionRows = openResult.data ?? [];
+          }
+        }
+
+        missionRows.sort((a, b) => (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ));
 
         const normalizedMissions: Mission[] = (missionRows as unknown as MissionRow[] | null ?? []).map((mission) => {
           const studioProfile = Array.isArray(mission.profiles)
