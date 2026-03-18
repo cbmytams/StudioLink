@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 type Mission = {
   id: string
@@ -71,6 +72,7 @@ function statusLabel(status: Mission['status']): ReactNode {
 export default function StudioDashboard() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const { showToast } = useToast();
 
   const [missions, setMissions] = useState<Mission[] | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -197,12 +199,18 @@ export default function StudioDashboard() {
           mission.id === missionId ? { ...mission, status } : mission,
         ),
       );
+      showToast({ title: 'Statut mission mis à jour', variant: 'default' });
     } catch (statusError) {
       setError(
         statusError instanceof Error
           ? statusError.message
           : 'Impossible de mettre à jour le statut de la mission.',
       );
+      showToast({
+        title: 'Mise à jour impossible',
+        description: statusError instanceof Error ? statusError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setStatusActionMissionId(null);
     }
