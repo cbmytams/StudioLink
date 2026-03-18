@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { ReviewModal } from '@/components/ReviewModal';
+import { useToast } from '@/components/ui/Toast';
 
 type ProProfile = {
   full_name: string | null
@@ -85,6 +86,7 @@ export default function ManageApplications() {
   const { missionId, id } = useParams<{ missionId: string; id: string }>();
   const targetMissionId = missionId ?? id ?? '';
   const { session } = useAuth();
+  const { showToast } = useToast();
 
   const [mission, setMission] = useState<Mission | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -254,8 +256,14 @@ export default function ManageApplications() {
         ),
       );
       setMission((prev) => (prev ? { ...prev, status: 'in_progress' } : prev));
+      showToast({ title: 'Candidature acceptée', description: 'Mission passée en cours', variant: 'default' });
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature");
+      showToast({
+        title: 'Action impossible',
+        description: actionError instanceof Error ? actionError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setActionLoading(null);
     }
@@ -280,10 +288,16 @@ export default function ManageApplications() {
       }
 
       setMission((prev) => (prev ? { ...prev, status: 'completed' } : prev));
+      showToast({ title: 'Mission terminée', variant: 'default' });
     } catch (completeError) {
       setError(
         completeError instanceof Error ? completeError.message : 'Impossible de terminer la mission.',
       );
+      showToast({
+        title: 'Mise à jour impossible',
+        description: completeError instanceof Error ? completeError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setActionLoading(null);
     }
@@ -306,8 +320,14 @@ export default function ManageApplications() {
       setApplications((prev) =>
         prev.map((item) => (item.id === applicationId ? { ...item, status: 'rejected' } : item)),
       );
+      showToast({ title: 'Candidature refusée', variant: 'default' });
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : 'Impossible de rejeter la candidature');
+      showToast({
+        title: 'Action impossible',
+        description: actionError instanceof Error ? actionError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setActionLoading(null);
     }
