@@ -168,6 +168,9 @@ export default function InvitationLanding() {
                   ? 'Publie tes missions et trouve les meilleurs créatifs.'
                   : 'Découvre des missions et collabore avec les meilleurs studios.'}
               </p>
+              <p className="text-white/60 text-sm mb-4">
+                Code d&apos;invitation : <span className="text-white font-mono">{invitation.code}</span>
+              </p>
               {invitation.email ? (
                 <p className="text-white/40 text-xs mb-4">
                   Invitation réservée à : {invitation.email}
