@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { ReviewModal } from '@/components/ReviewModal';
 
 type MissionRef = {
   id: string
   title: string
   status: string
+  studio_id: string
   category: string
   mission_type: string
   budget_min: number | null
@@ -94,6 +96,7 @@ export default function ProDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'applications' | 'bookings'>('applications');
+  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -123,6 +126,7 @@ export default function ProDashboard() {
             id,
             title,
             status,
+            studio_id,
             category,
             mission_type,
             budget_min,
@@ -358,6 +362,18 @@ export default function ProDashboard() {
                   >
                     Voir la mission →
                   </button>
+                  {(application.status === 'accepted' && application.missions?.status === 'completed') ? (
+                    <button
+                      type="button"
+                      onClick={() => setReviewTarget({
+                        missionId: application.mission_id,
+                        revieweeId: application.missions?.studio_id,
+                      })}
+                      className="text-orange-600 text-xs hover:underline mt-2 block"
+                    >
+                      Laisser un avis
+                    </button>
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -383,6 +399,14 @@ export default function ProDashboard() {
           </div>
         )}
       </div>
+      {reviewTarget ? (
+        <ReviewModal
+          isOpen={Boolean(reviewTarget)}
+          missionId={reviewTarget.missionId}
+          revieweeId={reviewTarget.revieweeId}
+          onClose={() => setReviewTarget(null)}
+        />
+      ) : null}
     </div>
   );
 }
