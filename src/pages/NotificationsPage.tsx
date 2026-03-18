@@ -30,7 +30,12 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id;
-  const { data = [], isLoading } = useNotifications(userId);
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+  } = useNotifications(userId);
   const markAllRead = useMarkAllRead(userId);
   const markAsRead = useMarkAsRead();
 
@@ -55,6 +60,19 @@ export default function NotificationsPage() {
             <NotificationSkeleton key={i} />
           ))}
         </div>
+      ) : isError ? (
+        <GlassCard className="p-8 text-center">
+          <p className="text-sm text-red-500">
+            {error instanceof Error ? error.message : 'Impossible de charger les notifications.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
+          >
+            Retour à l’accueil
+          </button>
+        </GlassCard>
       ) : notifications.length === 0 ? (
         <GlassCard className="p-8 text-center">
           <Bell size={20} className="mx-auto text-stone-400 mb-2" />
