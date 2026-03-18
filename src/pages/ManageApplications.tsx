@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/auth/AuthProvider';
+import Navbar from '@/components/layout/Navbar';
 
 type ProProfile = {
   full_name: string | null
@@ -245,7 +246,8 @@ export default function ManageApplications() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8">
+        <Navbar />
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 pt-4 pb-8">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         </div>
       </div>
@@ -254,7 +256,8 @@ export default function ManageApplications() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <div className="mx-auto max-w-4xl px-4 py-8 pb-20">
+      <Navbar />
+      <div className="mx-auto max-w-4xl px-4 pt-4 pb-8">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
