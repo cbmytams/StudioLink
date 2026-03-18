@@ -62,11 +62,15 @@ export default function ChatPage() {
   const {
     data: conversations = [],
     isLoading: conversationsLoading,
+    isError: conversationsError,
+    error: conversationsErrorData,
   } = useConversations(userId);
 
   const {
     data: messages = [],
     isLoading: messagesLoading,
+    isError: messagesError,
+    error: messagesErrorData,
   } = useMessages(selectedConversationId);
 
   useRealtimeMessages(selectedConversationId);
@@ -170,6 +174,10 @@ export default function ChatPage() {
         <div className="flex gap-2 overflow-x-auto">
           {conversationsLoading ? (
             <ConversationSkeleton />
+          ) : conversationsError ? (
+            <span className="text-xs text-red-500">
+              {conversationsErrorData instanceof Error ? conversationsErrorData.message : 'Erreur de chargement.'}
+            </span>
           ) : conversations.length === 0 ? (
             <span className="text-xs text-stone-500">Aucune conversation</span>
           ) : (
@@ -227,6 +235,10 @@ export default function ChatPage() {
                 <ConversationSkeleton />
                 <ConversationSkeleton />
               </div>
+            ) : messagesError ? (
+              <p className="text-sm text-red-500">
+                {messagesErrorData instanceof Error ? messagesErrorData.message : 'Impossible de charger les messages.'}
+              </p>
             ) : messages.length === 0 ? (
               <EmptyState emoji="💬" text="Commencez la conversation !" />
             ) : (
