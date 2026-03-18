@@ -295,7 +295,7 @@ export default function ManageApplications() {
           ← Mes missions
         </button>
 
-        <header className="app-header block">
+        <header className="mb-6">
           <div className="mb-2 flex items-center gap-3">
             <h1 className="app-title text-2xl">{mission?.title ?? 'Candidatures'}</h1>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionStatusClass(mission?.status ?? 'open')}`}>
