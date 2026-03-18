@@ -1,11 +1,20 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useMission } from '@/hooks/useMissions';
 import { useMissionApplications, useUpdateApplicationStatus } from '@/hooks/useApplications';
 import { useUpdateMissionStatus } from '@/hooks/useMissions';
+import type { ApplicationStatus } from '@/types/backend';
+
+const FILTERS: Array<{ key: ApplicationStatus | 'all'; label: string }> = [
+  { key: 'all', label: 'Toutes' },
+  { key: 'pending', label: 'En attente' },
+  { key: 'selected', label: 'Retenues' },
+  { key: 'rejected', label: 'Refusées' },
+];
 
 export default function ManageApplications() {
   const navigate = useNavigate();
@@ -14,6 +23,14 @@ export default function ManageApplications() {
   const { data: applications = [], isLoading } = useMissionApplications(id);
   const updateApplication = useUpdateApplicationStatus();
   const updateMissionStatus = useUpdateMissionStatus();
+  const [activeFilter, setActiveFilter] = useState<ApplicationStatus | 'all'>('all');
+
+  const filteredApplications = useMemo(
+    () => (activeFilter === 'all'
+      ? applications
+      : applications.filter((application) => application.status === activeFilter)),
+    [activeFilter, applications],
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl p-4 pb-24">
@@ -27,19 +44,36 @@ export default function ManageApplications() {
         </div>
       </header>
 
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+        {FILTERS.map((filter) => (
+          <button
+            key={filter.key}
+            type="button"
+            onClick={() => setActiveFilter(filter.key)}
+            className={`flex min-h-[44px] flex-shrink-0 items-center rounded-full px-3 text-xs font-medium transition-colors ${
+              activeFilter === filter.key
+                ? 'bg-orange-500 text-white'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-28 animate-pulse rounded-2xl bg-stone-100" />
           ))}
         </div>
-      ) : applications.length === 0 ? (
+      ) : filteredApplications.length === 0 ? (
         <GlassCard className="p-8 text-center">
           <p className="text-sm text-stone-500">Aucune candidature reçue sur cette mission.</p>
         </GlassCard>
       ) : (
         <div className="space-y-3">
-          {applications.map((application) => (
+          {filteredApplications.map((application) => (
             <div key={application.id}>
               <GlassCard className="p-4">
                 <div className="mb-2 flex items-center justify-between gap-2">
