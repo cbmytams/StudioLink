@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
@@ -56,6 +56,12 @@ type MyApplicationRow = {
   mission_id: string
 }
 
+interface MissionCardProps {
+  mission: Mission;
+  alreadyApplied: boolean;
+  onOpen: (missionId: string) => void;
+}
+
 function mapMissionType(value: string | null): Mission['mission_type'] {
   if (value === 'on_site' || value === 'hybrid') return value;
   return 'remote';
@@ -87,6 +93,73 @@ function budgetText(mission: Mission): string {
   }
   return 'Budget non renseigné';
 }
+
+const MissionCard = memo(function MissionCard({ mission, alreadyApplied, onOpen }: MissionCardProps) {
+  const visibleSkills = (mission.required_skills ?? []).slice(0, 3);
+  const remainingSkills = Math.max((mission.required_skills ?? []).length - 3, 0);
+
+  return (
+    <article
+      className="app-card p-5 transition-transform duration-150 hover:-translate-y-0.5"
+      onClick={() => onOpen(mission.id)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-semibold text-lg">{mission.title}</h2>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
+          {missionTypeLabel(mission.mission_type)}
+        </span>
+      </div>
+
+      <p className="mt-1 text-sm app-muted">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
+
+      <div className="mt-2">
+        <span className="app-chip">{mission.category}</span>
+      </div>
+
+      <p className="text-sm text-black/70 mt-2">{truncate(mission.description || '')}</p>
+      <p className="text-sm text-orange-700 mt-2">{budgetText(mission)}</p>
+      {mission.location ? (
+        <p className="text-xs text-black/45 mt-1">Lieu : {mission.location}</p>
+      ) : null}
+      {mission.deadline ? (
+        <p className="text-xs text-black/45 mt-1">
+          Deadline : {new Date(mission.deadline).toLocaleDateString('fr-FR')}
+        </p>
+      ) : null}
+
+      {(mission.required_skills ?? []).length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {visibleSkills.map((skill) => (
+            <span key={skill} className="app-chip">
+              {skill}
+            </span>
+          ))}
+          {remainingSkills > 0 ? (
+            <span className="app-chip text-black/55">
+              +{remainingSkills} autres
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="mt-4">
+        {alreadyApplied ? (
+          <span className="text-green-400 text-sm">✓ Candidature envoyée</span>
+        ) : (
+          <Button
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen(mission.id);
+            }}
+            className="bg-orange-500 text-white hover:bg-orange-600"
+          >
+            Postuler →
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+});
 
 export default function ProFeed() {
   const navigate = useNavigate();
@@ -266,6 +339,9 @@ export default function ProFeed() {
     setFilterBudgetMin('');
     setFilterLocation('');
   }, []);
+  const openMission = useCallback((missionId: string) => {
+    navigate(`/mission/${missionId}`);
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -348,74 +424,14 @@ export default function ProFeed() {
         ) : null}
 
         <div className="flex flex-col gap-4">
-          {visibleMissions.map((mission) => {
-            const alreadyApplied = myApplicationIds.includes(mission.id);
-            const visibleSkills = (mission.required_skills ?? []).slice(0, 3);
-            const remainingSkills = Math.max((mission.required_skills ?? []).length - 3, 0);
-
-            return (
-              <article
-                key={mission.id}
-                className="app-card p-5 transition-transform duration-150 hover:-translate-y-0.5"
-                onClick={() => navigate(`/mission/${mission.id}`)}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="font-semibold text-lg">{mission.title}</h2>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
-                    {missionTypeLabel(mission.mission_type)}
-                  </span>
-                </div>
-
-                <p className="mt-1 text-sm app-muted">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
-
-                <div className="mt-2">
-                  <span className="app-chip">{mission.category}</span>
-                </div>
-
-                <p className="text-sm text-black/70 mt-2">{truncate(mission.description || '')}</p>
-                <p className="text-sm text-orange-700 mt-2">{budgetText(mission)}</p>
-                {mission.location ? (
-                  <p className="text-xs text-black/45 mt-1">Lieu : {mission.location}</p>
-                ) : null}
-                {mission.deadline ? (
-                  <p className="text-xs text-black/45 mt-1">
-                    Deadline : {new Date(mission.deadline).toLocaleDateString('fr-FR')}
-                  </p>
-                ) : null}
-
-                {(mission.required_skills ?? []).length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {visibleSkills.map((skill) => (
-                      <span key={skill} className="app-chip">
-                        {skill}
-                      </span>
-                    ))}
-                    {remainingSkills > 0 ? (
-                      <span className="app-chip text-black/55">
-                        +{remainingSkills} autres
-                      </span>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <div className="mt-4">
-                  {alreadyApplied ? (
-                    <span className="text-green-400 text-sm">✓ Candidature envoyée</span>
-                  ) : (
-                    <Button
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        navigate(`/mission/${mission.id}`);
-                      }}
-                      className="bg-orange-500 text-white hover:bg-orange-600"
-                    >
-                      Postuler →
-                    </Button>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+          {visibleMissions.map((mission) => (
+            <MissionCard
+              key={mission.id}
+              mission={mission}
+              alreadyApplied={myApplicationIds.includes(mission.id)}
+              onOpen={openMission}
+            />
+          ))}
         </div>
         {filteredMissions.length > visibleCount ? (
           <div className="mt-4 flex justify-center">
