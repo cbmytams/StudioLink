@@ -8,18 +8,35 @@ export default function SavedPage() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
   const userId = session?.user?.id;
-  const { data: items = [], isLoading } = useSavedItems(userId);
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    error,
+  } = useSavedItems(userId);
 
   return (
     <main className="min-h-screen p-4 pb-24 max-w-3xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4">Éléments sauvegardés</h1>
       {isLoading ? (
         <div className="animate-pulse h-24 rounded-xl bg-stone-100" />
+      ) : isError ? (
+        <GlassCard className="p-8 text-center">
+          <p className="text-sm text-red-500">
+            {error instanceof Error ? error.message : 'Impossible de charger les éléments sauvegardés.'}
+          </p>
+          <Button
+            className="mt-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+            onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
+          >
+            Retour
+          </Button>
+        </GlassCard>
       ) : items.length === 0 ? (
         <GlassCard className="p-8 text-center">
           <p className="text-sm text-stone-500">Aucun élément sauvegardé.</p>
           <Button
-            className="mt-4"
+            className="mt-4 bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
             onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
           >
             Explorer
