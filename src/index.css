@@ -64,6 +64,38 @@
   .app-muted {
     @apply text-stone-500;
   }
+
+  .app-header {
+    @apply mb-6 flex flex-wrap items-end justify-between gap-4;
+  }
+
+  .app-title {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  .app-subtitle {
+    @apply mt-1 text-sm text-stone-500;
+  }
+
+  .app-stats-grid {
+    @apply mb-6 grid grid-cols-2 gap-3 md:grid-cols-4;
+  }
+
+  .app-stat-card {
+    @apply rounded-xl border border-white/50 bg-white/65 p-4 backdrop-blur-sm shadow-[0_4px_16px_rgba(26,26,26,0.05)];
+  }
+
+  .app-list {
+    @apply space-y-3;
+  }
+
+  .app-empty-state {
+    @apply py-10 text-center text-stone-500;
+  }
+
+  .app-chip {
+    @apply rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75;
+  }
 }
 
 body {
