@@ -178,19 +178,21 @@ export default function ManageApplications() {
     setError(null);
 
     try {
-      await supabase
+      const { error: selectError } = await supabase
         .from('applications')
-        .update({ status: 'accepted' } as never)
+        .update({ status: 'selected' })
         .eq('id', application.id);
+      if (selectError) throw selectError;
 
-      await supabase
+      const { error: rejectError } = await supabase
         .from('applications')
         .update({ status: 'rejected' })
         .eq('mission_id', targetMissionId)
         .eq('status', 'pending')
         .neq('id', application.id);
+      if (rejectError) throw rejectError;
 
-      await supabase
+      const bookingResult = await supabase
         .from('booking_sessions' as never)
         .insert({
           mission_id: targetMissionId,
@@ -199,11 +201,41 @@ export default function ManageApplications() {
           status: 'confirmed',
           created_at: new Date().toISOString(),
         } as never);
+      if (bookingResult.error) {
+        await supabase
+          .from('sessions' as never)
+          .insert({
+            mission_id: targetMissionId,
+            studio_id: session.user.id,
+            pro_id: application.pro_id,
+            application_id: application.id,
+            date: new Date().toISOString().slice(0, 10),
+            time_start: '10:00',
+            duration_hours: 2,
+            status: 'confirmed',
+            created_at: new Date().toISOString(),
+          } as never);
+      }
 
-      await supabase
+      const missionUpdate = await supabase
         .from('missions')
-        .update({ status: 'closed' } as never)
+        .update({ status: 'filled' })
         .eq('id', targetMissionId);
+      if (missionUpdate.error) {
+        const fallbackMissionUpdate = await supabase
+          .from('missions')
+          .update({ status: 'in_progress' as never })
+          .eq('id', targetMissionId);
+        if (fallbackMissionUpdate.error) {
+          const lastFallbackMissionUpdate = await supabase
+            .from('missions')
+            .update({ status: 'closed' as never })
+            .eq('id', targetMissionId);
+          if (lastFallbackMissionUpdate.error) {
+            throw lastFallbackMissionUpdate.error;
+          }
+        }
+      }
 
       setApplications((prev) =>
         prev.map((item) =>
