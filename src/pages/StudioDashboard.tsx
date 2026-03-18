@@ -230,7 +230,19 @@ export default function StudioDashboard() {
     <div className="app-shell">
       <div className="app-container-wide">
         <header className="app-header">
-          <div>
+          <div className="flex items-center gap-3">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar studio"
+                className="h-12 w-12 rounded-full border border-white/50 object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+                {companyName.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <div>
             <h1 className="app-title">Bonjour, {companyName} 👋</h1>
             <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
             <button
@@ -240,6 +252,7 @@ export default function StudioDashboard() {
             >
               Trouver des pros →
             </button>
+            </div>
           </div>
 
           <Button
