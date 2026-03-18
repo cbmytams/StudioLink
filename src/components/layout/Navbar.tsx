@@ -8,30 +8,6 @@ type NavLink = {
   activePrefixes: string[];
 };
 
-function NavItem({
-  label,
-  to,
-  activePrefixes,
-  pathname,
-  onNavigate,
-}: NavLink & { pathname: string; onNavigate: (to: string) => void }) {
-  const isActive = activePrefixes.some((prefix) => pathname.startsWith(prefix));
-
-  return (
-    <button
-      type="button"
-      onClick={() => onNavigate(to)}
-      className={`whitespace-nowrap text-sm transition-colors ${
-        isActive
-          ? 'text-white font-medium'
-          : 'text-white/60 hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
 export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -108,16 +84,23 @@ export default function Navbar() {
         </button>
 
         <div className="ml-4 flex flex-1 items-center justify-end gap-3 overflow-x-auto">
-          {links.map((link) => (
-            <NavItem
-              key={link.label}
-              label={link.label}
-              to={link.to}
-              activePrefixes={link.activePrefixes}
-              pathname={pathname}
-              onNavigate={(to) => navigate(to)}
-            />
-          ))}
+          {links.map((link) => {
+            const isActive = link.activePrefixes.some((prefix) => pathname.startsWith(prefix));
+            return (
+              <button
+                key={link.label}
+                type="button"
+                onClick={() => navigate(link.to)}
+                className={`whitespace-nowrap text-sm transition-colors ${
+                  isActive
+                    ? 'text-white font-medium'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                {link.label}
+              </button>
+            );
+          })}
           <button
             type="button"
             onClick={() => void handleSignOut()}
@@ -130,4 +113,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
