@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useState } from 'react';
+import { type FormEvent, type KeyboardEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/auth/AuthProvider';
@@ -121,7 +121,7 @@ export default function CreateMission() {
     setStep(1);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (step === 1) {
       handleNext();
