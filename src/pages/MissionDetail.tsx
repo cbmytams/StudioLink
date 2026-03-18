@@ -55,6 +55,7 @@ export default function MissionDetail() {
   const [mission, setMission] = useState<Mission | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('idle');
   const [coverLetter, setCoverLetter] = useState('');
   const [proposedRate, setProposedRate] = useState('');
@@ -73,6 +74,7 @@ export default function MissionDetail() {
 
       setLoading(true);
       setNotFound(false);
+      setFetchError(null);
       setApplicationStatus('idle');
 
       try {
@@ -112,7 +114,7 @@ export default function MissionDetail() {
         }
       } catch {
         if (!active) return;
-        setNotFound(true);
+        setFetchError('Impossible de charger les détails de la mission.');
       } finally {
         if (active) setLoading(false);
       }
@@ -184,6 +186,12 @@ export default function MissionDetail() {
         >
           ← Retour au feed
         </button>
+
+        {fetchError ? (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {fetchError}
+          </p>
+        ) : null}
 
         <header>
           <h1 className="text-3xl font-bold mb-1">{mission.title}</h1>
