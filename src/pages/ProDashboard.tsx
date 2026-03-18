@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 type MissionRef = {
   id: string
@@ -271,12 +271,12 @@ export default function ProDashboard() {
         </section>
 
         <div className="mb-5">
-          <GradientButton
+          <Button
             onClick={() => navigate('/pro/feed')}
             className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
           >
             Voir les missions disponibles →
-          </GradientButton>
+          </Button>
         </div>
 
         <div className="mb-4 flex gap-5 border-b border-black/10">
