@@ -166,7 +166,7 @@ export default function ProProfile() {
           ← Dashboard
         </button>
 
-        <header className="mb-5 flex items-start justify-between gap-3">
+        <header className="app-header items-start mb-5">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-lg font-semibold text-white">
               {fullName.trim().charAt(0).toUpperCase() || '?'}
@@ -266,11 +266,8 @@ export default function ProProfile() {
                   <section className="app-card-soft p-4">
                     <h2 className="mb-2 text-sm font-semibold text-black/80">Compétences</h2>
                     <div className="flex flex-wrap gap-2">
-                      {skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
-                        >
+                {skills.map((skill) => (
+                        <span key={skill} className="app-chip">
                           {skill}
                         </span>
                       ))}
@@ -364,10 +361,7 @@ export default function ProProfile() {
                 />
                 <div className="mt-2 flex flex-wrap gap-2">
                     {skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
-                      >
+                      <span key={skill} className="inline-flex items-center gap-2 app-chip">
                         {skill}
                         <button
                           type="button"
