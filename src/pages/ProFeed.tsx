@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { Helmet } from 'react-helmet-async';
 
 const CATEGORIES = [
   'Photographie',
@@ -355,6 +356,13 @@ export default function ProFeed() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>StudioLink — Feed des missions</title>
+        <meta
+          name="description"
+          content="Découvrez les missions ouvertes, filtrez selon vos critères et candidatez en quelques clics."
+        />
+      </Helmet>
       <div className="app-container">
         <header className="mb-5">
           <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
