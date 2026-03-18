@@ -13,55 +13,41 @@ type ProProfile = {
   type: string
 }
 
-export default function ProPublicProfile() {
+export function ProPublicProfile() {
   const navigate = useNavigate();
   const { proId } = useParams<{ proId: string }>();
 
   const [proProfile, setProProfile] = useState<ProProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    let active = true;
-
     const fetchProfile = async () => {
       if (!proId) {
-        setProProfile(null);
+        setNotFound(true);
         setLoading(false);
         return;
       }
 
       setLoading(true);
-      setError(null);
+      setNotFound(false);
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, bio, city, daily_rate, skills, type')
-          .eq('id', proId)
-          .eq('type', 'pro')
-          .single();
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, bio, city, daily_rate, skills, type')
+        .eq('id', proId)
+        .eq('type', 'pro')
+        .single();
 
-        if (fetchError || !data) {
-          setProProfile(null);
-          return;
-        }
-
-        if (!active) return;
+      if (!data) {
+        setNotFound(true);
+      } else {
         setProProfile(data as unknown as ProProfile);
-      } catch (fetchErr) {
-        if (!active) return;
-        setError(fetchErr instanceof Error ? fetchErr.message : 'Impossible de charger ce profil');
-      } finally {
-        if (active) setLoading(false);
       }
+      setLoading(false);
     };
 
     void fetchProfile();
-
-    return () => {
-      active = false;
-    };
   }, [proId]);
 
   const hasAnyInfo = Boolean(
@@ -79,15 +65,7 @@ export default function ProPublicProfile() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center px-4">
-        <p className="text-red-400 text-sm">{error}</p>
-      </div>
-    );
-  }
-
-  if (!proProfile) {
+  if (notFound || !proProfile) {
     return (
       <div className="min-h-screen bg-[#0D0D0F] text-white">
         <div className="max-w-2xl mx-auto px-4 py-8">
@@ -97,7 +75,7 @@ export default function ProPublicProfile() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="text-violet-400 underline text-sm mt-4"
+              className="text-violet-400 underline text-sm mt-4 block mx-auto"
             >
               Retour
             </button>
@@ -113,7 +91,7 @@ export default function ProPublicProfile() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="text-white/50 hover:text-white text-sm transition-colors"
+          className="text-white/50 hover:text-white text-sm mb-6 flex items-center gap-1 transition-colors"
         >
           ← Retour
         </button>
@@ -141,21 +119,21 @@ export default function ProPublicProfile() {
           <>
             {proProfile.bio ? (
               <section className="bg-white/5 border border-white/10 rounded-xl p-4 mt-4">
-                <h2 className="text-sm font-semibold text-white/85 mb-2">Bio</h2>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">À propos</p>
                 <p className="text-sm text-white/70">{proProfile.bio}</p>
               </section>
             ) : null}
 
             {proProfile.daily_rate ? (
               <section className="bg-white/5 border border-white/10 rounded-xl p-4 mt-4">
-                <h2 className="text-sm font-semibold text-white/85 mb-2">Tarif journalier</h2>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Tarif journalier</p>
                 <p className="text-violet-300 font-medium">{proProfile.daily_rate}€/j</p>
               </section>
             ) : null}
 
             {proProfile.skills?.length ? (
               <section className="bg-white/5 border border-white/10 rounded-xl p-4 mt-4">
-                <h2 className="text-sm font-semibold text-white/85 mb-2">Compétences</h2>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-2">Compétences</p>
                 <div className="flex flex-wrap gap-2">
                   {proProfile.skills.map((skill) => (
                     <span
@@ -177,3 +155,4 @@ export default function ProPublicProfile() {
   );
 }
 
+export default ProPublicProfile;
