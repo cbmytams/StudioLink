@@ -262,7 +262,7 @@ export default function StudioDashboard() {
                           className="rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-sm text-black/80 transition hover:bg-white"
                           onClick={() => navigate(`/studio/applications/${mission.id}`)}
                         >
-                          Gérer →
+                          Voir les candidatures
                         </button>
                       </div>
                     );
