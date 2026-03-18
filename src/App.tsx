@@ -14,6 +14,7 @@ import ProLayout from '@/layouts/ProLayout';
 
 const LoginPage = lazy(() => import('@/pages/Login'));
 const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
+const InvitationLandingPage = lazy(() => import('@/pages/InvitationLanding'));
 const SignupPage = lazy(() => import('@/pages/Signup'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallback'));
 const StudioOnboardingPage = lazy(() => import('@/pages/StudioOnboarding'));
@@ -134,6 +135,14 @@ export default function App() {
             element={(
               <PublicOnlyRoute>
                 <InvitationPage />
+              </PublicOnlyRoute>
+            )}
+          />
+          <Route
+            path="/invite/:code"
+            element={(
+              <PublicOnlyRoute>
+                <InvitationLandingPage />
               </PublicOnlyRoute>
             )}
           />
