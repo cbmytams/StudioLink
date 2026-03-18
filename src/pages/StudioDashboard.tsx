@@ -90,9 +90,10 @@ export default function StudioDashboard() {
       setError(null);
 
       try {
+        const missionColumns: string = 'id, title, status, created_at, deadline, budget_min, budget_max';
         const { data: missionRows, error: missionError } = await supabase
           .from('missions')
-          .select('id, title, status, created_at, deadline, budget_min, budget_max')
+          .select(missionColumns)
           .eq('studio_id', session.user.id)
           .order('created_at', { ascending: false });
 
