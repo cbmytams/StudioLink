@@ -1,297 +1,315 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, CircleX, Clock3, Euro, MapPin } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { ApplyModal } from '@/components/ApplyModal';
-import { ReviewModal } from '@/components/ReviewModal';
-import { useMission, useUpdateMissionStatus } from '@/hooks/useMissions';
-import { useMissionApplications, useUpdateApplicationStatus } from '@/hooks/useApplications';
-import { useReviews } from '@/hooks/useReviews';
-import { useToast } from '@/components/ui/Toast';
-import type { MissionStatus, ApplicationStatus } from '@/types/backend';
+import { GradientButton } from '@/components/ui/GradientButton';
 
-const STATUS_LABELS: Record<MissionStatus, string> = {
-  draft: 'Brouillon',
-  published: 'Publiée',
-  in_progress: 'En cours',
-  completed: 'Terminée',
-  cancelled: 'Annulée',
-};
+type Mission = {
+  id: string
+  title: string
+  description: string | null
+  category: string
+  mission_type: string
+  status: string
+  budget_min: number | null
+  budget_max: number | null
+  location: string | null
+  start_date: string | null
+  duration_days: number | null
+  created_at: string
+  studio_id: string
+  profiles: { company_name: string | null } | null
+}
 
-const STATUS_VARIANTS: Record<MissionStatus, 'default' | 'success' | 'warning' | 'error'> = {
-  draft: 'default',
-  published: 'success',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'error',
-};
+type ApplicationStatus = 'idle' | 'submitting' | 'submitted' | 'already_applied' | 'error'
 
-const TRANSITION_MAP: Partial<
-  Record<MissionStatus, { label: string; next: MissionStatus; variant: 'primary' | 'ghost' }>
-> = {
-  draft: { label: '📢 Publier la mission', next: 'published', variant: 'primary' },
-  published: { label: '▶️ Marquer en cours', next: 'in_progress', variant: 'primary' },
-  in_progress: { label: '✅ Marquer terminée', next: 'completed', variant: 'primary' },
-};
+function missionTypeBadgeClass(type: string): string {
+  if (type === 'on_site') return 'bg-orange-500/20 text-orange-300 border border-orange-400/30';
+  if (type === 'hybrid') return 'bg-violet-500/20 text-violet-300 border border-violet-400/30';
+  return 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30';
+}
 
-function StatusActionButtons({
-  applicationId,
-  onUpdate,
-  disabled,
-}: {
-  applicationId: string;
-  onUpdate: (id: string, status: ApplicationStatus) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="flex gap-2">
-      <Button
-        size="sm"
-        className="min-h-[44px]"
-        disabled={disabled}
-        onClick={() => onUpdate(applicationId, 'selected')}
-      >
-        Retenir
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="min-h-[44px]"
-        disabled={disabled}
-        onClick={() => onUpdate(applicationId, 'rejected')}
-      >
-        Refuser
-      </Button>
-    </div>
-  );
+function missionTypeLabel(type: string): string {
+  if (type === 'on_site') return 'Sur site';
+  if (type === 'hybrid') return 'Hybride';
+  return 'Remote';
+}
+
+function budgetText(mission: Mission): string {
+  if (mission.budget_min !== null && mission.budget_max !== null) {
+    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
+  }
+  if (mission.budget_min !== null) {
+    return `À partir de ${mission.budget_min}€/j`;
+  }
+  return 'Budget non précisé';
 }
 
 export default function MissionDetail() {
-  const { id } = useParams();
+  const { missionId } = useParams<{ missionId: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const userId = profile?.id;
-  const userType = profile?.user_type;
-  const isStudio = userType === 'studio';
-  const { showToast } = useToast();
+  const { session } = useAuth();
+  const userId = session?.user?.id ?? '';
 
-  const { data: mission, isLoading, error } = useMission(id);
-  const { data: applications = [] } = useMissionApplications(id);
-  const { data: reviews = [] } = useReviews(isStudio ? applications[0]?.pro_id : mission?.studio_id);
-  const updateStatusMutation = useUpdateMissionStatus();
-  const updateApplicationMutation = useUpdateApplicationStatus();
-
-  const [currentStatus, setCurrentStatus] = useState<MissionStatus>('draft');
-  const [applyOpen, setApplyOpen] = useState(false);
-  const [reviewOpen, setReviewOpen] = useState(false);
+  const [mission, setMission] = useState<Mission | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('idle');
+  const [coverLetter, setCoverLetter] = useState('');
+  const [proposedRate, setProposedRate] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mission) setCurrentStatus(mission.status);
-  }, [mission]);
+    let active = true;
 
-  const hasApplied = useMemo(() => {
-    if (!userId) return false;
-    return applications.some((application) => application.pro_id === userId);
-  }, [applications, userId]);
+    const fetchMission = async () => {
+      if (!missionId) {
+        if (!active) return;
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
 
-  const selectedApplication = useMemo(
-    () => applications.find((application) => application.status === 'selected'),
-    [applications],
-  );
+      setLoading(true);
+      setNotFound(false);
+      setApplicationStatus('idle');
 
-  if (isLoading) {
+      try {
+        const { data: missionData } = await supabase
+          .from('missions')
+          .select(`
+            id, title, description, category, mission_type, status,
+            budget_min, budget_max, location, start_date, duration_days,
+            created_at, studio_id,
+            profiles:studio_id (company_name)
+          `)
+          .eq('id', missionId)
+          .single();
+
+        if (!active) return;
+
+        if (!missionData) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        setMission(missionData as unknown as Mission);
+
+        if (userId) {
+          const { data: existing } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('mission_id', missionId)
+            .eq('pro_id', userId)
+            .maybeSingle();
+
+          if (!active) return;
+          if (existing) {
+            setApplicationStatus('already_applied');
+          }
+        }
+      } catch {
+        if (!active) return;
+        setNotFound(true);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void fetchMission();
+
+    return () => {
+      active = false;
+    };
+  }, [missionId, userId]);
+
+  const handleApply = async () => {
+    if (!missionId || !userId || applicationStatus === 'submitting') return;
+
+    if (coverLetter.trim().length < 20) {
+      setFormError('Message trop court (minimum 20 caractères)');
+      return;
+    }
+    if (proposedRate && (Number.isNaN(Number(proposedRate)) || Number(proposedRate) <= 0)) {
+      setFormError('Tarif invalide');
+      return;
+    }
+
+    setFormError(null);
+    setApplicationStatus('submitting');
+
+    const { error } = await supabase
+      .from('applications')
+      .insert({
+        mission_id: missionId,
+        pro_id: userId,
+        cover_letter: coverLetter.trim(),
+        proposed_rate: proposedRate ? Number(proposedRate) : null,
+        status: 'pending',
+      } as never);
+
+    if (error) {
+      setFormError(error.message);
+      setApplicationStatus('error');
+    } else {
+      setApplicationStatus('submitted');
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-stone-200 border-t-orange-500" />
+      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
       </div>
     );
   }
 
-  if (!mission || error) {
+  if (notFound || !mission) {
     return (
-      <main className="mx-auto min-h-screen max-w-3xl p-4 pb-24">
-        <GlassCard className="p-8 text-center">
-          <p className="text-base font-medium">Mission introuvable.</p>
-          <Button className="mt-4" onClick={() => navigate(isStudio ? '/studio/dashboard' : '/pro/feed')}>
-            Retour
-          </Button>
-        </GlassCard>
-      </main>
+      <div className="min-h-screen bg-[#0D0D0F] text-white flex items-center justify-center px-4">
+        <p className="text-white/50">Mission introuvable.</p>
+      </div>
     );
   }
 
-  const transition = TRANSITION_MAP[currentStatus];
-  const revieweeId = isStudio ? selectedApplication?.pro_id : mission.studio_id;
-
   return (
-    <main className="mx-auto min-h-screen max-w-3xl p-4 pb-36">
-      <header className="mb-5 flex items-center justify-between">
-        <Button
-          variant="icon"
-          size="icon"
-          onClick={() => navigate(isStudio ? '/studio/dashboard' : '/pro/feed')}
+    <div className="min-h-screen bg-[#0D0D0F] text-white">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <button
+          type="button"
+          onClick={() => navigate('/pro/feed')}
+          className="text-white/50 hover:text-white text-sm mb-6 flex items-center gap-1"
         >
-          <ArrowLeft size={18} />
-        </Button>
-        <Badge variant={STATUS_VARIANTS[currentStatus]}>{STATUS_LABELS[currentStatus]}</Badge>
-      </header>
+          ← Retour au feed
+        </button>
 
-      <GlassCard className="mb-4 p-5">
-        <h1 className="text-xl font-semibold">{mission.service_type}</h1>
-        <p className="mt-1 text-sm text-stone-600">{mission.artist_name || 'Confidentiel'}</p>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-2 text-sm text-stone-700">
-            <MapPin size={15} className="text-stone-500" />
-            {mission.location || 'Paris'}
+        <header>
+          <h1 className="text-3xl font-bold mb-1">{mission.title}</h1>
+          <p className="text-white/50 text-sm">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">{mission.category}</span>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
+              {missionTypeLabel(mission.mission_type)}
+            </span>
+            {mission.status !== 'open' ? (
+              <span className="rounded-full bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1 text-xs font-medium">
+                Mission fermée
+              </span>
+            ) : null}
           </div>
-          <div className="flex items-center gap-2 text-sm text-stone-700">
-            <Euro size={15} className="text-stone-500" />
-            {mission.price || 'À négocier'}
-          </div>
-          <div className="flex items-center gap-2 text-sm text-stone-700">
-            <Clock3 size={15} className="text-stone-500" />
-            {mission.duration || 'Durée non précisée'}
-          </div>
-          <div className="text-sm text-stone-700">
-            Genres: {mission.genres.join(', ') || 'Non renseigné'}
-          </div>
-        </div>
-      </GlassCard>
+        </header>
 
-      {isStudio ? (
-        <GlassCard className="mb-4 p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Candidatures</h2>
-            <span className="text-xs text-stone-500">{applications.length} total</span>
-          </div>
-          {applications.length === 0 ? (
-            <p className="text-sm text-stone-500">Aucune candidature pour le moment.</p>
-          ) : (
-            <div className="space-y-3">
-              {applications.map((application) => (
-                <div key={application.id} className="rounded-xl border border-stone-200 bg-white/80 p-3">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">Pro: {application.pro_id.slice(0, 8)}…</p>
-                    <Badge
-                      variant={
-                        application.status === 'selected'
-                          ? 'success'
-                          : application.status === 'rejected'
-                            ? 'error'
-                            : 'warning'
-                      }
-                    >
-                      {application.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-stone-600">{application.message || 'Sans message'}</p>
-                  {application.status === 'pending' ? (
-                    <div className="mt-3">
-                      <StatusActionButtons
-                        applicationId={application.id}
-                        disabled={updateApplicationMutation.isPending}
-                        onUpdate={(applicationId, status) => {
-                          updateApplicationMutation.mutate(
-                            { id: applicationId, status },
-                            {
-                              onSuccess: () => {
-                                if (status === 'selected') {
-                                  updateStatusMutation.mutate({ id: mission.id, status: 'in_progress' });
-                                  setCurrentStatus('in_progress');
-                                }
-                              },
-                            },
-                          );
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              ))}
+        <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Budget</p>
+              <p className="text-white/80">{budgetText(mission)}</p>
             </div>
-          )}
-        </GlassCard>
-      ) : (
-        <GlassCard className="mb-4 p-5">
-          {hasApplied ? (
-            <div className="flex items-center gap-2 text-emerald-700">
-              <CheckCircle2 size={18} />
-              <p className="text-sm font-medium">Candidature déjà envoyée</p>
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Localisation</p>
+              <p className="text-white/80">{mission.location ?? 'Non précisée'}</p>
             </div>
-          ) : currentStatus === 'published' ? (
-            <Button className="w-full min-h-[44px]" onClick={() => setApplyOpen(true)}>
-              Postuler
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2 text-stone-600">
-              <CircleX size={18} />
-              <p className="text-sm">Mission non disponible pour candidature.</p>
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Date de début</p>
+              <p className="text-white/80">
+                {mission.start_date ? new Date(mission.start_date).toLocaleDateString('fr-FR') : 'À définir'}
+              </p>
             </div>
-          )}
-        </GlassCard>
-      )}
+            <div>
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Durée</p>
+              <p className="text-white/80">
+                {mission.duration_days ? `${mission.duration_days} jour(s)` : 'Non précisée'}
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Publiée le</p>
+              <p className="text-white/80">{new Date(mission.created_at).toLocaleDateString('fr-FR')}</p>
+            </div>
+          </div>
+        </section>
 
-      {isStudio && transition ? (
-        <div className="mb-4">
-          <Button
-            variant={transition.variant}
-            className="w-full min-h-[44px]"
-            onClick={() => {
-              updateStatusMutation.mutate(
-                { id: mission.id, status: transition.next },
-                {
-                  onSuccess: () => {
-                    setCurrentStatus(transition.next);
-                    showToast({
-                      title: `Mission passée en ${STATUS_LABELS[transition.next]}`,
-                      variant: 'default',
-                    });
-                    if (transition.next === 'completed' && revieweeId) {
-                      setReviewOpen(true);
-                    }
-                  },
-                },
-              );
-            }}
-          >
-            {transition.label}
-          </Button>
-        </div>
-      ) : null}
+        {mission.description ? (
+          <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-4">
+            <h2 className="text-sm font-semibold text-white mb-2">Description</h2>
+            <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+              {mission.description}
+            </p>
+          </section>
+        ) : null}
 
-      <GlassCard className="p-5">
-        <h3 className="mb-3 text-base font-semibold">Avis</h3>
-        {reviews.length === 0 ? (
-          <p className="text-sm text-stone-500">Aucun avis pour le moment.</p>
-        ) : (
-          <div className="space-y-3">
-            {reviews.map((review) => (
-              <div key={review.id} className="rounded-xl border border-stone-200 bg-white/80 p-3">
-                <p className="text-sm font-medium">Note: {review.rating}/5</p>
-                <p className="mt-1 text-sm text-stone-600">{review.comment || 'Sans commentaire'}</p>
+        <section className="bg-white/5 border border-white/10 rounded-xl p-5 mt-4">
+          <h2 className="text-sm font-semibold text-white mb-3">Postuler à cette mission</h2>
+
+          {applicationStatus === 'already_applied' ? (
+            <div className="text-center py-4">
+              <p className="text-green-400 font-medium">✓ Tu as déjà postulé à cette mission</p>
+              <p className="text-white/40 text-sm mt-1">Ta candidature est en cours de traitement.</p>
+            </div>
+          ) : null}
+
+          {applicationStatus === 'submitted' ? (
+            <div className="text-center py-4">
+              <p className="text-green-400 font-medium">✓ Candidature envoyée !</p>
+              <p className="text-white/40 text-sm mt-1">Le studio a été notifié.</p>
+              <button
+                type="button"
+                onClick={() => navigate('/pro/dashboard')}
+                className="text-violet-400 underline text-sm mt-3 block mx-auto"
+              >
+                Voir mes candidatures
+              </button>
+            </div>
+          ) : null}
+
+          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status !== 'open' ? (
+            <p className="text-white/40 text-sm text-center py-4">
+              Cette mission n&apos;accepte plus de candidatures.
+            </p>
+          ) : null}
+
+          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status === 'open' ? (
+            <div>
+              <label className="text-sm text-white/80 block mb-2" htmlFor="cover-letter">
+                Ton message au studio *
+              </label>
+              <textarea
+                id="cover-letter"
+                rows={4}
+                maxLength={500}
+                value={coverLetter}
+                onChange={(event) => setCoverLetter(event.target.value)}
+                placeholder="Présente-toi et explique pourquoi tu es le bon profil..."
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
+              />
+              <p className="text-xs text-white/30 text-right mt-1">{coverLetter.length}/500</p>
+
+              <label className="text-sm text-white/80 block mt-4 mb-2" htmlFor="proposed-rate">
+                Ton tarif journalier (€)
+              </label>
+              <input
+                id="proposed-rate"
+                type="number"
+                value={proposedRate}
+                onChange={(event) => setProposedRate(event.target.value)}
+                placeholder="ex: 300"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-violet-400"
+              />
+
+              {formError ? <p className="text-red-400 text-xs mt-2">{formError}</p> : null}
+
+              <div className="mt-4">
+                <GradientButton
+                  onClick={handleApply}
+                  disabled={applicationStatus === 'submitting'}
+                >
+                  {applicationStatus === 'submitting' ? 'Envoi...' : 'Envoyer ma candidature'}
+                </GradientButton>
               </div>
-            ))}
-          </div>
-        )}
-      </GlassCard>
-
-      <ApplyModal
-        isOpen={applyOpen}
-        missionId={mission.id}
-        onClose={() => setApplyOpen(false)}
-      />
-
-      {revieweeId ? (
-        <ReviewModal
-          isOpen={reviewOpen}
-          missionId={mission.id}
-          revieweeId={revieweeId}
-          onClose={() => setReviewOpen(false)}
-        />
-      ) : null}
-    </main>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </div>
   );
 }
