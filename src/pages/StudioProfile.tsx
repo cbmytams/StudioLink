@@ -135,12 +135,12 @@ export default function StudioProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container-compact">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
+          className="mb-6 text-sm app-muted transition-colors hover:text-black"
         >
           ← Dashboard
         </button>
@@ -184,7 +184,7 @@ export default function StudioProfile() {
               <Button
                 disabled={saving}
                 onClick={() => void handleSave()}
-                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+                className="bg-orange-500 text-white hover:bg-orange-600"
               >
                 {saving ? (
                   <>
@@ -210,14 +210,14 @@ export default function StudioProfile() {
           hasAnyInfo ? (
             <div className="space-y-4">
               {bio.trim() ? (
-                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                <section className="app-card-soft p-4">
                   <h2 className="mb-2 text-sm font-semibold text-black/80">Bio</h2>
                   <p className="text-sm text-black/70">{bio}</p>
                 </section>
               ) : null}
 
               {website.trim() ? (
-                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                <section className="app-card-soft p-4">
                   <h2 className="mb-2 text-sm font-semibold text-black/80">Site web</h2>
                   <a
                     href={website}
@@ -231,14 +231,14 @@ export default function StudioProfile() {
               ) : null}
 
               {contactEmail.trim() ? (
-                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                <section className="app-card-soft p-4">
                   <h2 className="mb-2 text-sm font-semibold text-black/80">Email de contact</h2>
                   <p className="text-sm text-black/70">{contactEmail}</p>
                 </section>
               ) : null}
 
               {phone.trim() ? (
-                <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                <section className="app-card-soft p-4">
                   <h2 className="mb-2 text-sm font-semibold text-black/80">Téléphone</h2>
                   <p className="text-sm text-black/70">{phone}</p>
                 </section>
@@ -250,7 +250,7 @@ export default function StudioProfile() {
             </p>
           )
         ) : (
-          <section className="bg-white/70 border border-white/50 rounded-xl p-4 space-y-4">
+          <section className="app-card-soft p-4 space-y-4">
             <div>
               <input
                 value={companyName}
