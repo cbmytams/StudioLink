@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { TextInput } from '@/components/ui/TextInput'
@@ -22,7 +22,7 @@ export default function InvitationPage() {
     navigate('/pro/feed', { replace: true })
   }, [authLoading, navigate, profile?.user_type, session])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     const normalizedCode = code.trim().toUpperCase()
