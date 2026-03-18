@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { GradientButton } from '@/components/ui/GradientButton';
+import { Button } from '@/components/ui/Button';
 
 type Mission = {
   id: string
@@ -300,13 +300,13 @@ export default function MissionDetail() {
               {formError ? <p className="text-red-400 text-xs mt-2">{formError}</p> : null}
 
               <div className="mt-4">
-                <GradientButton
+                <Button
                   onClick={handleApply}
                   disabled={applicationStatus === 'submitting'}
                   className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
                 >
                   {applicationStatus === 'submitting' ? 'Envoi...' : 'Envoyer ma candidature'}
-                </GradientButton>
+                </Button>
               </div>
             </div>
           ) : null}
