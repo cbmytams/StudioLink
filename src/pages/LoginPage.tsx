@@ -102,6 +102,7 @@ export default function LoginPage() {
 
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
+      sessionStorage.removeItem('invitationEmail');
       setSuccessMessage('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.');
       setPassword('');
       setConfirmPassword('');
