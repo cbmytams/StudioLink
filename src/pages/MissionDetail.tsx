@@ -168,6 +168,16 @@ export default function MissionDetail() {
     );
   }
 
+  if (fetchError && !mission) {
+    return (
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center px-4">
+        <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 text-sm">
+          {fetchError}
+        </div>
+      </div>
+    );
+  }
+
   if (notFound || !mission) {
     return (
       <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a] flex items-center justify-center px-4">
