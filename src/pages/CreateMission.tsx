@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 const CATEGORIES = [
   'Photographie',
@@ -19,6 +20,7 @@ const CATEGORIES = [
 export default function CreateMission() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { showToast } = useToast();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
@@ -134,6 +136,11 @@ export default function CreateMission() {
     const userId = session?.user?.id;
     if (!userId) {
       setError('Session expirée. Reconnecte-toi.');
+      showToast({
+        title: 'Session expirée',
+        description: 'Reconnecte-toi pour créer une mission.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -159,13 +166,24 @@ export default function CreateMission() {
 
       if (insertError) {
         setError(insertError.message);
+        showToast({
+          title: 'Création impossible',
+          description: insertError.message,
+          variant: 'destructive',
+        });
         return;
       }
 
+      showToast({ title: 'Mission publiée', variant: 'default' });
       navigate('/studio/dashboard');
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : 'Une erreur est survenue';
       setError(message);
+      showToast({
+        title: 'Création impossible',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
