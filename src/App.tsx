@@ -189,6 +189,14 @@ export default function App() {
             )}
           />
           <Route
+            path="/mission/:missionId"
+            element={(
+              <ProtectedRoute requiredType="pro">
+                <MissionDetailPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
             path="/missions/:id/applications"
             element={(
               <ProtectedRoute requiredType="studio">
