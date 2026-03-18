@@ -249,8 +249,23 @@ export default function ProDashboard() {
     <div className="app-shell">
       <div className="app-container">
         <header className="mb-5">
-          <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
-          <p className="app-subtitle">{applications.length} candidature(s) envoyée(s)</p>
+          <div className="flex items-center gap-3">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar pro"
+                className="h-12 w-12 rounded-full border border-white/50 object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+                {greetingName.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <div>
+              <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
+              <p className="app-subtitle">{applications.length} candidature(s) envoyée(s)</p>
+            </div>
+          </div>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
