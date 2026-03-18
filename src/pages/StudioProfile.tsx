@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { profileService } from '@/services/profileService';
 import { useReviews } from '@/hooks/useReviews';
+import { useToast } from '@/components/ui/Toast';
 
 type EditableStudioProfile = {
   company_name?: string | null
@@ -24,6 +25,7 @@ type FieldErrors = {
 export default function StudioProfile() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const { showToast } = useToast();
 
   const user = session?.user ?? null;
   const profileData = (profile ?? null) as EditableStudioProfile | null;
@@ -99,6 +101,11 @@ export default function StudioProfile() {
   const handleSave = async () => {
     if (!user) {
       setError('Session invalide. Reconnecte-toi.');
+      showToast({
+        title: 'Session invalide',
+        description: 'Reconnecte-toi pour sauvegarder ton profil.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -128,16 +135,27 @@ export default function StudioProfile() {
 
       if (updateError) {
         setError(updateError.message);
+        showToast({
+          title: 'Sauvegarde impossible',
+          description: updateError.message,
+          variant: 'destructive',
+        });
         return;
       }
 
       setSuccessMessage('Profil mis à jour ✓');
+      showToast({ title: 'Profil mis à jour', variant: 'default' });
       setIsEditing(false);
       setAvatarUrl(uploadedAvatarUrl);
       setAvatarFile(null);
       setAvatarPreview(null);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
+      showToast({
+        title: 'Sauvegarde impossible',
+        description: saveError instanceof Error ? saveError.message : undefined,
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
