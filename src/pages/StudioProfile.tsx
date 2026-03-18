@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { profileService } from '@/services/profileService';
+import { useReviews } from '@/hooks/useReviews';
 
 type EditableStudioProfile = {
   company_name?: string | null
@@ -10,6 +12,7 @@ type EditableStudioProfile = {
   bio?: string | null
   contact_email?: string | null
   phone?: string | null
+  avatar_url?: string | null
 }
 
 type FieldErrors = {
@@ -36,6 +39,10 @@ export default function StudioProfile() {
   const [bio, setBio] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { data: reviews = [] } = useReviews(user?.id);
 
   useEffect(() => {
     if (!profileData) return;
@@ -44,6 +51,9 @@ export default function StudioProfile() {
     setBio(profileData.bio ?? '');
     setContactEmail(profileData.contact_email ?? '');
     setPhone(profileData.phone ?? '');
+    setAvatarUrl(profileData.avatar_url ?? null);
+    setAvatarPreview(null);
+    setAvatarFile(null);
   }, [profileData]);
 
   useEffect(() => {
@@ -98,6 +108,11 @@ export default function StudioProfile() {
 
     setSaving(true);
     try {
+      let uploadedAvatarUrl = avatarUrl;
+      if (avatarFile && user) {
+        uploadedAvatarUrl = await profileService.uploadAvatar(user.id, avatarFile);
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -106,6 +121,7 @@ export default function StudioProfile() {
           bio: bio.trim() || null,
           contact_email: contactEmail.trim(),
           phone: phone.trim() || null,
+          avatar_url: uploadedAvatarUrl,
           updated_at: new Date().toISOString(),
         } as never)
         .eq('id', user.id);
@@ -117,6 +133,9 @@ export default function StudioProfile() {
 
       setSuccessMessage('Profil mis à jour ✓');
       setIsEditing(false);
+      setAvatarUrl(uploadedAvatarUrl);
+      setAvatarFile(null);
+      setAvatarPreview(null);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
     } finally {
@@ -133,6 +152,9 @@ export default function StudioProfile() {
     contactEmail.trim() ||
     phone.trim(),
   );
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+    : null;
 
   return (
     <div className="app-shell">
@@ -147,9 +169,17 @@ export default function StudioProfile() {
 
         <header className="app-header items-start mb-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-600 text-lg font-semibold">
-              {companyName.trim().charAt(0).toUpperCase() || '?'}
-            </div>
+            {avatarPreview || avatarUrl ? (
+              <img
+                src={avatarPreview ?? avatarUrl ?? undefined}
+                alt="Avatar studio"
+                className="h-12 w-12 rounded-full border border-white/50 object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-600 text-lg font-semibold">
+                {companyName.trim().charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
             <div>
               <h1 className="text-xl font-semibold">{companyName || profileData?.company_name || 'Studio'}</h1>
               <p className="text-sm text-black/50">Studio</p>
@@ -209,6 +239,23 @@ export default function StudioProfile() {
         {!isEditing ? (
           hasAnyInfo ? (
             <div className="space-y-4">
+              <section className="app-card-soft p-4">
+                <h2 className="mb-2 text-sm font-semibold text-black/80">Avis reçus</h2>
+                {averageRating !== null ? (
+                  <p className="text-sm text-black/70">
+                    Note moyenne : <span className="font-semibold text-orange-700">{averageRating.toFixed(1)} / 5</span> ({reviews.length} avis)
+                  </p>
+                ) : (
+                  <p className="text-sm app-muted">Aucun avis pour le moment.</p>
+                )}
+                {reviews.slice(0, 5).map((review) => (
+                  <div key={review.id} className="rounded-xl border border-white/50 bg-white/70 p-3 mt-2">
+                    <p className="text-sm font-medium text-orange-700">{'★'.repeat(review.rating)}</p>
+                    {review.comment ? <p className="text-sm text-black/70 mt-1">{review.comment}</p> : null}
+                    <p className="text-xs app-muted mt-1">{new Date(review.created_at).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                ))}
+              </section>
               {bio.trim() ? (
                 <section className="app-card-soft p-4">
                   <h2 className="mb-2 text-sm font-semibold text-black/80">Bio</h2>
@@ -251,6 +298,28 @@ export default function StudioProfile() {
           )
         ) : (
           <section className="app-card-soft p-4 space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black/75" htmlFor="studio-avatar">
+                Avatar
+              </label>
+              <input
+                id="studio-avatar"
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  const nextFile = event.target.files?.[0] ?? null;
+                  setAvatarFile(nextFile);
+                  if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+                  if (nextFile) {
+                    setAvatarPreview(URL.createObjectURL(nextFile));
+                  } else {
+                    setAvatarPreview(null);
+                  }
+                }}
+                className={baseInputClass}
+              />
+            </div>
+
             <div>
               <input
                 value={companyName}
