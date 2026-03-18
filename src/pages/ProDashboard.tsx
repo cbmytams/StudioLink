@@ -1,0 +1,381 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/auth/AuthProvider';
+import { Button as GradientButton } from '@/components/ui/Button';
+
+type MissionRef = {
+  id: string
+  title: string
+  status: string
+  category: string
+  mission_type: string
+  budget_min: number | null
+  budget_max: number | null
+  profiles: { company_name: string | null } | null
+}
+
+type Application = {
+  id: string
+  status: 'pending' | 'accepted' | 'rejected'
+  cover_letter: string | null
+  proposed_rate: number | null
+  created_at: string
+  mission_id: string
+  missions: MissionRef | null
+}
+
+type BookingMissionRef = {
+  title: string
+  profiles: { company_name: string | null } | null
+}
+
+type Booking = {
+  id: string
+  status: string
+  created_at: string
+  mission_id: string
+  missions: BookingMissionRef | null
+}
+
+type ApplicationRow = {
+  id: string
+  status: string | null
+  cover_letter: string | null
+  proposed_rate: number | null
+  created_at: string
+  mission_id: string
+  missions: MissionRef | MissionRef[] | null
+}
+
+type BookingRow = {
+  id: string
+  status: string | null
+  created_at: string
+  mission_id: string
+  missions: BookingMissionRef | BookingMissionRef[] | null
+}
+
+function normalizeApplicationStatus(status: string | null): Application['status'] {
+  if (status === 'accepted' || status === 'selected') return 'accepted';
+  if (status === 'rejected') return 'rejected';
+  return 'pending';
+}
+
+function statusClass(status: Application['status']): string {
+  if (status === 'accepted') return 'bg-green-500/20 text-green-400';
+  if (status === 'rejected') return 'bg-red-500/20 text-red-400';
+  return 'bg-yellow-500/20 text-yellow-400';
+}
+
+function bookingStatusClass(status: string): string {
+  return status === 'confirmed'
+    ? 'bg-green-500/20 text-green-400'
+    : 'bg-white/15 text-white/70';
+}
+
+function budgetText(mission: MissionRef | null): string {
+  if (!mission) return 'Budget non renseigné';
+  if (mission.budget_min !== null && mission.budget_max !== null) {
+    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
+  }
+  if (mission.budget_min !== null) {
+    return `À partir de ${mission.budget_min}€/j`;
+  }
+  return 'Budget non renseigné';
+}
+
+export default function ProDashboard() {
+  const navigate = useNavigate();
+  const { session, profile } = useAuth();
+
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'applications' | 'bookings'>('applications');
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchDashboard = async () => {
+      const userId = session?.user?.id;
+      if (!userId) {
+        if (!active) return;
+        setApplications([]);
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const applicationsColumns: string = `
+          id,
+          status,
+          cover_letter,
+          proposed_rate,
+          created_at,
+          mission_id,
+          missions:mission_id (
+            id,
+            title,
+            status,
+            category,
+            mission_type,
+            budget_min,
+            budget_max,
+            profiles:studio_id (
+              company_name
+            )
+          )
+        `;
+        const { data: applicationsData, error: applicationsError } = await supabase
+          .from('applications')
+          .select(applicationsColumns)
+          .eq('pro_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (applicationsError) throw applicationsError;
+
+        const bookingsColumns: string = `
+          id,
+          status,
+          created_at,
+          mission_id,
+          missions:mission_id (
+            title,
+            profiles:studio_id (
+              company_name
+            )
+          )
+        `;
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('booking_sessions' as never)
+          .select(bookingsColumns)
+          .eq('pro_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (bookingsError) throw bookingsError;
+
+        if (!active) return;
+
+        const mappedApplications: Application[] = (applicationsData as unknown as ApplicationRow[] | null ?? []).map((application) => {
+          const missionRef = Array.isArray(application.missions)
+            ? application.missions[0] ?? null
+            : application.missions;
+
+          return {
+            id: application.id,
+            status: normalizeApplicationStatus(application.status),
+            cover_letter: application.cover_letter,
+            proposed_rate: application.proposed_rate,
+            created_at: application.created_at,
+            mission_id: application.mission_id,
+            missions: missionRef,
+          };
+        });
+
+        const mappedBookings: Booking[] = (bookingsData as unknown as BookingRow[] | null ?? []).map((booking) => {
+          const missionRef = Array.isArray(booking.missions)
+            ? booking.missions[0] ?? null
+            : booking.missions;
+          return {
+            id: booking.id,
+            status: booking.status ?? 'unknown',
+            created_at: booking.created_at,
+            mission_id: booking.mission_id,
+            missions: missionRef,
+          };
+        });
+
+        setApplications(mappedApplications);
+        setBookings(mappedBookings);
+      } catch (fetchError) {
+        if (!active) return;
+        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le dashboard');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void fetchDashboard();
+
+    return () => {
+      active = false;
+    };
+  }, [session?.user?.id]);
+
+  const stats = useMemo(
+    () => ({
+      totalApplications: applications.length,
+      pendingApplications: applications.filter((item) => item.status === 'pending').length,
+      acceptedApplications: applications.filter((item) => item.status === 'accepted').length,
+      bookingsCount: bookings.length,
+    }),
+    [applications, bookings.length],
+  );
+
+  const profileIdentity = profile as
+    | {
+      full_name?: string | null
+      username?: string | null
+      display_name?: string | null
+    }
+    | null;
+  const greetingName =
+    profileIdentity?.full_name ??
+    profileIdentity?.username ??
+    profileIdentity?.display_name ??
+    'Pro';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0D0D0F] text-white">
+        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0D0D0F] text-white">
+      <div className="max-w-4xl mx-auto px-4 py-8 pb-20">
+        <header className="mb-5">
+          <h1 className="text-2xl font-semibold">Bonjour, {greetingName} 👋</h1>
+          <p className="text-sm text-white/60">{applications.length} candidature(s) envoyée(s)</p>
+        </header>
+
+        {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
+
+        <section className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-2xl font-bold">{stats.totalApplications}</p>
+            <p className="text-sm text-white/60">Candidatures envoyées</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-2xl font-bold">{stats.pendingApplications}</p>
+            <p className="text-sm text-white/60">En attente</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
+            <p className="text-sm text-white/60">Acceptées</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-2xl font-bold">{stats.bookingsCount}</p>
+            <p className="text-sm text-white/60">Missions bookées</p>
+          </div>
+        </section>
+
+        <div className="mb-5">
+          <GradientButton
+            onClick={() => navigate('/pro/feed')}
+            className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+          >
+            Voir les missions disponibles →
+          </GradientButton>
+        </div>
+
+        <div className="mb-4 flex gap-5 border-b border-white/10">
+          <button
+            type="button"
+            onClick={() => setActiveTab('applications')}
+            className={`pb-2 text-sm transition-colors ${
+              activeTab === 'applications'
+                ? 'border-b-2 border-violet-500 text-white'
+                : 'text-white/40'
+            }`}
+          >
+            Mes candidatures
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('bookings')}
+            className={`pb-2 text-sm transition-colors ${
+              activeTab === 'bookings'
+                ? 'border-b-2 border-violet-500 text-white'
+                : 'text-white/40'
+            }`}
+          >
+            Mes bookings
+          </button>
+        </div>
+
+        {activeTab === 'applications' ? (
+          applications.length === 0 ? (
+            <div className="text-center text-white/40 py-8">
+              Tu n&apos;as encore postulé à aucune mission.
+              <br />
+              <button
+                onClick={() => navigate('/pro/feed')}
+                className="text-violet-400 underline mt-2"
+              >
+                Découvrir les missions
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {applications.map((application) => (
+                <article key={application.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold">{application.missions?.title ?? 'Mission supprimée'}</p>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(application.status)}`}>
+                      {application.status === 'pending'
+                        ? 'En attente'
+                        : application.status === 'accepted'
+                          ? 'Acceptée'
+                          : 'Refusée'}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-white/50">
+                    {application.missions?.profiles?.company_name ?? 'Studio inconnu'}
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/80">
+                      {application.missions?.category ?? 'Catégorie inconnue'}
+                    </span>
+                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/80">
+                      {application.missions?.mission_type ?? 'Type inconnu'}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-sm text-violet-300">{budgetText(application.missions)}</p>
+                  {application.proposed_rate ? (
+                    <p className="mt-1 text-sm text-white/60">Tarif proposé : {application.proposed_rate}€/j</p>
+                  ) : null}
+                  <p className="mt-1 text-xs text-white/45">
+                    Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )
+        ) : bookings.length === 0 ? (
+          <p className="text-center text-white/40 py-8">Aucun booking confirmé pour l&apos;instant.</p>
+        ) : (
+          <div className="space-y-3">
+            {bookings.map((booking) => (
+              <article key={booking.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="font-semibold">{booking.missions?.title ?? 'Mission'}</p>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${bookingStatusClass(booking.status)}`}>
+                    {booking.status}
+                  </span>
+                </div>
+                <p className="text-sm text-white/50">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
+                <p className="mt-1 text-xs text-white/45">
+                  Booking du {new Date(booking.created_at).toLocaleDateString('fr-FR')}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
