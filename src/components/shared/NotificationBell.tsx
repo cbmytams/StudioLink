@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
-import { useUnreadCount } from '@/hooks/useNotifications';
+import { useMarkAllRead, useUnreadCount } from '@/hooks/useNotifications';
 
 interface NotificationBellProps {
   userType: 'studio' | 'pro';
@@ -10,12 +10,23 @@ interface NotificationBellProps {
 export function NotificationBell(_props: NotificationBellProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { unreadCount } = useUnreadCount(session?.user?.id);
+  const userId = session?.user?.id;
+  const { unreadCount } = useUnreadCount(userId);
+  const markAllRead = useMarkAllRead(userId);
 
   return (
     <button
       type="button"
-      onClick={() => navigate('/notifications')}
+      onClick={async () => {
+        if (unreadCount > 0) {
+          try {
+            await markAllRead.mutateAsync();
+          } catch {
+            // Navigation reste prioritaire, l'action sera rejouée depuis la page notifications.
+          }
+        }
+        navigate('/notifications');
+      }}
       className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/50 bg-white/60 shadow-sm transition-colors hover:bg-white"
     >
       <Bell size={20} className="text-black/70" />
