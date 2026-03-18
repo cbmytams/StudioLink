@@ -2,7 +2,7 @@ import { type FormEvent, type KeyboardEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 const CATEGORIES = [
   'Photographie',
@@ -324,7 +324,7 @@ export default function CreateMission() {
                   ← Retour
                 </button>
               )}
-              <GradientButton
+              <Button
                 type="submit"
                 disabled={loading}
                 className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
@@ -339,7 +339,7 @@ export default function CreateMission() {
                 ) : (
                   'Créer la mission →'
                 )}
-              </GradientButton>
+              </Button>
             </div>
           </form>
         </div>
