@@ -199,22 +199,39 @@ export default function CreateMission() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {step === 1 ? (
               <>
+                <div>
+                  <label htmlFor="mission-title" className="mb-2 block text-sm font-medium text-black/75">
+                    Titre de la mission
+                  </label>
                 <input
+                    id="mission-title"
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Titre de la mission"
                   className={baseInputClass}
                 />
+                </div>
 
+                <div>
+                  <label htmlFor="mission-description" className="mb-2 block text-sm font-medium text-black/75">
+                    Description
+                  </label>
                 <textarea
+                    id="mission-description"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="Description de la mission"
                   rows={4}
                   className={baseInputClass}
                 />
+                </div>
 
+                <div>
+                  <label htmlFor="mission-category" className="mb-2 block text-sm font-medium text-black/75">
+                    Catégorie
+                  </label>
                 <select
+                    id="mission-category"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
                   className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
@@ -228,9 +245,10 @@ export default function CreateMission() {
                     </option>
                   ))}
                 </select>
+                </div>
 
                 <div>
-                  <p className="mb-2 text-sm text-black/60">Type de mission</p>
+                  <p className="mb-2 text-sm font-medium text-black/75">Type de mission</p>
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { key: 'on_site' as const, label: 'Sur place' },
@@ -256,31 +274,53 @@ export default function CreateMission() {
             ) : (
               <>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="budget-min" className="mb-2 block text-sm font-medium text-black/75">
+                      Budget minimum (€)
+                    </label>
                   <input
+                      id="budget-min"
                     value={budgetMin}
                     onChange={(event) => setBudgetMin(event.target.value)}
                     placeholder="Budget min (€)"
                     className={baseInputClass}
                     inputMode="numeric"
                   />
+                  </div>
+                  <div>
+                    <label htmlFor="budget-max" className="mb-2 block text-sm font-medium text-black/75">
+                      Budget maximum (€)
+                    </label>
                   <input
+                      id="budget-max"
                     value={budgetMax}
                     onChange={(event) => setBudgetMax(event.target.value)}
                     placeholder="Budget max (€)"
                     className={baseInputClass}
                     inputMode="numeric"
                   />
+                  </div>
                 </div>
 
+                <div>
+                  <label htmlFor="mission-deadline" className="mb-2 block text-sm font-medium text-black/75">
+                    Deadline
+                  </label>
                 <input
+                    id="mission-deadline"
                   type="date"
                   value={deadline}
                   onChange={(event) => setDeadline(event.target.value)}
                   className={baseInputClass}
                 />
+                </div>
 
                 <div>
+                  <label htmlFor="required-skills" className="mb-2 block text-sm font-medium text-black/75">
+                    Compétences requises
+                  </label>
                   <input
+                    id="required-skills"
                     value={skillInput}
                     onChange={(event) => setSkillInput(event.target.value)}
                     onKeyDown={handleSkillKeyDown}
@@ -337,7 +377,7 @@ export default function CreateMission() {
                 ) : step === 1 ? (
                   'Suivant →'
                 ) : (
-                  'Créer la mission →'
+                  'Publier la mission'
                 )}
               </Button>
             </div>
