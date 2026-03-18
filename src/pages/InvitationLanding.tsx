@@ -17,6 +17,8 @@ type InvitationRow = {
   id: string
   code: string
   type: 'studio' | 'pro'
+  email?: string | null
+  used?: boolean
   used_by: string | null
   expires_at: string
   created_at: string
@@ -41,11 +43,27 @@ export default function InvitationLanding() {
 
       setState('loading')
 
-      const { data, error: fetchError } = await supabase
+      const normalizedCode = code.trim().toUpperCase()
+
+      const expected = await supabase
         .from('invitations')
-        .select('id, code, type, used_by, expires_at, created_at')
-        .eq('code', code.trim().toUpperCase())
+        .select('id, code, type, email, used, expires_at, created_at')
+        .eq('code', normalizedCode)
         .single()
+
+      let data = expected.data as InvitationRow | null
+      let fetchError = expected.error
+
+      if (fetchError) {
+        const fallback = await supabase
+          .from('invitations')
+          .select('id, code, type, used_by, expires_at, created_at')
+          .eq('code', normalizedCode)
+          .single()
+
+        data = fallback.data as InvitationRow | null
+        fetchError = fallback.error
+      }
 
       if (cancelled) return
 
@@ -54,13 +72,13 @@ export default function InvitationLanding() {
         return
       }
 
-      const row = data as unknown as InvitationRow
+      const row = data as InvitationRow
       const normalized: Invitation = {
         id: row.id,
         code: row.code,
         type: row.type,
-        email: null,
-        used: row.used_by !== null,
+        email: row.email ?? null,
+        used: row.used ?? row.used_by !== null,
         expires_at: row.expires_at ?? null,
         created_at: row.created_at,
       }
