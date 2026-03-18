@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
+import { Helmet } from 'react-helmet-async';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -21,6 +22,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
+      <Helmet>
+        <title>StudioLink — Plateforme Studios & Créatifs</title>
+        <meta
+          name="description"
+          content="Frapppe connecte les studios et les professionnels créatifs via une plateforme sur invitation."
+        />
+        <meta property="og:title" content="StudioLink — Plateforme Studios & Créatifs" />
+        <meta
+          property="og:description"
+          content="Rejoins la plateforme sur invitation pour publier des missions ou candidater en tant que pro."
+        />
+      </Helmet>
       <section className="min-h-screen flex flex-col items-center justify-center text-center px-4 py-24">
         <span className="inline-block text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-3 py-1 rounded-full mb-6">
           🔒 Plateforme sur invitation uniquement
@@ -143,4 +156,3 @@ export default function HomePage() {
     </div>
   );
 }
-
