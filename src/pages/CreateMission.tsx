@@ -182,7 +182,7 @@ export default function CreateMission() {
           ← Retour au dashboard
         </button>
 
-        <div className="app-card p-6">
+        <div className="app-card p-6 md:p-7">
           <div className="w-full h-1 bg-black/10 rounded-full mb-6">
             <div
               className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
@@ -191,8 +191,8 @@ export default function CreateMission() {
           </div>
           <p className="text-sm app-muted mb-4">Étape {step} sur 2</p>
 
-          <h1 className="text-2xl font-semibold mb-1">Créer une mission</h1>
-          <p className="text-sm app-muted mb-6">
+          <h1 className="app-title text-2xl mb-1">Créer une mission</h1>
+          <p className="app-subtitle mb-6 mt-0">
             {step === 1 ? 'Renseigne les informations principales' : 'Ajoute les conditions de mission'}
           </p>
 
