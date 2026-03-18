@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
+import { useReviews } from '@/hooks/useReviews';
 
 type ProProfile = {
   id: string
@@ -21,6 +22,7 @@ export function ProPublicProfile() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { data: reviews = [] } = useReviews(proId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -63,6 +65,9 @@ export function ProPublicProfile() {
     proProfile?.daily_rate ||
     (proProfile?.skills?.length ?? 0) > 0,
   );
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+    : null;
 
   if (loading) {
     return (
@@ -179,6 +184,23 @@ export function ProPublicProfile() {
                 </div>
               </section>
             ) : null}
+            <section className="app-card-soft p-4 mt-4">
+              <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Avis</p>
+              {averageRating !== null ? (
+                <p className="text-sm text-black/70 mb-3">
+                  Note moyenne : <span className="font-semibold text-orange-700">{averageRating.toFixed(1)} / 5</span> ({reviews.length} avis)
+                </p>
+              ) : (
+                <p className="text-sm app-muted">Aucun avis pour le moment.</p>
+              )}
+              {reviews.slice(0, 5).map((review) => (
+                <div key={review.id} className="rounded-xl border border-white/50 bg-white/70 p-3 mt-2">
+                  <p className="text-sm font-medium text-orange-700">{'★'.repeat(review.rating)}</p>
+                  {review.comment ? <p className="text-sm text-black/70 mt-1">{review.comment}</p> : null}
+                  <p className="text-xs app-muted mt-1">{new Date(review.created_at).toLocaleDateString('fr-FR')}</p>
+                </div>
+              ))}
+            </section>
           </>
         ) : (
           <p className="app-muted text-sm mt-6">Ce profil est incomplet.</p>
