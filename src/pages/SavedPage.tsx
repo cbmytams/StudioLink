@@ -18,7 +18,7 @@ export default function SavedPage() {
   return (
     <main className="app-shell">
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
-        <h1 className="mb-4 text-3xl font-semibold tracking-tight">Éléments sauvegardés</h1>
+        <h1 className="app-title mb-4">Éléments sauvegardés</h1>
         {isLoading ? (
           <div className="animate-pulse h-24 rounded-xl bg-stone-100" />
         ) : isError ? (
