@@ -33,6 +33,7 @@ export function ProPublicProfile() {
       setLoading(true);
       setNotFound(false);
       setError(null);
+      setProProfile(null);
 
       try {
         const { data } = await supabase
