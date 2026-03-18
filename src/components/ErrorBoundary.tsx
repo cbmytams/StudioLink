@@ -3,7 +3,10 @@ import React, { type ReactNode } from 'react';
 type Props = { children: ReactNode };
 type State = { hasError: boolean; errorMessage: string };
 
-export class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundary extends React.Component {
+  declare props: Props;
+  state: State;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, errorMessage: '' };
