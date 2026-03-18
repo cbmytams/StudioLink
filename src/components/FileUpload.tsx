@@ -15,6 +15,7 @@ export function FileUpload({ bucket, onUpload, accept, maxMB = 10 }: FileUploadP
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFile = async (file?: File) => {
     if (!file) return;
@@ -59,10 +60,24 @@ export function FileUpload({ bucket, onUpload, accept, maxMB = 10 }: FileUploadP
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="w-full rounded-xl border border-dashed border-stone-300 bg-white/70 px-4 py-5 text-sm text-stone-600 hover:bg-white transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragOver(false);
+          void handleFile(event.dataTransfer.files?.[0]);
+        }}
+        className={`w-full rounded-xl border border-dashed px-4 py-5 text-sm text-stone-600 transition-colors flex items-center justify-center gap-2 min-h-[44px] ${
+          isDragOver
+            ? 'border-orange-400 bg-orange-50'
+            : 'border-stone-300 bg-white/70 hover:bg-white'
+        }`}
       >
         <Upload size={16} />
-        Ajouter un fichier
+        {isDragOver ? 'Dépose le fichier ici' : 'Ajouter un fichier'}
       </button>
       <input
         ref={inputRef}
