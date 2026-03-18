@@ -23,6 +23,10 @@ type Mission = {
 
 type ApplicationStatus = 'idle' | 'submitting' | 'submitted' | 'already_applied' | 'error'
 
+function isMissionOpen(status: string): boolean {
+  return status === 'open' || status === 'published' || status === 'selecting';
+}
+
 function missionTypeBadgeClass(type: string): string {
   if (type === 'on_site') return 'bg-orange-100 text-orange-700 border border-orange-200';
   if (type === 'hybrid') return 'bg-purple-100 text-purple-700 border border-purple-200';
@@ -211,7 +215,7 @@ export default function MissionDetail() {
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
               {missionTypeLabel(mission.mission_type)}
             </span>
-            {mission.status !== 'open' ? (
+            {!isMissionOpen(mission.status) ? (
               <span className="rounded-full bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 text-xs font-medium">
                 Mission fermée
               </span>
@@ -281,13 +285,13 @@ export default function MissionDetail() {
             </div>
           ) : null}
 
-          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status !== 'open' ? (
+          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && !isMissionOpen(mission.status) ? (
             <p className="text-sm app-muted text-center py-4">
               Cette mission n&apos;accepte plus de candidatures.
             </p>
           ) : null}
 
-          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && mission.status === 'open' ? (
+          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && isMissionOpen(mission.status) ? (
             <div>
               <label className="text-sm text-black/80 block mb-2" htmlFor="cover-letter">
                 Ton message au studio *
