@@ -319,7 +319,7 @@ export default function ProFeed() {
                 {(mission.required_skills ?? []).length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {visibleSkills.map((skill) => (
-                      <span key={skill} className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75">
+                      <span key={skill} className="app-chip">
                         {skill}
                       </span>
                     ))}
