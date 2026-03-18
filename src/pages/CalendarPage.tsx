@@ -147,7 +147,8 @@ function getDayLabel(date: Date): AvailabilitySlot['day'] {
 export default function CalendarPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const userType = profile?.user_type ?? 'pro';
+  const profileType = profile?.user_type ?? (profile as { type?: 'studio' | 'pro' } | null)?.type ?? 'pro';
+  const userType = profileType;
   const userId = profile?.id;
 
   const [view, setView] = useState<'week' | 'month'>('week');
@@ -470,6 +471,13 @@ export default function CalendarPage() {
             <p className="text-sm leading-relaxed text-stone-500">
               Aucune disponibilité définie pour cette période.
             </p>
+            <button
+              type="button"
+              onClick={() => navigate(profileType === 'studio' ? '/studio/dashboard' : '/pro/feed')}
+              className="min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Trouver des missions
+            </button>
           </div>
         ) : (
           <AnimatePresence mode="wait">
