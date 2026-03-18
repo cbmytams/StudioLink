@@ -172,27 +172,27 @@ export default function CreateMission() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container-compact">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
+          className="mb-6 text-sm app-muted transition-colors hover:text-black"
         >
           ← Retour au dashboard
         </button>
 
-        <div className="bg-white/60 border border-white/50 rounded-2xl p-6">
+        <div className="app-card p-6">
           <div className="w-full h-1 bg-black/10 rounded-full mb-6">
             <div
               className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
               style={{ width: step === 1 ? '50%' : '100%' }}
             />
           </div>
-          <p className="text-black/45 text-sm mb-4">Étape {step} sur 2</p>
+          <p className="text-sm app-muted mb-4">Étape {step} sur 2</p>
 
           <h1 className="text-2xl font-semibold mb-1">Créer une mission</h1>
-          <p className="text-sm text-black/55 mb-6">
+          <p className="text-sm app-muted mb-6">
             {step === 1 ? 'Renseigne les informations principales' : 'Ajoute les conditions de mission'}
           </p>
 
@@ -244,7 +244,7 @@ export default function CreateMission() {
                         className={`rounded-xl px-3 py-2 text-sm transition-colors ${
                           missionType === option.key
                             ? 'bg-orange-500 text-white'
-                            : 'bg-white/70 text-black/70 hover:bg-white'
+                            : 'bg-white/80 text-black/70 hover:bg-white'
                         }`}
                       >
                         {option.label}
@@ -319,15 +319,15 @@ export default function CreateMission() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="rounded-xl border border-black/10 bg-white/70 px-4 py-2.5 text-sm text-black/80 transition hover:bg-white"
-                >
-                  ← Retour
-                </button>
+                    className="rounded-xl border border-black/10 bg-white/80 px-4 py-2.5 text-sm text-black/80 transition hover:bg-white"
+                  >
+                    ← Retour
+                  </button>
               )}
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
+                className="bg-orange-500 text-white hover:bg-orange-600"
               >
                 {loading ? (
                   <>
