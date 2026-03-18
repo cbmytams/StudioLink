@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
-import Navbar from '@/components/layout/Navbar';
 
 type Mission = {
   id: string
@@ -53,10 +52,10 @@ function mapApplicationStatus(status: string | null): Application['status'] {
 }
 
 function statusBadgeClass(status: Mission['status']): string {
-  if (status === 'open') return 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
-  if (status === 'draft') return 'bg-white/10 text-white/70 border border-white/15';
-  if (status === 'completed') return 'bg-blue-500/20 text-blue-300 border border-blue-400/30';
-  return 'bg-red-500/20 text-red-300 border border-red-400/30';
+  if (status === 'open') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+  if (status === 'draft') return 'bg-stone-100 text-stone-600 border border-stone-200';
+  if (status === 'completed') return 'bg-blue-100 text-blue-700 border border-blue-200';
+  return 'bg-red-100 text-red-700 border border-red-200';
 }
 
 function statusLabel(status: Mission['status']): ReactNode {
@@ -167,28 +166,26 @@ export default function StudioDashboard() {
 
   if (loadingMissions) {
     return (
-      <div className="min-h-screen bg-[#0D0D0F] text-white">
-        <Navbar />
-        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 pt-4 pb-8">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4 py-8 pb-24">
+          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="mx-auto max-w-5xl px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="mx-auto max-w-5xl px-4 py-8 pb-24">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">Bonjour, {companyName} 👋</h1>
-            <p className="text-sm text-white/60">{missions?.length ?? 0} mission(s) publiée(s)</p>
+            <p className="text-sm text-black/55">{missions?.length ?? 0} mission(s) publiée(s)</p>
           </div>
 
           <GradientButton
             onClick={() => navigate('/studio/create-mission')}
-            className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
           >
             + Créer une mission
           </GradientButton>
@@ -199,37 +196,37 @@ export default function StudioDashboard() {
         ) : (
           <>
             <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
                 <p className="text-2xl font-bold">{stats.activeMissions}</p>
-                <p className="text-sm text-white/60">Missions actives</p>
+                <p className="text-sm text-black/55">Missions actives</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
                 <p className="text-2xl font-bold">{stats.applicationsCount}</p>
-                <p className="text-sm text-white/60">Candidatures reçues</p>
+                <p className="text-sm text-black/55">Candidatures reçues</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
                 <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-                <p className="text-sm text-white/60">En attente</p>
+                <p className="text-sm text-black/55">En attente</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-xl border border-white/50 bg-white/60 p-4">
                 <p className="text-2xl font-bold">{stats.closedMissions}</p>
-                <p className="text-sm text-white/60">Missions clôturées</p>
+                <p className="text-sm text-black/55">Missions clôturées</p>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <section className="rounded-2xl border border-white/50 bg-white/60 p-4">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Missions récentes</h2>
-                <span className="text-xs text-white/50">5 plus récentes</span>
+                <span className="text-xs text-black/45">5 plus récentes</span>
               </div>
 
               {recentMissions.length === 0 ? (
-                <div className="text-center text-white/40 py-8">
+                <div className="text-center text-black/45 py-8">
                   Aucune mission publiée pour l&apos;instant.
                   <br />
                   <button
                     onClick={() => navigate('/studio/create-mission')}
-                    className="text-violet-400 underline mt-2"
+                    className="text-orange-600 underline mt-2"
                   >
                     Créer votre première mission
                   </button>
@@ -244,14 +241,14 @@ export default function StudioDashboard() {
                     return (
                       <div
                         key={mission.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4"
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/70 p-4"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">{mission.title}</p>
-                          <p className="text-xs text-white/50">
+                          <p className="text-xs text-black/45">
                             Créée le {new Date(mission.created_at).toLocaleDateString('fr-FR')}
                           </p>
-                          <p className="text-xs text-white/60 mt-1">
+                          <p className="text-xs text-black/55 mt-1">
                             {candidateCount} candidature{candidateCount > 1 ? 's' : ''}
                           </p>
                         </div>
@@ -262,7 +259,7 @@ export default function StudioDashboard() {
 
                         <button
                           type="button"
-                          className="rounded-full border border-white/20 px-3 py-1.5 text-sm text-white/90 transition hover:bg-white/10"
+                          className="rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-sm text-black/80 transition hover:bg-white"
                           onClick={() => navigate(`/studio/applications/${mission.id}`)}
                         >
                           Gérer →
