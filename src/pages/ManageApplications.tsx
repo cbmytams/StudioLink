@@ -295,14 +295,14 @@ export default function ManageApplications() {
           ← Mes missions
         </button>
 
-        <header className="mb-6">
+        <header className="app-header block">
           <div className="mb-2 flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{mission?.title ?? 'Candidatures'}</h1>
+            <h1 className="app-title text-2xl">{mission?.title ?? 'Candidatures'}</h1>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionStatusClass(mission?.status ?? 'open')}`}>
               {(mission?.status ?? 'open') === 'closed' ? 'Clôturée' : 'Ouverte'}
             </span>
           </div>
-          <p className="text-sm app-muted">
+          <p className="app-subtitle mt-0">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
         </header>
@@ -310,10 +310,10 @@ export default function ManageApplications() {
         {error ? <p className="text-red-400 text-center">{error}</p> : null}
 
         {!error && applications.length === 0 ? (
-          <p className="text-center app-muted py-10">Aucune candidature reçue pour l&apos;instant.</p>
+          <p className="app-empty-state">Aucune candidature reçue pour l&apos;instant.</p>
         ) : null}
 
-        <div className="space-y-3">
+        <div className="app-list">
           {applications.map((application) => {
             const displayName =
               application.profiles?.full_name ??
@@ -354,7 +354,7 @@ export default function ManageApplications() {
                     {application.profiles.skills.slice(0, 4).map((skill) => (
                       <span
                         key={skill}
-                        className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
+                        className="app-chip"
                       >
                         {skill}
                       </span>
