@@ -177,10 +177,10 @@ export default function StudioDashboard() {
   return (
     <div className="app-shell">
       <div className="app-container-wide">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <header className="app-header">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Bonjour, {companyName} 👋</h1>
-            <p className="text-sm app-muted">{missions?.length ?? 0} mission(s) publiée(s)</p>
+            <h1 className="app-title">Bonjour, {companyName} 👋</h1>
+            <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
           </div>
 
           <Button
@@ -195,20 +195,20 @@ export default function StudioDashboard() {
           <p className="text-red-400 text-center">{error}</p>
         ) : (
           <>
-            <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="app-card-soft p-4">
+            <section className="app-stats-grid">
+              <div className="app-stat-card">
                 <p className="text-2xl font-bold">{stats.activeMissions}</p>
                 <p className="text-sm app-muted">Missions actives</p>
               </div>
-              <div className="app-card-soft p-4">
+              <div className="app-stat-card">
                 <p className="text-2xl font-bold">{stats.applicationsCount}</p>
                 <p className="text-sm app-muted">Candidatures reçues</p>
               </div>
-              <div className="app-card-soft p-4">
+              <div className="app-stat-card">
                 <p className="text-2xl font-bold">{stats.pendingApplications}</p>
                 <p className="text-sm app-muted">En attente</p>
               </div>
-              <div className="app-card-soft p-4">
+              <div className="app-stat-card">
                 <p className="text-2xl font-bold">{stats.closedMissions}</p>
                 <p className="text-sm app-muted">Missions clôturées</p>
               </div>
@@ -221,7 +221,7 @@ export default function StudioDashboard() {
               </div>
 
               {recentMissions.length === 0 ? (
-                <div className="text-center app-muted py-8">
+                <div className="app-empty-state">
                   Aucune mission publiée pour l&apos;instant.
                   <br />
                   <button
@@ -232,7 +232,7 @@ export default function StudioDashboard() {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="app-list">
                   {recentMissions.map((mission) => {
                     const candidateCount = applications.filter(
                       (application) => application.mission_id === mission.id,
