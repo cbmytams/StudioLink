@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import { Helmet } from 'react-helmet-async';
 
 const CATEGORIES = [
   'Photographie',
@@ -191,6 +192,13 @@ export default function CreateMission() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>StudioLink — Créer une mission</title>
+        <meta
+          name="description"
+          content="Publiez une nouvelle mission et trouvez rapidement le bon profil créatif."
+        />
+      </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
