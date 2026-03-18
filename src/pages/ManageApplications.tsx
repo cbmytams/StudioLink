@@ -244,8 +244,8 @@ export default function ManageApplications() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-        <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 pb-24">
+      <div className="app-shell">
+        <div className="app-container flex min-h-screen items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -253,12 +253,12 @@ export default function ManageApplications() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
-      <div className="mx-auto max-w-4xl px-4 py-8 pb-24">
+    <div className="app-shell">
+      <div className="app-container">
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-4 text-sm text-black/60 transition-colors hover:text-black"
+          className="mb-4 text-sm app-muted transition-colors hover:text-black"
         >
           ← Mes missions
         </button>
@@ -270,7 +270,7 @@ export default function ManageApplications() {
               {(mission?.status ?? 'open') === 'closed' ? 'Clôturée' : 'Ouverte'}
             </span>
           </div>
-          <p className="text-sm text-black/55">
+          <p className="text-sm app-muted">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
         </header>
@@ -278,7 +278,7 @@ export default function ManageApplications() {
         {error ? <p className="text-red-400 text-center">{error}</p> : null}
 
         {!error && applications.length === 0 ? (
-          <p className="text-center text-black/45 py-10">Aucune candidature reçue pour l&apos;instant.</p>
+          <p className="text-center app-muted py-10">Aucune candidature reçue pour l&apos;instant.</p>
         ) : null}
 
         <div className="space-y-3">
@@ -291,7 +291,7 @@ export default function ManageApplications() {
             const isCurrentAction = actionLoading === application.id;
 
             return (
-              <div key={application.id} className="bg-white/70 border border-white/50 rounded-xl p-4">
+              <div key={application.id} className="app-card-soft p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{displayName}</p>
@@ -305,7 +305,7 @@ export default function ManageApplications() {
                       </button>
                     ) : null}
                     {application.profiles?.city ? (
-                      <p className="text-sm text-black/55">{application.profiles.city}</p>
+                      <p className="text-sm app-muted">{application.profiles.city}</p>
                     ) : null}
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${applicationStatusClass(application.status)}`}>
@@ -331,14 +331,14 @@ export default function ManageApplications() {
                 ) : null}
 
                 {application.cover_letter ? (
-                  <p className="text-sm text-black/70 mt-2">{application.cover_letter}</p>
+                  <p className="text-sm text-stone-600 mt-2">{application.cover_letter}</p>
                 ) : null}
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <p className="text-black/80">
+                  <p className="text-stone-700">
                     Tarif proposé : {application.proposed_rate ? `${application.proposed_rate}€/j` : 'Non renseigné'}
                   </p>
-                  <p className="text-black/55">
+                  <p className="app-muted">
                     {new Date(application.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
