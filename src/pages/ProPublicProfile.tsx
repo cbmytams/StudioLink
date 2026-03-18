@@ -11,7 +11,17 @@ type ProProfile = {
   city: string | null
   daily_rate: number | null
   skills: string[] | null
+  avatar_url: string | null
   type: string
+}
+
+type PortfolioItem = {
+  id: string
+  title: string
+  description: string | null
+  url: string
+  image_url: string | null
+  created_at: string
 }
 
 export function ProPublicProfile() {
@@ -22,6 +32,7 @@ export function ProPublicProfile() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const { data: reviews = [] } = useReviews(proId);
 
   useEffect(() => {
@@ -40,7 +51,7 @@ export function ProPublicProfile() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('id, full_name, username, bio, city, daily_rate, skills, type')
+          .select('id, full_name, username, bio, city, daily_rate, skills, avatar_url, type')
           .eq('id', proId)
           .eq('type', 'pro')
           .single();
@@ -49,6 +60,12 @@ export function ProPublicProfile() {
           setNotFound(true);
         } else {
           setProProfile(data as unknown as ProProfile);
+          const { data: portfolioRows } = await supabase
+            .from('portfolio_items' as never)
+            .select('id, title, description, url, image_url, created_at')
+            .eq('pro_id', proId)
+            .order('created_at', { ascending: false });
+          setPortfolioItems((portfolioRows ?? []) as PortfolioItem[]);
         }
       } catch (fetchError) {
         setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger ce profil.');
@@ -136,9 +153,17 @@ export function ProPublicProfile() {
 
         <header className="mt-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-2xl font-semibold text-white">
-              {proProfile.full_name?.[0]?.toUpperCase() ?? '?'}
-            </div>
+            {proProfile.avatar_url ? (
+              <img
+                src={proProfile.avatar_url}
+                alt="Avatar pro"
+                className="w-16 h-16 rounded-full border border-white/50 object-cover"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-2xl font-semibold text-white">
+                {proProfile.full_name?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
             <div>
               <h1 className="app-title text-2xl">
                 {proProfile.full_name ?? proProfile.username ?? 'Anonyme'}
@@ -201,6 +226,27 @@ export function ProPublicProfile() {
                 </div>
               ))}
             </section>
+            {portfolioItems.length > 0 ? (
+              <section className="app-card-soft p-4 mt-4">
+                <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Portfolio</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {portfolioItems.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-white/50 bg-white/70 p-3">
+                      <p className="text-sm font-medium text-black/80">{item.title}</p>
+                      {item.description ? <p className="text-xs text-black/60 mt-1">{item.description}</p> : null}
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-orange-600 underline mt-2 block"
+                      >
+                        Ouvrir le projet
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </>
         ) : (
           <p className="app-muted text-sm mt-6">Ce profil est incomplet.</p>
