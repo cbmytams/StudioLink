@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { useCreateReview } from '@/hooks/useReviews';
 import { useAuth } from '@/lib/supabase/auth';
+import { reviewService } from '@/services/reviewService';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -16,7 +17,30 @@ export function ReviewModal({ isOpen, missionId, revieweeId, onClose }: ReviewMo
   const { session } = useAuth();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [canSubmit, setCanSubmit] = useState(true);
+  const [checkError, setCheckError] = useState<string | null>(null);
   const createReview = useCreateReview(session?.user?.id);
+
+  useEffect(() => {
+    let active = true;
+    const checkEligibility = async () => {
+      if (!isOpen || !session?.user?.id) return;
+      try {
+        const eligible = await reviewService.canReview(session.user.id, revieweeId, missionId);
+        if (!active) return;
+        setCanSubmit(eligible);
+        setCheckError(eligible ? null : 'Avis déjà envoyé pour cette mission.');
+      } catch (error) {
+        if (!active) return;
+        setCanSubmit(false);
+        setCheckError(error instanceof Error ? error.message : "Impossible de vérifier l'éligibilité.");
+      }
+    };
+    void checkEligibility();
+    return () => {
+      active = false;
+    };
+  }, [isOpen, missionId, revieweeId, session?.user?.id]);
 
   if (!isOpen) return null;
 
@@ -43,13 +67,14 @@ export function ReviewModal({ isOpen, missionId, revieweeId, onClose }: ReviewMo
           rows={4}
           placeholder="Ton commentaire"
         />
+        {checkError ? <p className="text-xs text-red-500">{checkError}</p> : null}
         <div className="flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onClose}>
             Annuler
           </Button>
           <Button
             className="flex-1"
-            disabled={rating === 0 || createReview.isPending}
+            disabled={rating === 0 || createReview.isPending || !canSubmit}
             onClick={async () => {
               await createReview.mutateAsync({
                 mission_id: missionId,
