@@ -302,7 +302,7 @@ export default function ManageApplications() {
                       <button
                         type="button"
                         onClick={() => navigate(`/pro/public/${application.pro_id}`)}
-                        className="text-violet-400 text-xs hover:underline mt-0.5"
+                        className="text-violet-400 text-xs hover:underline mt-0.5 block"
                       >
                         Voir le profil complet →
                       </button>
