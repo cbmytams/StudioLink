@@ -45,7 +45,7 @@ export default function NotificationsPage() {
     <main className="app-shell">
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
         <header className="mb-4 flex items-center justify-between">
-          <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
+          <h1 className="app-title">Notifications</h1>
           <button
             type="button"
             onClick={() => markAllRead.mutate()}
