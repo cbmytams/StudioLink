@@ -218,13 +218,13 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <div className="max-w-4xl mx-auto px-4 py-8 pb-24">
+      <div className="max-w-4xl mx-auto px-4 pt-8 pb-24">
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold">Panel Admin</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Panel Admin</h1>
           <p className="text-sm text-white/60 mt-1">{summary}</p>
         </header>
 
-        <section className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md mb-6">
           <div className="mb-4">
             <p className="text-sm text-white/70 mb-2">Type d&apos;invitation</p>
             <div className="grid grid-cols-2 gap-2 max-w-xs">
@@ -272,7 +272,7 @@ export default function AdminPage() {
           {error ? <p className="text-red-400 text-sm mt-3">{error}</p> : null}
         </section>
 
-        <section className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+        <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
               <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/80 inline-block" />
