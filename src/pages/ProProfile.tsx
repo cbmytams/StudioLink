@@ -2,7 +2,7 @@ import { type KeyboardEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 type EditableProfile = {
   full_name?: string | null
@@ -212,7 +212,7 @@ export default function ProProfile() {
               >
                 Annuler
               </button>
-              <GradientButton
+              <Button
                 disabled={saving}
                 onClick={() => void handleSave()}
                 className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
@@ -225,7 +225,7 @@ export default function ProProfile() {
                 ) : (
                   'Sauvegarder'
                 )}
-              </GradientButton>
+              </Button>
             </div>
           )}
         </header>
