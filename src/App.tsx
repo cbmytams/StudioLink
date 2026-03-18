@@ -22,6 +22,7 @@ const CreateMissionPage = lazy(() => import('@/pages/CreateMission'));
 const MissionDetailPage = lazy(() => import('@/pages/MissionDetail'));
 const ManageApplicationsPage = lazy(() => import('@/pages/ManageApplications'));
 const StudioProfilePage = lazy(() => import('@/pages/StudioProfile'));
+const StudioSearchProsPage = lazy(() => import('@/pages/StudioSearchPros'));
 const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
 const ProDashboardPage = lazy(() => import('@/pages/ProDashboard'));
 const ProApplicationsPage = lazy(() => import('@/pages/ProApplications'));
@@ -240,6 +241,7 @@ export default function App() {
             <Route path="/studio/profile" element={<StudioProfilePage />} />
             <Route path="/studio/settings" element={<StudioProfilePage />} />
             <Route path="/studio/calendrier" element={<CalendarPage />} />
+            <Route path="/studio/search-pros" element={<StudioSearchProsPage />} />
           </Route>
 
           <Route element={<ProtectedRoute requiredType="pro"><ProLayout /></ProtectedRoute>}>
