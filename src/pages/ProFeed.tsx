@@ -238,7 +238,7 @@ export default function ProFeed() {
   return (
     <div className="app-shell">
       <div className="app-container">
-        <header className="app-header block mb-5">
+        <header className="mb-5">
           <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
           <p className="app-subtitle">{filteredMissions.length} mission(s) disponible(s)</p>
         </header>
