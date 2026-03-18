@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import type { UserType } from '@/types/backend';
 import { profileService } from '@/services/profileService';
+import { useToast } from '@/components/ui/Toast';
 
 type OnboardingType = 'studio' | 'pro';
 
@@ -38,6 +39,7 @@ interface LegacyProfileShape {
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { session, profile, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
 
   const user = session?.user ?? null;
   const profileData = profile as LegacyProfileShape | null;
@@ -172,11 +174,21 @@ export default function OnboardingPage() {
   const handleFinalSubmit = async () => {
     if (!user) {
       setError('Session invalide. Reconnecte-toi.');
+      showToast({
+        title: 'Session invalide',
+        description: 'Reconnecte-toi pour terminer ton onboarding.',
+        variant: 'destructive',
+      });
       return;
     }
 
     if (!invitationType) {
       setError("Type d'invitation introuvable.");
+      showToast({
+        title: 'Invitation manquante',
+        description: "Type d'invitation introuvable.",
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -218,6 +230,11 @@ export default function OnboardingPage() {
 
       if (upsertError) {
         setError(upsertError.message);
+        showToast({
+          title: 'Finalisation impossible',
+          description: upsertError.message,
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -232,10 +249,16 @@ export default function OnboardingPage() {
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
       sessionStorage.removeItem('invitationEmail');
+      showToast({ title: 'Profil finalisé', variant: 'default' });
       navigate(invitationType === 'studio' ? '/studio/dashboard' : '/pro/feed');
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : 'Une erreur est survenue.';
       setError(message);
+      showToast({
+        title: 'Finalisation impossible',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
