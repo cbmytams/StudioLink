@@ -157,9 +157,24 @@ export default function CalendarPage() {
   const [isDaySheetOpen, setIsDaySheetOpen] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
 
-  const { data: studioMissions = [] } = useMissions(userType === 'studio' ? userId : undefined);
-  const { data: myApplications = [] } = useMyApplications(userType === 'pro' ? userId : undefined);
-  const { data: proProfile } = useProProfile(userType === 'pro' ? userId : undefined);
+  const {
+    data: studioMissions = [],
+    isLoading: studioMissionsLoading,
+    isError: studioMissionsError,
+    error: studioMissionsErrorData,
+  } = useMissions(userType === 'studio' ? userId : undefined);
+  const {
+    data: myApplications = [],
+    isLoading: myApplicationsLoading,
+    isError: myApplicationsError,
+    error: myApplicationsErrorData,
+  } = useMyApplications(userType === 'pro' ? userId : undefined);
+  const {
+    data: proProfile,
+    isLoading: proProfileLoading,
+    isError: proProfileError,
+    error: proProfileErrorData,
+  } = useProProfile(userType === 'pro' ? userId : undefined);
 
   const selectedMissionIds = useMemo(() => {
     if (userType !== 'pro') return [];
@@ -168,7 +183,12 @@ export default function CalendarPage() {
       .map((application) => application.mission_id);
   }, [myApplications, userType]);
 
-  const { data: proMissions = [] } = useQuery({
+  const {
+    data: proMissions = [],
+    isLoading: proMissionsLoading,
+    isError: proMissionsError,
+    error: proMissionsErrorData,
+  } = useQuery({
     queryKey: ['calendar', 'pro-missions', selectedMissionIds.join(',')],
     queryFn: async () => {
       if (selectedMissionIds.length === 0) return [] as MissionRecord[];
@@ -183,7 +203,12 @@ export default function CalendarPage() {
     [studioMissions],
   );
 
-  const { data: selectedByMission = {} } = useQuery({
+  const {
+    data: selectedByMission = {},
+    isLoading: selectedByMissionLoading,
+    isError: selectedByMissionError,
+    error: selectedByMissionErrorData,
+  } = useQuery({
     queryKey: ['calendar', 'selected-pro-by-mission', studioMissionIds.join(',')],
     queryFn: async () => {
       const map: Record<string, string> = {};
@@ -251,6 +276,39 @@ export default function CalendarPage() {
   const hours = Array.from({ length: 15 }, (_, i) => i + 8);
   const weekDays = getWeekDays(new Date(currentDate));
   const monthDays = getMonthDays(currentDate);
+  const loadingCalendar = userType === 'studio'
+    ? studioMissionsLoading || selectedByMissionLoading
+    : myApplicationsLoading || proProfileLoading || proMissionsLoading;
+
+  const calendarError = userType === 'studio'
+    ? (studioMissionsError ? studioMissionsErrorData : selectedByMissionError ? selectedByMissionErrorData : null)
+    : (
+      myApplicationsError
+        ? myApplicationsErrorData
+        : proProfileError
+          ? proProfileErrorData
+          : proMissionsError
+            ? proMissionsErrorData
+            : null
+    );
+
+  if (loadingCalendar) {
+    return (
+      <div className="min-h-screen bg-[#f4ece4] flex items-center justify-center pb-20">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+      </div>
+    );
+  }
+
+  if (calendarError) {
+    return (
+      <div className="min-h-screen bg-[#f4ece4] pb-20 px-4 pt-10">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 text-sm">
+          {calendarError instanceof Error ? calendarError.message : 'Impossible de charger le calendrier.'}
+        </div>
+      </div>
+    );
+  }
 
   const getSessionsForDate = (date: Date) => {
     const fromMissions = allSessions.filter((session) =>
