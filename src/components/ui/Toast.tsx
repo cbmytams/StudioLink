@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { create } from 'zustand';
 
@@ -136,4 +136,8 @@ export function Toaster() {
       ) : null}
     </AnimatePresence>
   );
+}
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }
