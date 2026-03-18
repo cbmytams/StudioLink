@@ -6,7 +6,9 @@ export type InvitationStatus = 'available' | 'used';
 
 export type NotificationType =
   | 'new_application'
+  | 'application_accepted'
   | 'application_selected'
+  | 'application_rejected'
   | 'application_rejected'
   | 'new_message'
   | 'mission_completed';
