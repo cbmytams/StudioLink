@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button as GradientButton } from '@/components/ui/Button';
-import Navbar from '@/components/layout/Navbar';
 
 type EditableProfile = {
   full_name?: string | null
@@ -147,7 +146,7 @@ export default function ProProfile() {
   };
 
   const baseInputClass =
-    'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/45 focus:outline-none focus:ring-1 focus:ring-violet-400 focus:border-violet-400';
+    'w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400';
 
   const hasAnyInfo = Boolean(
     bio.trim() ||
@@ -157,25 +156,24 @@ export default function ProProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
-      <Navbar />
-      <div className="max-w-2xl mx-auto px-4 pt-4 pb-8">
+    <div className="min-h-screen bg-[#f4ece4] text-[#1a1a1a]">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
         <button
           type="button"
           onClick={() => navigate('/pro/dashboard')}
-          className="mb-6 text-sm text-white/70 transition-colors hover:text-white"
+          className="mb-6 text-sm text-black/60 transition-colors hover:text-black"
         >
           ← Dashboard
         </button>
 
         <header className="mb-5 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-600 text-lg font-semibold">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-lg font-semibold text-white">
               {fullName.trim().charAt(0).toUpperCase() || '?'}
             </div>
             <div>
               <h1 className="text-xl font-semibold">{fullName || profileData?.full_name || 'Profil Pro'}</h1>
-              <p className="text-sm text-white/55">@{username || profileData?.username || 'username'}</p>
+              <p className="text-sm text-black/50">@{username || profileData?.username || 'username'}</p>
             </div>
           </div>
 
@@ -188,7 +186,7 @@ export default function ProProfile() {
                 setSuccessMessage(null);
                 setFieldErrors({});
               }}
-              className="rounded-xl bg-white/10 px-3 py-2 text-sm text-white/90 transition hover:bg-white/15"
+              className="rounded-xl bg-white/70 px-3 py-2 text-sm text-black/80 transition hover:bg-white"
             >
               Modifier le profil
             </button>
@@ -210,14 +208,14 @@ export default function ProProfile() {
                     setSkills(profileData.skills ?? []);
                   }
                 }}
-                className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10"
+                className="rounded-xl bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white"
               >
                 Annuler
               </button>
               <GradientButton
                 disabled={saving}
                 onClick={() => void handleSave()}
-                className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+                className="bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:opacity-95"
               >
                 {saving ? (
                   <>
@@ -244,34 +242,34 @@ export default function ProProfile() {
             hasAnyInfo ? (
               <>
                 {bio.trim() ? (
-                  <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <h2 className="mb-2 text-sm font-semibold text-white/85">Bio</h2>
-                    <p className="text-sm text-white/75">{bio}</p>
+                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-black/80">Bio</h2>
+                    <p className="text-sm text-black/70">{bio}</p>
                   </section>
                 ) : null}
 
                 {city.trim() ? (
-                  <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <h2 className="mb-2 text-sm font-semibold text-white/85">Ville</h2>
-                    <p className="text-sm text-white/75">{city}</p>
+                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-black/80">Ville</h2>
+                    <p className="text-sm text-black/70">{city}</p>
                   </section>
                 ) : null}
 
                 {dailyRate.trim() ? (
-                  <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <h2 className="mb-2 text-sm font-semibold text-white/85">Tarif journalier</h2>
-                    <p className="text-sm text-white/75">{dailyRate}€/j</p>
+                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-black/80">Tarif journalier</h2>
+                    <p className="text-sm text-black/70">{dailyRate}€/j</p>
                   </section>
                 ) : null}
 
                 {skills.length > 0 ? (
-                  <section className="bg-white/5 border border-white/10 rounded-xl p-4">
-                    <h2 className="mb-2 text-sm font-semibold text-white/85">Compétences</h2>
+                  <section className="bg-white/70 border border-white/50 rounded-xl p-4">
+                    <h2 className="mb-2 text-sm font-semibold text-black/80">Compétences</h2>
                     <div className="flex flex-wrap gap-2">
                       {skills.map((skill) => (
                         <span
                           key={skill}
-                          className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85"
+                          className="rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
                         >
                           {skill}
                         </span>
@@ -281,12 +279,12 @@ export default function ProProfile() {
                 ) : null}
               </>
             ) : (
-              <p className="text-white/40 text-sm">
+              <p className="text-black/45 text-sm">
                 Profil incomplet. Clique sur &quot;Modifier&quot; pour le compléter.
               </p>
             )
           ) : (
-            <section className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-4">
+            <section className="bg-white/70 border border-white/50 rounded-xl p-4 space-y-4">
               <div>
                 <input
                   value={fullName}
@@ -365,23 +363,23 @@ export default function ProProfile() {
                   className={baseInputClass}
                 />
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85"
-                    >
-                      {skill}
-                      <button
-                        type="button"
-                        onClick={() => removeSkill(skill)}
-                        className="text-white/70 hover:text-white"
+                    {skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75"
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="text-black/60 hover:text-black"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
                 </div>
-                <p className="mt-2 text-xs text-white/50">{skills.length}/10 compétences</p>
+                <p className="mt-2 text-xs text-black/45">{skills.length}/10 compétences</p>
               </div>
 
               {error ? <p className="text-red-400 text-sm">{error}</p> : null}
