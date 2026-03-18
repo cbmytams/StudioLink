@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { Helmet } from 'react-helmet-async';
+import { useToast } from '@/components/ui/Toast';
 
 type Mission = {
   id: string
@@ -55,6 +56,7 @@ export default function MissionDetail() {
   const targetMissionId = missionId ?? id ?? '';
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { showToast } = useToast();
   const userId = session?.user?.id ?? '';
 
   const [mission, setMission] = useState<Mission | null>(null);
@@ -137,10 +139,20 @@ export default function MissionDetail() {
 
     if (coverLetter.trim().length < 20) {
       setFormError('Message trop court (minimum 20 caractères)');
+      showToast({
+        title: 'Validation',
+        description: 'Le message doit contenir au moins 20 caractères.',
+        variant: 'destructive',
+      });
       return;
     }
     if (proposedRate && (Number.isNaN(Number(proposedRate)) || Number(proposedRate) <= 0)) {
       setFormError('Tarif invalide');
+      showToast({
+        title: 'Validation',
+        description: 'Le tarif proposé est invalide.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -157,11 +169,21 @@ export default function MissionDetail() {
         status: 'pending',
       } as never);
 
-    if (error) {
+  if (error) {
       setFormError(error.message);
       setApplicationStatus('error');
+      showToast({
+        title: 'Candidature impossible',
+        description: error.message,
+        variant: 'destructive',
+      });
     } else {
       setApplicationStatus('submitted');
+      showToast({
+        title: 'Candidature envoyée',
+        description: 'Le studio a bien reçu ta candidature.',
+        variant: 'default',
+      });
     }
   };
 
