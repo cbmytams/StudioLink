@@ -286,7 +286,7 @@ export default function ProDashboard() {
             className={`pb-2 text-sm transition-colors ${
               activeTab === 'applications'
                 ? 'border-b-2 border-orange-500 text-black'
-                : 'text-black/45'
+                : 'app-muted'
             }`}
           >
             Mes candidatures
@@ -297,7 +297,7 @@ export default function ProDashboard() {
             className={`pb-2 text-sm transition-colors ${
               activeTab === 'bookings'
                 ? 'border-b-2 border-orange-500 text-black'
-                : 'text-black/45'
+                : 'app-muted'
             }`}
           >
             Mes bookings
@@ -346,7 +346,7 @@ export default function ProDashboard() {
 
                   <p className="mt-2 text-sm text-orange-700">{budgetText(application.missions)}</p>
                   {application.proposed_rate ? (
-                  <p className="mt-1 text-sm text-stone-600">Tarif proposé : {application.proposed_rate}€/j</p>
+                    <p className="mt-1 text-sm text-stone-600">Tarif proposé : {application.proposed_rate}€/j</p>
                   ) : null}
                   <p className="mt-1 text-xs app-muted">
                     Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
