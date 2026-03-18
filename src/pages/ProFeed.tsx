@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +28,7 @@ type Mission = {
   mission_type: 'on_site' | 'remote' | 'hybrid'
   budget_min: number | null
   budget_max: number | null
+  location: string | null
   deadline: string | null
   required_skills: string[] | null
   created_at: string
@@ -43,6 +44,7 @@ type MissionRow = {
   mission_type: string | null
   budget_min: number | null
   budget_max: number | null
+  location: string | null
   deadline: string | null
   required_skills: string[] | null
   created_at: string
@@ -88,6 +90,7 @@ function budgetText(mission: Mission): string {
 
 export default function ProFeed() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session, profile } = useAuth();
 
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -95,8 +98,11 @@ export default function ProFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('');
+  const [filterCategory, setFilterCategory] = useState<string>(searchParams.get('category') ?? '');
+  const [filterType, setFilterType] = useState<string>(searchParams.get('type') ?? '');
+  const [filterBudgetMin, setFilterBudgetMin] = useState<string>(searchParams.get('budgetMin') ?? '');
+  const [filterLocation, setFilterLocation] = useState<string>(searchParams.get('location') ?? '');
+  const [visibleCount, setVisibleCount] = useState(20);
 
   useEffect(() => {
     let active = true;
@@ -123,6 +129,7 @@ export default function ProFeed() {
           mission_type,
           budget_min,
           budget_max,
+          location,
           deadline,
           required_skills,
           created_at,
@@ -175,6 +182,7 @@ export default function ProFeed() {
             mission_type: mapMissionType(mission.mission_type),
             budget_min: mission.budget_min,
             budget_max: mission.budget_max,
+            location: mission.location ?? null,
             deadline: mission.deadline,
             required_skills: mission.required_skills ?? [],
             created_at: mission.created_at,
@@ -208,14 +216,41 @@ export default function ProFeed() {
     };
   }, [session?.user?.id]);
 
+  useEffect(() => {
+    const nextParams = new URLSearchParams();
+    if (filterCategory) nextParams.set('category', filterCategory);
+    if (filterType) nextParams.set('type', filterType);
+    if (filterBudgetMin) nextParams.set('budgetMin', filterBudgetMin);
+    if (filterLocation) nextParams.set('location', filterLocation);
+    setSearchParams(nextParams, { replace: true });
+  }, [filterBudgetMin, filterCategory, filterLocation, filterType, setSearchParams]);
+
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [filterBudgetMin, filterCategory, filterLocation, filterType]);
+
   const filteredMissions = useMemo(
     () =>
       missions.filter((mission) => {
         if (filterCategory && mission.category !== filterCategory) return false;
         if (filterType && mission.mission_type !== filterType) return false;
+        if (filterBudgetMin) {
+          const minBudget = Number(filterBudgetMin);
+          if (!Number.isNaN(minBudget)) {
+            if (mission.budget_min === null || mission.budget_min < minBudget) return false;
+          }
+        }
+        if (filterLocation && !(mission.location ?? '').toLowerCase().includes(filterLocation.toLowerCase())) {
+          return false;
+        }
         return true;
       }),
-    [filterCategory, filterType, missions],
+    [filterBudgetMin, filterCategory, filterLocation, filterType, missions],
+  );
+
+  const visibleMissions = useMemo(
+    () => filteredMissions.slice(0, visibleCount),
+    [filteredMissions, visibleCount],
   );
 
   const profileName = (profile as { full_name?: string | null; username?: string | null; display_name?: string | null } | null);
@@ -224,6 +259,13 @@ export default function ProFeed() {
     profileName?.username ??
     profileName?.display_name ??
     'Pro';
+
+  const resetFilters = useCallback(() => {
+    setFilterCategory('');
+    setFilterType('');
+    setFilterBudgetMin('');
+    setFilterLocation('');
+  }, []);
 
   if (loading) {
     return (
@@ -240,12 +282,12 @@ export default function ProFeed() {
       <div className="app-container">
         <header className="mb-5">
           <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
-          <p className="app-subtitle">{filteredMissions.length} mission(s) disponible(s)</p>
+          <p className="app-subtitle">{filteredMissions.length} mission(s) trouvée(s)</p>
         </header>
 
         {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
 
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <select
             value={filterCategory}
             onChange={(event) => setFilterCategory(event.target.value)}
@@ -274,6 +316,28 @@ export default function ProFeed() {
             <option value="hybrid" className="bg-[#f4ece4] text-stone-900">Hybride</option>
           </select>
         </div>
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <input
+            value={filterBudgetMin}
+            onChange={(event) => setFilterBudgetMin(event.target.value)}
+            inputMode="numeric"
+            placeholder="Budget min (€)"
+            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+          />
+          <input
+            value={filterLocation}
+            onChange={(event) => setFilterLocation(event.target.value)}
+            placeholder="Localisation"
+            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+          />
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="min-h-[44px] rounded-xl border border-black/10 bg-white/70 px-4 text-sm font-medium text-black/70 transition hover:bg-white"
+          >
+            Réinitialiser les filtres
+          </button>
+        </div>
 
         {!error && missions.length === 0 ? (
           <p className="app-empty-state">Aucune mission disponible pour l&apos;instant.</p>
@@ -284,7 +348,7 @@ export default function ProFeed() {
         ) : null}
 
         <div className="flex flex-col gap-4">
-          {filteredMissions.map((mission) => {
+          {visibleMissions.map((mission) => {
             const alreadyApplied = myApplicationIds.includes(mission.id);
             const visibleSkills = (mission.required_skills ?? []).slice(0, 3);
             const remainingSkills = Math.max((mission.required_skills ?? []).length - 3, 0);
@@ -310,6 +374,9 @@ export default function ProFeed() {
 
                 <p className="text-sm text-black/70 mt-2">{truncate(mission.description || '')}</p>
                 <p className="text-sm text-orange-700 mt-2">{budgetText(mission)}</p>
+                {mission.location ? (
+                  <p className="text-xs text-black/45 mt-1">Lieu : {mission.location}</p>
+                ) : null}
                 {mission.deadline ? (
                   <p className="text-xs text-black/45 mt-1">
                     Deadline : {new Date(mission.deadline).toLocaleDateString('fr-FR')}
@@ -350,6 +417,16 @@ export default function ProFeed() {
             );
           })}
         </div>
+        {filteredMissions.length > visibleCount ? (
+          <div className="mt-4 flex justify-center">
+            <Button
+              onClick={() => setVisibleCount((previous) => previous + 20)}
+              className="bg-white/70 text-black/80 hover:bg-white"
+            >
+              Charger plus
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
