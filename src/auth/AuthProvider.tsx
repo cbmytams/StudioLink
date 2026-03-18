@@ -1,0 +1,152 @@
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import type { Session } from '@supabase/supabase-js';
+import type { Profile } from '@/types/backend';
+import {
+  getCurrentProfile,
+  getCurrentSession,
+  onAuthStateChange,
+  sendMagicLink as sendMagicLinkService,
+  signInPassword as signInPasswordService,
+  signOut as signOutService,
+} from '@/services/authService';
+import { hasSupabaseConfig } from '@/lib/supabaseClient';
+import { useAppStore } from '@/store/useAppStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
+
+interface AuthContextValue {
+  session: Session | null;
+  profile: Profile | null;
+  loading: boolean;
+  signInPassword: (email: string, password: string) => Promise<void>;
+  sendMagicLink: (email: string, redirectTo?: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const setUserType = useAppStore((state) => state.setUserType);
+  const setOnboardingComplete = useOnboardingStore((state) => state.setOnboardingComplete);
+  const setCurrentStep = useOnboardingStore((state) => state.setCurrentStep);
+
+  const hydrateProfile = useCallback(async (nextSession: Session | null) => {
+    if (!nextSession) {
+      setProfile(null);
+      return;
+    }
+    const nextProfile = await getCurrentProfile(nextSession);
+    setProfile(nextProfile);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (!session) return;
+    await hydrateProfile(session);
+  }, [hydrateProfile, session]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const bootstrap = async () => {
+      if (!hasSupabaseConfig) {
+        if (isMounted) {
+          setSession(null);
+          setProfile(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const currentSession = await getCurrentSession();
+        if (!isMounted) return;
+        setSession(currentSession);
+        await hydrateProfile(currentSession);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void bootstrap();
+
+    if (!hasSupabaseConfig) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const { data } = onAuthStateChange(async (_event, nextSession) => {
+      setSession(nextSession);
+      await hydrateProfile(nextSession);
+      if (isMounted) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      data.subscription.unsubscribe();
+    };
+  }, [hydrateProfile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setUserType(profile.user_type);
+    setOnboardingComplete(profile.onboarding_complete);
+    setCurrentStep(profile.onboarding_step || 1);
+  }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);
+
+  const signInPassword = useCallback(async (email: string, password: string) => {
+    await signInPasswordService(email, password);
+  }, []);
+
+  const sendMagicLink = useCallback(async (email: string, redirectTo?: string) => {
+    const callbackUrl = new URL('/auth/callback', window.location.origin);
+    callbackUrl.searchParams.set('next', '/');
+    const fallbackRedirect = callbackUrl.toString();
+    await sendMagicLinkService(email, redirectTo ?? fallbackRedirect);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await signOutService();
+    setProfile(null);
+    setSession(null);
+  }, []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      profile,
+      loading,
+      signInPassword,
+      sendMagicLink,
+      signOut,
+      refreshProfile,
+    }),
+    [loading, profile, refreshProfile, sendMagicLink, session, signInPassword, signOut],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
