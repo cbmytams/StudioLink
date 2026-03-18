@@ -20,7 +20,7 @@ function getRelativeTime(dateIso: string) {
 
 function iconForType(type: NotificationRecord['type']) {
   if (type === 'new_application') return <Bell size={16} className="text-orange-600" />;
-  if (type === 'application_selected') return <CheckCircle2 size={16} className="text-emerald-600" />;
+  if (type === 'application_selected' || type === 'application_accepted') return <CheckCircle2 size={16} className="text-emerald-600" />;
   if (type === 'application_rejected') return <XCircle size={16} className="text-red-600" />;
   if (type === 'new_message') return <MessageSquare size={16} className="text-blue-600" />;
   return <Star size={16} className="text-amber-600" />;
