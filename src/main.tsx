@@ -6,6 +6,7 @@ import App from './App.tsx';
 import { AuthProvider } from './lib/supabase/auth.ts';
 import { queryClient } from './lib/queryClient.ts';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { ToastProvider } from './components/ui/Toast.tsx';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -13,9 +14,11 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </ToastProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
