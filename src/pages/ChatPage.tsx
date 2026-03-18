@@ -80,6 +80,21 @@ export default function ChatPage() {
   const sendMessage = useSendMessage();
 
   useEffect(() => {
+    if (!selectedConversationId || !userId || messages.length === 0) return;
+    const hasUnreadFromOther = messages.some(
+      (message) => message.sender_id !== userId && !message.read,
+    );
+    if (!hasUnreadFromOther) return;
+
+    void supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('conversation_id', selectedConversationId)
+      .neq('sender_id', userId)
+      .eq('read', false);
+  }, [messages, selectedConversationId, userId]);
+
+  useEffect(() => {
     if (conversationId) {
       setSelectedConversationId(conversationId);
       return;
