@@ -208,10 +208,10 @@ export default function MissionDetail() {
         ) : null}
 
         <header>
-          <h1 className="text-3xl font-semibold tracking-tight mb-1">{mission.title}</h1>
-          <p className="text-sm app-muted">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
+          <h1 className="app-title mb-1">{mission.title}</h1>
+          <p className="app-subtitle mt-0">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs bg-white/80 border border-white/50 px-2 py-0.5 rounded-full">{mission.category}</span>
+            <span className="app-chip">{mission.category}</span>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
               {missionTypeLabel(mission.mission_type)}
             </span>
