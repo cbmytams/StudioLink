@@ -42,9 +42,10 @@ export default function NotificationsPage() {
   const notifications = useMemo(() => data, [data]);
 
   return (
-    <main className="min-h-screen p-4 pb-24 max-w-3xl mx-auto">
+    <main className="app-shell">
+      <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
       <header className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Notifications</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Notifications</h1>
         <button
           type="button"
           onClick={() => markAllRead.mutate()}
@@ -91,7 +92,7 @@ export default function NotificationsPage() {
             <button
               key={item.id}
               type="button"
-              className={`w-full text-left rounded-2xl border p-4 min-h-[44px] ${
+              className={`w-full text-left rounded-2xl border p-4 min-h-[44px] transition-colors ${
                 item.read ? 'bg-white border-stone-200' : 'bg-orange-50 border-orange-200'
               }`}
               onClick={async () => {
@@ -113,6 +114,7 @@ export default function NotificationsPage() {
           ))}
         </div>
       )}
+      </div>
     </main>
   );
 }
