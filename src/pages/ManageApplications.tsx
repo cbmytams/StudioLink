@@ -319,7 +319,7 @@ export default function ManageApplications() {
               application.profiles?.full_name ??
               application.profiles?.username ??
               'Anonyme';
-            const pendingAndOpen = application.status === 'pending' && mission?.status !== 'closed';
+            const canAct = application.status === 'pending';
             const isCurrentAction = actionLoading === application.id;
 
             return (
@@ -375,33 +375,39 @@ export default function ManageApplications() {
                   </p>
                 </div>
 
-                {pendingAndOpen ? (
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void handleAccept(application)}
-                      disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:opacity-60"
-                    >
-                      {isCurrentAction ? (
-                        <>
-                          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                          Traitement...
-                        </>
-                      ) : (
-                        'Accepter ✓'
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleReject(application.id)}
-                      disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-300 bg-white px-4 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-60"
-                    >
-                      Rejeter ✗
-                    </button>
-                  </div>
-                ) : null}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleAccept(application)}
+                    disabled={!canAct || Boolean(actionLoading)}
+                    className={`inline-flex min-h-[44px] items-center justify-center rounded-lg px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      canAct
+                        ? 'bg-green-600 text-white hover:bg-green-500'
+                        : 'border border-stone-300 bg-stone-100 text-stone-500'
+                    }`}
+                  >
+                    {isCurrentAction ? (
+                      <>
+                        <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                        Traitement...
+                      </>
+                    ) : (
+                      'Accepter ✓'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleReject(application.id)}
+                    disabled={!canAct || Boolean(actionLoading)}
+                    className={`inline-flex min-h-[44px] items-center justify-center rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      canAct
+                        ? 'border-red-300 bg-white text-red-700 hover:bg-red-50'
+                        : 'border-stone-300 bg-stone-100 text-stone-500'
+                    }`}
+                  >
+                    Rejeter ✗
+                  </button>
+                </div>
               </div>
             );
           })}
