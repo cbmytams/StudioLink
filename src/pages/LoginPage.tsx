@@ -136,7 +136,12 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="login-email" className="block text-sm font-medium text-white/85">
+              Adresse email
+            </label>
           <TextInput
+              id="login-email"
             type="email"
             value={email}
             onChange={(event) => {
@@ -146,8 +151,14 @@ export default function LoginPage() {
             placeholder="Adresse email"
             className="text-white placeholder:text-white/45"
           />
+          </div>
 
+          <div className="space-y-2">
+            <label htmlFor="login-password" className="block text-sm font-medium text-white/85">
+              Mot de passe
+            </label>
           <TextInput
+              id="login-password"
             type="password"
             value={password}
             onChange={(event) => {
@@ -157,6 +168,7 @@ export default function LoginPage() {
             placeholder="Mot de passe"
             className="text-white placeholder:text-white/45"
           />
+          </div>
 
           {mode === 'signup' && (
             <TextInput
