@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 type SavedMissionRow = {
   id: string;
@@ -57,6 +58,7 @@ function statusLabel(status: string | null): string {
 export default function SavedPage() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const { showToast } = useToast();
   const userId = session?.user?.id;
   const [missions, setMissions] = useState<MissionCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,10 +145,12 @@ export default function SavedPage() {
 
     if (deleteError) {
       setError(deleteError.message);
+      showToast({ title: 'Suppression impossible', description: deleteError.message, variant: 'destructive' });
       return;
     }
 
     setMissions((prev) => prev.filter((mission) => mission.id !== missionId));
+    showToast({ title: 'Retiré des favoris', variant: 'default' });
   };
 
   return (
