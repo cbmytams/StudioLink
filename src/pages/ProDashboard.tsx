@@ -157,13 +157,26 @@ export default function ProDashboard() {
             )
           )
         `;
-        const { data: bookingsData, error: bookingsError } = await supabase
+        let bookingsData: BookingRow[] | null = null;
+        const bookingsResult = await supabase
           .from('booking_sessions' as never)
           .select(bookingsColumns)
           .eq('pro_id', userId)
           .order('created_at', { ascending: false });
 
-        if (bookingsError) throw bookingsError;
+        if (bookingsResult.error) {
+          const relationMissing =
+            bookingsResult.error.code === '42P01'
+            || bookingsResult.error.code === 'PGRST205'
+            || bookingsResult.error.message.toLowerCase().includes('booking_sessions');
+          if (relationMissing) {
+            bookingsData = [];
+          } else {
+            throw bookingsResult.error;
+          }
+        } else {
+          bookingsData = bookingsResult.data as unknown as BookingRow[] | null;
+        }
 
         if (!active) return;
 
@@ -183,7 +196,7 @@ export default function ProDashboard() {
           };
         });
 
-        const mappedBookings: Booking[] = (bookingsData as unknown as BookingRow[] | null ?? []).map((booking) => {
+        const mappedBookings: Booking[] = (bookingsData ?? []).map((booking) => {
           const missionRef = Array.isArray(booking.missions)
             ? booking.missions[0] ?? null
             : booking.missions;
