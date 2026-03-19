@@ -1,0 +1,118 @@
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Textarea } from '@/components/ui/Textarea';
+import { StarRating } from '@/components/ui/StarRating';
+import { useCreateReview } from '@/hooks/useReviews';
+import { useAuth } from '@/lib/supabase/auth';
+import { reviewService } from '@/services/reviewService';
+import { useToast } from '@/components/ui/Toast';
+
+type ReviewModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  missionId: string;
+  reviewedId: string;
+  reviewedName: string;
+  onSubmitted?: () => void;
+};
+
+export function ReviewModal({
+  isOpen,
+  onClose,
+  missionId,
+  reviewedId,
+  reviewedName,
+  onSubmitted,
+}: ReviewModalProps) {
+  const { session } = useAuth();
+  const { showToast } = useToast();
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  const createReview = useCreateReview(session?.user?.id);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setRating(0);
+    setComment('');
+    setCheckError(null);
+  }, [isOpen]);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkAlreadyReviewed = async () => {
+      if (!isOpen || !session?.user?.id) return;
+      try {
+        const reviewed = await reviewService.hasReviewed(missionId, session.user.id);
+        if (!active) return;
+        setAlreadyReviewed(reviewed);
+      } catch (error) {
+        if (!active) return;
+        setAlreadyReviewed(false);
+        setCheckError(error instanceof Error ? error.message : 'Impossible de vérifier les avis existants.');
+      }
+    };
+
+    void checkAlreadyReviewed();
+
+    return () => {
+      active = false;
+    };
+  }, [isOpen, missionId, session?.user?.id]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-5 shadow-[0_12px_32px_rgba(26,26,26,0.08)]">
+        <h3 className="text-lg font-semibold">Laisser un avis</h3>
+        <p className="text-sm text-stone-600">Pour {reviewedName}</p>
+
+        <StarRating value={rating} onChange={setRating} />
+
+        <Textarea
+          value={comment}
+          onChange={(event) => setComment(event.target.value)}
+          rows={4}
+          placeholder="Votre commentaire (optionnel)"
+        />
+
+        {checkError ? <p className="text-xs text-red-500">{checkError}</p> : null}
+        {alreadyReviewed ? <p className="text-xs text-stone-500">Vous avez déjà laissé un avis pour cette mission.</p> : null}
+
+        <div className="flex gap-2">
+          <Button variant="ghost" className="flex-1" onClick={onClose}>
+            Annuler
+          </Button>
+          <Button
+            className="flex-1"
+            disabled={rating === 0 || createReview.isPending || alreadyReviewed}
+            onClick={async () => {
+              try {
+                await createReview.mutateAsync({
+                  missionId,
+                  reviewedId,
+                  rating,
+                  comment,
+                });
+                onSubmitted?.();
+                onClose();
+              } catch (error) {
+                const message = error instanceof Error ? error.message : 'Impossible d’envoyer cet avis.';
+                showToast({
+                  title: 'Envoi impossible',
+                  description: message,
+                  variant: 'destructive',
+                });
+              }
+            }}
+          >
+            {createReview.isPending ? 'Envoi...' : 'Envoyer'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
