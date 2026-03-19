@@ -57,7 +57,7 @@ export default function NotificationsPage() {
             onClick={() => markAllRead.mutate()}
             className="min-h-[44px] text-sm font-medium text-orange-600"
           >
-            Tout lire
+            Tout marquer comme lu
           </button>
         </header>
 
