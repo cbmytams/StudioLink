@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button as GradientButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Helmet } from 'react-helmet-async';
 
 export default function HomePage() {
@@ -21,7 +21,7 @@ export default function HomePage() {
   }, [user, profileType, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-white">
+    <div className="app-shell">
       <Helmet>
         <title>StudioLink — Plateforme Studios & Créatifs</title>
         <meta
@@ -35,55 +35,55 @@ export default function HomePage() {
         />
       </Helmet>
       <section className="min-h-screen flex flex-col items-center justify-center text-center px-4 py-24">
-        <span className="inline-block text-xs bg-violet-500/20 text-violet-300 border border-violet-500/30 px-3 py-1 rounded-full mb-6">
+        <span className="inline-block rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-orange-700 mb-6">
           🔒 Plateforme sur invitation uniquement
         </span>
 
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight text-black">
           La plateforme qui connecte
           <br />
-          <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
             studios & créatifs
           </span>
         </h1>
 
-        <p className="text-white/50 text-lg md:text-xl max-w-xl mb-10">
+        <p className="text-stone-600 text-lg md:text-xl max-w-xl mb-10">
           Frapppe réunit les studios de production et les professionnels créatifs
           pour des collaborations fluides et efficaces.
         </p>
 
-        <GradientButton
+        <Button
           onClick={() => navigate('/invitation')}
-          className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+          className="bg-orange-500 text-white hover:bg-orange-600"
         >
           J&apos;ai une invitation →
-        </GradientButton>
+        </Button>
       </section>
 
       <section className="py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-10">Une plateforme, deux univers</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-10 text-black">Une plateforme, deux univers</h2>
           <div className="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
-            <article className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <article className="app-card p-6">
               <p className="text-3xl mb-4">🎬</p>
-              <h3 className="text-xl font-semibold mb-3">Studios de production</h3>
-              <p className="text-white/60 mb-4">
+              <h3 className="text-xl font-semibold mb-3 text-black">Studios de production</h3>
+              <p className="text-stone-600 mb-4">
                 Publiez vos missions, recevez des candidatures qualifiées et gérez vos collaborations en un seul endroit.
               </p>
-              <ul className="space-y-2 text-sm text-white/75">
+              <ul className="space-y-2 text-sm text-stone-700">
                 <li>✓ Création de missions en quelques minutes</li>
                 <li>✓ Accès à des profils vérifiés</li>
                 <li>✓ Gestion des candidatures intégrée</li>
               </ul>
             </article>
 
-            <article className="bg-white/5 border border-violet-500/20 rounded-2xl p-6">
+            <article className="app-card p-6">
               <p className="text-3xl mb-4">🎨</p>
-              <h3 className="text-xl font-semibold mb-3">Professionnels créatifs</h3>
-              <p className="text-white/60 mb-4">
+              <h3 className="text-xl font-semibold mb-3 text-black">Professionnels créatifs</h3>
+              <p className="text-stone-600 mb-4">
                 Découvrez des missions adaptées à vos compétences et construisez votre réputation sur la plateforme.
               </p>
-              <ul className="space-y-2 text-sm text-white/75">
+              <ul className="space-y-2 text-sm text-stone-700">
                 <li>✓ Feed de missions personnalisé</li>
                 <li>✓ Candidature en un clic</li>
                 <li>✓ Suivi de vos collaborations</li>
@@ -95,28 +95,28 @@ export default function HomePage() {
 
       <section className="py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-10">Comment ça marche ?</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-10 text-black">Comment ça marche ?</h2>
           <div className="flex flex-col md:flex-row gap-6">
-            <article className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent mb-3">01</p>
-              <h3 className="text-xl font-semibold mb-2">Recevez votre invitation</h3>
-              <p className="text-white/60 text-sm">
+            <article className="flex-1 app-card p-6">
+              <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">01</p>
+              <h3 className="text-xl font-semibold mb-2 text-black">Recevez votre invitation</h3>
+              <p className="text-stone-600 text-sm">
                 La plateforme est accessible sur invitation uniquement. Contactez-nous pour rejoindre.
               </p>
             </article>
 
-            <article className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent mb-3">02</p>
-              <h3 className="text-xl font-semibold mb-2">Créez votre profil</h3>
-              <p className="text-white/60 text-sm">
+            <article className="flex-1 app-card p-6">
+              <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">02</p>
+              <h3 className="text-xl font-semibold mb-2 text-black">Créez votre profil</h3>
+              <p className="text-stone-600 text-sm">
                 Studio ou pro créatif, complétez votre profil en quelques minutes.
               </p>
             </article>
 
-            <article className="flex-1 bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent mb-3">03</p>
-              <h3 className="text-xl font-semibold mb-2">Collaborez</h3>
-              <p className="text-white/60 text-sm">
+            <article className="flex-1 app-card p-6">
+              <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">03</p>
+              <h3 className="text-xl font-semibold mb-2 text-black">Collaborez</h3>
+              <p className="text-stone-600 text-sm">
                 Studios publient leurs missions, les pros postulent. C&apos;est aussi simple que ça.
               </p>
             </article>
@@ -126,22 +126,22 @@ export default function HomePage() {
 
       <section className="py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-4">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center max-w-xl mx-auto">
-            <h2 className="text-3xl font-semibold mb-3">Prêt à rejoindre Frapppe ?</h2>
-            <p className="text-white/50 text-sm mb-6">
+          <div className="app-card p-10 text-center max-w-xl mx-auto">
+            <h2 className="text-3xl font-semibold mb-3 text-black">Prêt à rejoindre Frapppe ?</h2>
+            <p className="text-stone-600 text-sm mb-6">
               Vous avez reçu un lien d&apos;invitation ? Créez votre compte maintenant.
             </p>
             <div className="flex flex-col items-center gap-4">
-              <GradientButton
+              <Button
                 onClick={() => navigate('/invitation')}
-                className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+                className="bg-orange-500 text-white hover:bg-orange-600"
               >
                 Créer mon compte →
-              </GradientButton>
+              </Button>
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="text-sm text-white/60 hover:text-white transition-colors"
+                className="text-sm text-stone-500 hover:text-black transition-colors"
               >
                 Déjà un compte ? Se connecter
               </button>
@@ -150,7 +150,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/10 py-6 text-center text-white/30 text-xs">
+      <footer className="border-t border-black/10 py-6 text-center text-stone-500 text-xs">
         © 2025 Frapppe. Tous droits réservés.
       </footer>
     </div>
