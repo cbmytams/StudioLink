@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { ReviewModal } from '@/components/ReviewModal';
 import { useToast } from '@/components/ui/Toast';
+import { reviewService } from '@/services/reviewService';
 
 type ProProfile = {
   full_name: string | null
@@ -93,7 +94,8 @@ export default function ManageApplications() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; reviewedId: string; reviewedName: string } | null>(null);
+  const [reviewedByProId, setReviewedByProId] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const PAGE_SIZE = 10;
@@ -148,10 +150,11 @@ export default function ManageApplications() {
         if (!active) return;
 
         const mappedMissionRow = missionData as unknown as MissionRow;
+        const mappedMissionStatus = normalizeMissionStatus(mappedMissionRow.status);
         setMission({
           id: mappedMissionRow.id,
           title: mappedMissionRow.title,
-          status: normalizeMissionStatus(mappedMissionRow.status),
+          status: mappedMissionStatus,
           deadline: mappedMissionRow.deadline,
           budget_min: mappedMissionRow.budget_min,
           budget_max: mappedMissionRow.budget_max,
@@ -167,6 +170,27 @@ export default function ManageApplications() {
           profiles: application.profiles,
         }));
         setApplications(mappedApplications);
+
+        const acceptedProIds = mappedApplications
+          .filter((application) => application.status === 'accepted' && application.pro_id)
+          .map((application) => application.pro_id);
+
+        if (
+          session?.user?.id
+          && mappedMissionStatus === 'completed'
+          && acceptedProIds.length > 0
+          && targetMissionId
+        ) {
+          const hasReviewed = await reviewService.hasReviewed(targetMissionId, session.user.id);
+          const nextReviewedByProId: Record<string, boolean> = {};
+          acceptedProIds.forEach((proId) => {
+            nextReviewedByProId[proId] = hasReviewed;
+          });
+          setReviewedByProId(nextReviewedByProId);
+        } else {
+          setReviewedByProId({});
+        }
+
         setCurrentPage(1);
       } catch (fetchError) {
         if (!active) return;
@@ -399,6 +423,7 @@ export default function ManageApplications() {
               'Anonyme';
             const canAct = application.status === 'pending';
             const isCurrentAction = actionLoading === application.id;
+            const alreadyReviewed = reviewedByProId[application.pro_id] ?? false;
 
             return (
               <div key={application.id} className="app-card-soft p-4">
@@ -489,10 +514,17 @@ export default function ManageApplications() {
                 {mission?.status === 'completed' && application.status === 'accepted' && application.pro_id ? (
                   <button
                     type="button"
-                    onClick={() => setReviewTarget({ missionId: targetMissionId, revieweeId: application.pro_id })}
-                    className="mt-3 text-sm font-medium text-orange-600 hover:underline"
+                    onClick={() => setReviewTarget({
+                      missionId: targetMissionId,
+                      reviewedId: application.pro_id,
+                      reviewedName: displayName,
+                    })}
+                    disabled={alreadyReviewed}
+                    className={alreadyReviewed
+                      ? 'mt-3 text-xs text-gray-400 cursor-not-allowed'
+                      : 'mt-3 text-xs text-orange-500 hover:underline'}
                   >
-                    Laisser un avis
+                    {alreadyReviewed ? '✓ Avis déposé' : 'Laisser un avis →'}
                   </button>
                 ) : null}
               </div>
@@ -527,7 +559,11 @@ export default function ManageApplications() {
         <ReviewModal
           isOpen={Boolean(reviewTarget)}
           missionId={reviewTarget.missionId}
-          revieweeId={reviewTarget.revieweeId}
+          reviewedId={reviewTarget.reviewedId}
+          reviewedName={reviewTarget.reviewedName}
+          onSubmitted={() => {
+            setReviewedByProId((prev) => ({ ...prev, [reviewTarget.reviewedId]: true }));
+          }}
           onClose={() => setReviewTarget(null)}
         />
       ) : null}
