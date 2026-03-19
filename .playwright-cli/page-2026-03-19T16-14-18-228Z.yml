@@ -1,0 +1,10 @@
+- generic [ref=e44]:
+  - paragraph [ref=e47]: Étape 1 sur 3
+  - generic [ref=e48]:
+    - heading "Finaliser mon profil" [level=1] [ref=e49]
+    - paragraph [ref=e50]: Configuration profil pro
+  - generic [ref=e51]:
+    - textbox "Nom complet" [ref=e54]: Pro Flow
+    - textbox "Nom d'utilisateur" [active] [ref=e57]: proflow
+    - textbox "Bio (optionnel)" [ref=e59]
+  - button "Suivant →" [ref=e61]
