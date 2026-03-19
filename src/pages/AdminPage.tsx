@@ -71,7 +71,14 @@ export default function AdminPage() {
       if (!active) return;
 
       const payload = Array.isArray(data) ? data[0] : data;
-      const isAdmin = payload === true;
+      const isAdmin =
+        payload === true
+        || (
+          typeof payload === 'object'
+          && payload !== null
+          && 'is_admin_user_secure' in payload
+          && (payload as { is_admin_user_secure?: boolean }).is_admin_user_secure === true
+        );
       if (rpcError || !isAdmin) {
         navigate('/', { replace: true });
         return;
