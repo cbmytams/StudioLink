@@ -14,6 +14,7 @@ import ProLayout from '@/layouts/ProLayout';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HomePage = lazy(() => import('@/pages/HomePage'));
+const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
 const InvitationLandingPage = lazy(() => import('@/pages/InvitationLanding'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallback'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
@@ -42,27 +43,22 @@ function PublicOnlyRoute({ children }: { children: ReactNode }) {
     return <LoadingScreen />;
   }
 
-  if (!session || !profile) {
+  if (!session) {
     return <>{children}</>;
   }
 
-  if (!profile.onboarding_complete) {
-    return (
-      <Navigate
-        to={profile.user_type === 'studio' ? '/onboarding/studio' : '/onboarding/pro'}
-        replace
-      />
-    );
+  if (!profile || !profile.onboarding_complete) {
+    return <Navigate to="/onboarding" replace />;
   }
 
-  return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed'} replace />;
+  return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard'} replace />;
 }
 
 function OnboardingRoute({
   type,
   children,
 }: {
-  type: 'studio' | 'pro';
+  type?: 'studio' | 'pro';
   children: ReactNode;
 }) {
   const { session, profile, loading } = useAuth();
@@ -71,16 +67,27 @@ function OnboardingRoute({
     return <LoadingScreen />;
   }
 
-  if (!session || !profile) {
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
 
-  if (profile.user_type !== type) {
-    return <Navigate to={profile.user_type === 'studio' ? '/onboarding/studio' : '/onboarding/pro'} replace />;
+  const effectiveType =
+    profile?.user_type
+    ?? ((sessionStorage.getItem('invitationType') === 'studio' || sessionStorage.getItem('invitationType') === 'pro')
+      ? sessionStorage.getItem('invitationType')
+      : null);
+
+  if (profile?.onboarding_complete) {
+    return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard'} replace />;
   }
 
-  if (profile.onboarding_complete) {
-    return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed'} replace />;
+  if (
+    type
+    && effectiveType
+    && effectiveType !== type
+    && (effectiveType === 'studio' || effectiveType === 'pro')
+  ) {
+    return <Navigate to={`/onboarding/${effectiveType}`} replace />;
   }
 
   return <>{children}</>;
@@ -120,7 +127,7 @@ export default function App() {
             path="/invitation"
             element={(
               <PublicOnlyRoute>
-                <InvitationLandingPage />
+                <InvitationPage />
               </PublicOnlyRoute>
             )}
           />
@@ -134,6 +141,14 @@ export default function App() {
           />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
+          <Route
+            path="/onboarding"
+            element={(
+              <OnboardingRoute>
+                <OnboardingPage />
+              </OnboardingRoute>
+            )}
+          />
           <Route
             path="/onboarding/studio"
             element={(
