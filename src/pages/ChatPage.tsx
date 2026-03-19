@@ -193,6 +193,10 @@ export default function ChatPage() {
 
   return (
     <div className="app-shell flex flex-col">
+      <Helmet>
+        <title>Messagerie — StudioLink</title>
+        <meta name="description" content="Échangez avec vos contacts StudioLink." />
+      </Helmet>
       <header className="sticky top-0 z-40 border-b border-black/5 bg-[#f4ece4]/85 px-4 py-3 backdrop-blur-md">
         <div className="mb-3 flex items-center justify-between">
           <button

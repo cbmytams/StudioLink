@@ -156,6 +156,10 @@ export default function SavedPage() {
 
   return (
     <main className="app-shell">
+      <Helmet>
+        <title>Favoris — StudioLink</title>
+        <meta name="description" content="Vos missions sauvegardées sur StudioLink." />
+      </Helmet>
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
         <h1 className="app-title mb-4">Éléments sauvegardés</h1>
         {loading ? (
