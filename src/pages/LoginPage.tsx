@@ -250,9 +250,6 @@ export default function LoginPage() {
         return;
       }
 
-      sessionStorage.removeItem('invitationCode');
-      sessionStorage.removeItem('invitationType');
-      sessionStorage.removeItem('invitationEmail');
       setSuccessMessage('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.');
       showToast({ title: 'Compte créé', description: 'Vérifie ta boîte mail.', variant: 'default' });
       setPassword('');
