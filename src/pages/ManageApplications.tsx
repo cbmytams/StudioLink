@@ -344,6 +344,10 @@ export default function ManageApplications() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>Candidatures — StudioLink</title>
+        <meta name="description" content="Gérez les candidatures reçues pour votre mission." />
+      </Helmet>
       <div className="app-container">
         <button
           type="button"
