@@ -35,7 +35,7 @@ export function BottomSheet({ isOpen, onClose, title, headerAction, children, cl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 z-50 bg-[#f4ece4]/75 backdrop-blur-sm"
           />
           <motion.div
             initial={{ y: '100%' }}
