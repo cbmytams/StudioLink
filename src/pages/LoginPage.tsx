@@ -150,7 +150,7 @@ export default function LoginPage() {
     return () => {
       active = false;
     };
-  }, [email, invitationContext, mode]);
+  }, [invitationContext, mode]);
 
   const isSignIn = mode === 'signin';
 
