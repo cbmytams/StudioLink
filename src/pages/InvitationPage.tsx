@@ -22,7 +22,15 @@ export default function InvitationPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !session || !profile) return;
+    if (authLoading || !session) return;
+    if (!profile) {
+      const invitationCode = sessionStorage.getItem('invitationCode');
+      const invitationType = sessionStorage.getItem('invitationType');
+      if (invitationCode && (invitationType === 'studio' || invitationType === 'pro')) {
+        navigate('/onboarding', { replace: true });
+      }
+      return;
+    }
     navigate(profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
   }, [authLoading, navigate, profile, session]);
 
@@ -127,4 +135,3 @@ export default function InvitationPage() {
     </div>
   );
 }
-
