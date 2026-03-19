@@ -26,15 +26,14 @@ export const messageService = {
     const conversations = await this.getConversations(userId);
     if (conversations.length === 0) return 0;
     const conversationIds = conversations.map((conversation) => conversation.id);
-    const { data, error } = await client
+    const { count, error } = await client
       .from('messages')
-      .select('conversation_id,sender_id,read')
+      .select('id', { count: 'exact', head: true })
       .in('conversation_id', conversationIds)
       .eq('read', false)
       .neq('sender_id', userId);
     if (error) throw error;
-    const ids = new Set((data ?? []).map((row) => row.conversation_id as string));
-    return ids.size;
+    return count ?? 0;
   },
 
   async getMessages(conversationId: string): Promise<MessageRecord[]> {
