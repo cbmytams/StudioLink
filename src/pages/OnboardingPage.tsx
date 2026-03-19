@@ -265,19 +265,19 @@ export default function OnboardingPage() {
             value={studioData.company_name}
             onChange={(event) => setStudioData((prev) => ({ ...prev, company_name: event.target.value }))}
             placeholder="Nom du studio"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <TextInput
             value={studioData.website}
             onChange={(event) => setStudioData((prev) => ({ ...prev, website: event.target.value }))}
             placeholder="https://mon-studio.com"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <Textarea
             value={studioData.bio}
             onChange={(event) => setStudioData((prev) => ({ ...prev, bio: event.target.value.slice(0, 300) }))}
             placeholder="Bio du studio (optionnel)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
         </div>
       );
@@ -290,27 +290,27 @@ export default function OnboardingPage() {
             value={studioData.contact_email}
             onChange={(event) => setStudioData((prev) => ({ ...prev, contact_email: event.target.value }))}
             placeholder="Email de contact"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <TextInput
             value={studioData.phone}
             onChange={(event) => setStudioData((prev) => ({ ...prev, phone: event.target.value }))}
             placeholder="Téléphone (optionnel)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
         </div>
       );
     }
 
     return (
-      <div className="space-y-3 text-sm text-white/80">
-        <p><span className="text-white/60">Nom du studio :</span> {studioData.company_name || '—'}</p>
-        <p><span className="text-white/60">Site web :</span> {studioData.website || '—'}</p>
-        <p><span className="text-white/60">Bio :</span> {studioData.bio || '—'}</p>
-        <p><span className="text-white/60">Email contact :</span> {studioData.contact_email || '—'}</p>
-        <p><span className="text-white/60">Téléphone :</span> {studioData.phone || '—'}</p>
+      <div className="space-y-3 text-sm text-black/80">
+        <p><span className="text-stone-500">Nom du studio :</span> {studioData.company_name || '—'}</p>
+        <p><span className="text-stone-500">Site web :</span> {studioData.website || '—'}</p>
+        <p><span className="text-stone-500">Bio :</span> {studioData.bio || '—'}</p>
+        <p><span className="text-stone-500">Email contact :</span> {studioData.contact_email || '—'}</p>
+        <p><span className="text-stone-500">Téléphone :</span> {studioData.phone || '—'}</p>
         <div className="pt-2">
-          <label htmlFor="onboarding-avatar-studio" className="mb-2 block text-xs text-white/60">
+          <label htmlFor="onboarding-avatar-studio" className="mb-2 block text-xs text-stone-500">
             Avatar (optionnel)
           </label>
           <input
@@ -324,7 +324,7 @@ export default function OnboardingPage() {
               if (nextFile) setAvatarPreview(URL.createObjectURL(nextFile));
               else setAvatarPreview(null);
             }}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/15 file:px-2 file:py-1 file:text-xs file:text-white"
+            className="w-full glass-input rounded-xl px-3 py-2 text-xs text-stone-900 file:mr-2 file:rounded-md file:border-0 file:bg-orange-100 file:px-2 file:py-1 file:text-xs file:text-orange-700"
           />
           {avatarPreview ? (
             <img
@@ -346,19 +346,19 @@ export default function OnboardingPage() {
             value={proData.full_name}
             onChange={(event) => setProData((prev) => ({ ...prev, full_name: event.target.value }))}
             placeholder="Nom complet"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <TextInput
             value={proData.username}
             onChange={(event) => setProData((prev) => ({ ...prev, username: event.target.value }))}
             placeholder="Nom d'utilisateur"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <Textarea
             value={proData.bio}
             onChange={(event) => setProData((prev) => ({ ...prev, bio: event.target.value.slice(0, 300) }))}
             placeholder="Bio (optionnel)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
         </div>
       );
@@ -372,20 +372,20 @@ export default function OnboardingPage() {
             onChange={(event) => setSkillsInput(event.target.value)}
             onKeyDown={handleSkillKeyDown}
             placeholder="Ajouter une compétence (Entrée)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
 
           <div className="flex flex-wrap gap-2">
             {proData.skills.map((skill) => (
               <span
                 key={skill}
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white"
+                className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs text-orange-700 border border-orange-100"
               >
                 {skill}
                 <button
                   type="button"
                   onClick={() => removeSkill(skill)}
-                  className="text-white/70 hover:text-white"
+                  className="text-orange-600 hover:text-orange-700"
                 >
                   ×
                 </button>
@@ -393,35 +393,35 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          <p className="text-xs text-white/60">{proData.skills.length}/10 compétences</p>
+          <p className="text-xs text-stone-500">{proData.skills.length}/10 compétences</p>
 
           <TextInput
             value={proData.city}
             onChange={(event) => setProData((prev) => ({ ...prev, city: event.target.value }))}
             placeholder="Ville (optionnel)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
           <TextInput
             type="number"
             value={proData.daily_rate}
             onChange={(event) => setProData((prev) => ({ ...prev, daily_rate: event.target.value }))}
             placeholder="Tarif journalier (optionnel)"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
         </div>
       );
     }
 
     return (
-      <div className="space-y-3 text-sm text-white/80">
-        <p><span className="text-white/60">Nom complet :</span> {proData.full_name || '—'}</p>
-        <p><span className="text-white/60">Username :</span> {proData.username || '—'}</p>
-        <p><span className="text-white/60">Bio :</span> {proData.bio || '—'}</p>
-        <p><span className="text-white/60">Compétences :</span> {proData.skills.join(', ') || '—'}</p>
-        <p><span className="text-white/60">Ville :</span> {proData.city || '—'}</p>
-        <p><span className="text-white/60">Tarif :</span> {proData.daily_rate || '—'}</p>
+      <div className="space-y-3 text-sm text-black/80">
+        <p><span className="text-stone-500">Nom complet :</span> {proData.full_name || '—'}</p>
+        <p><span className="text-stone-500">Username :</span> {proData.username || '—'}</p>
+        <p><span className="text-stone-500">Bio :</span> {proData.bio || '—'}</p>
+        <p><span className="text-stone-500">Compétences :</span> {proData.skills.join(', ') || '—'}</p>
+        <p><span className="text-stone-500">Ville :</span> {proData.city || '—'}</p>
+        <p><span className="text-stone-500">Tarif :</span> {proData.daily_rate || '—'}</p>
         <div className="pt-2">
-          <label htmlFor="onboarding-avatar-pro" className="mb-2 block text-xs text-white/60">
+          <label htmlFor="onboarding-avatar-pro" className="mb-2 block text-xs text-stone-500">
             Avatar (optionnel)
           </label>
           <input
@@ -435,7 +435,7 @@ export default function OnboardingPage() {
               if (nextFile) setAvatarPreview(URL.createObjectURL(nextFile));
               else setAvatarPreview(null);
             }}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-md file:border-0 file:bg-white/15 file:px-2 file:py-1 file:text-xs file:text-white"
+            className="w-full glass-input rounded-xl px-3 py-2 text-xs text-stone-900 file:mr-2 file:rounded-md file:border-0 file:bg-orange-100 file:px-2 file:py-1 file:text-xs file:text-orange-700"
           />
           {avatarPreview ? (
             <img
@@ -451,16 +451,15 @@ export default function OnboardingPage() {
 
   if (!invitationType) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
-        <GlassCard className="relative z-10 w-full max-w-xl p-8 text-center">
-          <h1 className="text-2xl font-semibold text-white">Invitation requise</h1>
-          <p className="mt-2 text-sm text-white/70">
+      <div className="app-shell flex min-h-screen items-center justify-center p-4">
+        <GlassCard className="w-full max-w-xl p-8 text-center">
+          <h1 className="text-2xl font-semibold text-black">Invitation requise</h1>
+          <p className="mt-2 text-sm text-stone-500">
             Impossible de déterminer le type de profil à créer.
           </p>
           <Button
             type="button"
-            className="mt-6 bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            className="mt-6 bg-orange-500 text-white hover:bg-orange-600"
             onClick={() => navigate('/invitation', { replace: true })}
           >
             Retour à l&apos;invitation
@@ -471,21 +470,19 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
-
-      <GlassCard className="relative z-10 w-full max-w-xl p-8">
-        <div className="w-full h-1 bg-white/10 rounded-full mb-6">
+    <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <GlassCard className="w-full max-w-xl p-8">
+        <div className="w-full h-1 bg-black/10 rounded-full mb-6">
           <div
-            className="h-1 bg-gradient-to-r from-violet-500 to-cyan-400 rounded-full transition-all duration-300"
+            className="h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="mb-6 text-center text-xs text-white/70">Étape {step} sur {totalSteps}</p>
+        <p className="mb-6 text-center text-xs text-stone-500">Étape {step} sur {totalSteps}</p>
 
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold text-white">Finaliser mon profil</h1>
-          <p className="mt-2 text-sm text-white/70">
+          <h1 className="text-2xl font-semibold text-black">Finaliser mon profil</h1>
+          <p className="mt-2 text-sm text-stone-500">
             {invitationType === 'studio' ? 'Configuration studio' : 'Configuration profil pro'}
           </p>
         </div>
@@ -508,7 +505,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleFinalSubmit}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+              className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
             >
               {loading ? (
                 <>
@@ -524,7 +521,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleNext}
               disabled={Boolean(validationMessage)}
-              className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+              className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
             >
               Suivant →
             </Button>
