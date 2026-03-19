@@ -358,7 +358,7 @@ export default function ChatPage() {
                 {isPeerTyping ? (
                   <p className="text-xs text-stone-500">en train d&apos;écrire...</p>
                 ) : null}
-                <div ref={endRef} />
+                <div ref={bottomRef} />
               </div>
             )
           ) : (
