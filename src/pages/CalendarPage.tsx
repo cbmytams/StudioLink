@@ -157,7 +157,7 @@ export default function CalendarPage() {
   const [selectedSession, setSelectedSession] = useState<CalendarSession | null>(null);
   const [selectedDaySessions, setSelectedDaySessions] = useState<CalendarSession[]>([]);
   const [isDaySheetOpen, setIsDaySheetOpen] = useState(false);
-  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; reviewedId: string; reviewedName: string } | null>(null);
 
   const {
     data: studioMissions = [],
@@ -408,7 +408,7 @@ export default function CalendarPage() {
           <Button
             variant="ghost"
             className="w-full gap-2 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-            onClick={() => setReviewTarget({ missionId: session.missionId, revieweeId: session.revieweeId! })}
+            onClick={() => setReviewTarget({ missionId: session.missionId, reviewedId: session.revieweeId!, reviewedName: 'Ce contact' })}
           >
             <Star size={16} />
             Évaluer la session ⭐
@@ -642,7 +642,8 @@ export default function CalendarPage() {
         <ReviewModal
           isOpen={Boolean(reviewTarget)}
           missionId={reviewTarget.missionId}
-          revieweeId={reviewTarget.revieweeId}
+          reviewedId={reviewTarget.reviewedId}
+          reviewedName={reviewTarget.reviewedName}
           onClose={() => setReviewTarget(null)}
         />
       ) : null}
