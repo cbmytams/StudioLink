@@ -88,6 +88,10 @@ export default function StudioSearchPros() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>Rechercher des pros — StudioLink</title>
+        <meta name="description" content="Trouvez des professionnels créatifs sur StudioLink." />
+      </Helmet>
       <div className="app-container-wide">
         <button
           type="button"
