@@ -76,18 +76,61 @@ create table if not exists messages (
 );
 alter table messages enable row level security;
 drop policy if exists "participant_messages" on messages;
-create policy "participant_messages" on messages for all using (
-  exists (
-    select 1 from conversations c where c.id = conversation_id
-    and (c.participant_1 = auth.uid() or c.participant_2 = auth.uid())
-  )
-) with check (
-  auth.uid() = sender_id and
-  exists (
-    select 1 from conversations c where c.id = conversation_id
-    and (c.participant_1 = auth.uid() or c.participant_2 = auth.uid())
-  )
-);
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'messages'
+      and column_name = 'conversation_id'
+  ) and to_regclass('public.conversations') is not null then
+    execute $policy$
+      create policy "participant_messages" on messages for all using (
+        exists (
+          select 1 from conversations c where c.id = conversation_id
+          and (c.participant_1 = auth.uid() or c.participant_2 = auth.uid())
+        )
+      ) with check (
+        auth.uid() = sender_id and
+        exists (
+          select 1 from conversations c where c.id = conversation_id
+          and (c.participant_1 = auth.uid() or c.participant_2 = auth.uid())
+        )
+      )
+    $policy$;
+  elsif exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'messages'
+      and column_name = 'session_id'
+  ) and to_regclass('public.sessions') is not null then
+    execute $policy$
+      create policy "participant_messages" on messages for all using (
+        exists (
+          select 1
+          from sessions ss
+          join studios st on st.id = ss.studio_id
+          join professionals pr on pr.id = ss.pro_id
+          where ss.id = session_id
+            and (st.profile_id = auth.uid() or pr.profile_id = auth.uid())
+        )
+      ) with check (
+        auth.uid() = sender_id and
+        exists (
+          select 1
+          from sessions ss
+          join studios st on st.id = ss.studio_id
+          join professionals pr on pr.id = ss.pro_id
+          where ss.id = session_id
+            and (st.profile_id = auth.uid() or pr.profile_id = auth.uid())
+        )
+      )
+    $policy$;
+  end if;
+end
+$$;
 
 do $$
 begin
