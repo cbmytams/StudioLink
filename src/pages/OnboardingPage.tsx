@@ -38,7 +38,7 @@ interface LegacyProfileShape {
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { session, profile, loading: authLoading } = useAuth();
+  const { session, profile, loading: authLoading, refreshProfile } = useAuth();
   const { showToast } = useToast();
 
   const user = session?.user ?? null;
@@ -242,6 +242,7 @@ export default function OnboardingPage() {
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
       sessionStorage.removeItem('invitationEmail');
+      await refreshProfile();
       showToast({ title: 'Profil finalisé', variant: 'default' });
       navigate(invitationType === 'studio' ? '/studio/dashboard' : '/pro/dashboard');
     } catch (submitError) {
