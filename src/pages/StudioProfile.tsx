@@ -177,6 +177,10 @@ export default function StudioProfile() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>Profil Studio — StudioLink</title>
+        <meta name="description" content="Gérez votre profil studio sur StudioLink." />
+      </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
