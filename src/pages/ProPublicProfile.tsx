@@ -33,6 +33,7 @@ export function ProPublicProfile() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const { data: reviews = [] } = useReviews(proId);
 
@@ -75,7 +76,7 @@ export function ProPublicProfile() {
     };
 
     void fetchProfile();
-  }, [proId]);
+  }, [proId, reloadKey]);
 
   const hasAnyInfo = Boolean(
     proProfile?.bio ||
@@ -111,6 +112,13 @@ export function ProPublicProfile() {
             >
               Retour
             </button>
+            <button
+              type="button"
+              onClick={() => setReloadKey((prev) => prev + 1)}
+              className="text-orange-600 underline text-sm mt-2 block mx-auto"
+            >
+              Réessayer
+            </button>
           </div>
         </div>
       </div>
@@ -130,6 +138,13 @@ export function ProPublicProfile() {
               className="text-orange-600 underline text-sm mt-4 block mx-auto"
             >
               Retour
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/studio/dashboard')}
+              className="text-orange-600 underline text-sm mt-2 block mx-auto"
+            >
+              Retour au dashboard
             </button>
           </div>
         </div>
