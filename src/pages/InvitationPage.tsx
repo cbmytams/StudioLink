@@ -1,0 +1,130 @@
+import { type FormEvent, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { TextInput } from '@/components/ui/TextInput';
+import { Button } from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/supabase/auth';
+
+type InvitationLookup = {
+  code: string;
+  invitation_type: 'studio' | 'pro';
+  email: string | null;
+  used: boolean;
+  expires_at: string | null;
+};
+
+export default function InvitationPage() {
+  const navigate = useNavigate();
+  const { session, profile, loading: authLoading } = useAuth();
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (authLoading || !session || !profile) return;
+    navigate(profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
+  }, [authLoading, navigate, profile, session]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode) {
+      setError("Entre un code d'invitation");
+      return;
+    }
+    if (normalizedCode.length < 6) {
+      setError('Code trop court');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error: rpcError } = await supabase.rpc('get_invitation_by_code', {
+        p_code: normalizedCode,
+      });
+
+      if (rpcError) {
+        setError('Code invalide ou introuvable');
+        return;
+      }
+
+      const invitation = (Array.isArray(data) ? data[0] : data) as InvitationLookup | null;
+      if (!invitation) {
+        setError('Code invalide ou introuvable');
+        return;
+      }
+
+      if (invitation.used) {
+        setError('Ce code a déjà été utilisé');
+        return;
+      }
+
+      if (invitation.expires_at && new Date(invitation.expires_at) < new Date()) {
+        setError('Ce code est expiré');
+        return;
+      }
+
+      sessionStorage.setItem('invitationCode', invitation.code);
+      sessionStorage.setItem('invitationType', invitation.invitation_type);
+      if (invitation.email) {
+        sessionStorage.setItem('invitationEmail', invitation.email);
+      }
+
+      navigate('/login?mode=signup', { replace: true });
+    } catch {
+      setError('Code invalide ou introuvable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
+
+      <GlassCard className="relative z-10 w-full max-w-md p-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-semibold text-white">Code d&apos;invitation</h1>
+          <p className="mt-2 text-sm text-white/70">
+            Entre ton code pour débloquer la création de compte.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <TextInput
+            autoCapitalize="characters"
+            maxLength={16}
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value.toUpperCase());
+              if (error) setError(null);
+            }}
+            placeholder="EX: STUDIO2026"
+            className="text-white placeholder:text-white/45"
+          />
+
+          {error ? <p className="text-red-400 text-sm text-center">{error}</p> : null}
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+          >
+            {loading ? (
+              <>
+                <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Vérification...
+              </>
+            ) : (
+              'Continuer →'
+            )}
+          </Button>
+        </form>
+      </GlassCard>
+    </div>
+  );
+}
+
