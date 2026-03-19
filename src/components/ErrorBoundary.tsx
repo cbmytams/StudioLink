@@ -19,18 +19,18 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0D0D0F] text-white flex flex-col items-center justify-center text-center px-4">
+        <div className="app-shell flex flex-col items-center justify-center text-center px-4">
           <p className="text-5xl mb-4">⚠️</p>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-black mb-2">
             Une erreur est survenue
           </h1>
-          <p className="text-white/40 text-sm mb-8">
+          <p className="text-stone-500 text-sm mb-8">
             {this.state.errorMessage}
           </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="bg-white/10 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-colors"
+            className="bg-orange-500 text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition-colors"
           >
             Recharger la page
           </button>
