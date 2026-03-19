@@ -53,7 +53,7 @@ export default function HomePage() {
         </p>
 
         <GradientButton
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/invitation')}
           className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
         >
           J&apos;ai une invitation →
@@ -133,7 +133,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col items-center gap-4">
               <GradientButton
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/invitation')}
                 className="bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
               >
                 Créer mon compte →
