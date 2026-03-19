@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
+import { StarDisplay } from '@/components/ui/StarDisplay';
 import { profileService } from '@/services/profileService';
 import { useReviews } from '@/hooks/useReviews';
 import { useToast } from '@/components/ui/Toast';
@@ -21,6 +22,16 @@ type FieldErrors = {
   companyName?: string
   website?: string
   contactEmail?: string
+}
+
+function getRelativeDateLabel(dateIso: string): string {
+  const diffMs = Date.now() - new Date(dateIso).getTime();
+  const dayMs = 24 * 60 * 60 * 1000;
+  if (diffMs < dayMs) return 'Aujourd’hui';
+  if (diffMs < 2 * dayMs) return 'Hier';
+  const days = Math.floor(diffMs / dayMs);
+  if (days < 7) return `Il y a ${days} jours`;
+  return new Date(dateIso).toLocaleDateString('fr-FR');
 }
 
 export default function StudioProfile() {
@@ -265,17 +276,24 @@ export default function StudioProfile() {
               <section className="app-card-soft p-4">
                 <h2 className="mb-2 text-sm font-semibold text-black/80">Avis reçus</h2>
                 {averageRating !== null ? (
-                  <p className="text-sm text-black/70">
-                    Note moyenne : <span className="font-semibold text-orange-700">{averageRating.toFixed(1)} / 5</span> ({reviews.length} avis)
-                  </p>
+                  <div className="mb-2 flex items-center gap-2">
+                    <StarDisplay rating={averageRating} />
+                    <p className="text-sm text-black/70">
+                      <span className="font-semibold text-orange-700">{averageRating.toFixed(1)} ★</span> · {reviews.length} avis
+                    </p>
+                  </div>
                 ) : (
-                  <p className="text-sm app-muted">Aucun avis pour le moment.</p>
+                  <p className="text-sm app-muted">Aucun avis pour l&apos;instant</p>
                 )}
                 {reviews.slice(0, 5).map((review) => (
                   <div key={review.id} className="rounded-xl border border-white/50 bg-white/70 p-3 mt-2">
-                    <p className="text-sm font-medium text-orange-700">{'★'.repeat(review.rating)}</p>
+                    <p className="text-xs text-stone-500">{review.reviewer_name}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <StarDisplay rating={review.rating} />
+                      <span className="text-xs text-orange-700 font-medium">{review.rating}/5</span>
+                    </div>
                     {review.comment ? <p className="text-sm text-black/70 mt-1">{review.comment}</p> : null}
-                    <p className="text-xs app-muted mt-1">{new Date(review.created_at).toLocaleDateString('fr-FR')}</p>
+                    <p className="text-xs app-muted mt-1">{getRelativeDateLabel(review.created_at)}</p>
                   </div>
                 ))}
               </section>
