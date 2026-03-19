@@ -205,7 +205,7 @@ export default function ManageApplications() {
     return () => {
       active = false;
     };
-  }, [targetMissionId]);
+  }, [session?.user?.id, targetMissionId]);
 
   const handleAccept = async (application: Application) => {
     if (!targetMissionId || !session?.user?.id) return;
