@@ -322,7 +322,7 @@ export default function AdminPage() {
                 const statusNode = invitation.used
                   ? <span className="text-red-400">Utilisée</span>
                   : isExpired
-                    ? <span className="text-white/35">Expirée</span>
+                    ? <span className="text-stone-400">Expirée</span>
                     : <span className="text-green-400">Active</span>;
 
                 return (
