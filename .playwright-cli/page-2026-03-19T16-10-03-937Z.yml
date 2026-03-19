@@ -1,0 +1,7 @@
+- generic [ref=e13]:
+  - generic [ref=e14]:
+    - heading "Code d'invitation" [level=1] [ref=e15]
+    - paragraph [ref=e16]: Entre ton code pour débloquer la création de compte.
+  - generic [ref=e17]:
+    - 'textbox "EX: STUDIO2026" [ref=e20]'
+    - button "Continuer →" [ref=e21]
