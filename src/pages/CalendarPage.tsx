@@ -420,6 +420,10 @@ export default function CalendarPage() {
 
   return (
     <div className="app-shell pb-20 pt-safe">
+      <Helmet>
+        <title>Calendrier — StudioLink</title>
+        <meta name="description" content="Votre planning de sessions et missions sur StudioLink." />
+      </Helmet>
       <header className="sticky top-0 z-30 flex flex-col gap-6 bg-[#f4ece4]/90 px-4 py-6 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-light tracking-tight">Calendrier</h1>
