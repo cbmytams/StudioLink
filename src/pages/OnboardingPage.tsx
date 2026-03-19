@@ -82,7 +82,7 @@ export default function OnboardingPage() {
     );
     if (onboardingCompleted) {
       const currentType = profileData?.user_type ?? profileData?.type;
-      navigate(currentType === 'studio' ? '/studio/dashboard' : '/pro/feed', { replace: true });
+      navigate(currentType === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
       return;
     }
 
@@ -203,8 +203,9 @@ export default function OnboardingPage() {
 
       const payload: Record<string, string | number | boolean | null | string[]> = {
         id: user.id,
-        type: invitationType,
-        onboarding_completed: true,
+        user_type: invitationType,
+        onboarding_complete: true,
+        onboarding_step: totalSteps,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       };
@@ -238,19 +239,11 @@ export default function OnboardingPage() {
         return;
       }
 
-      const invitationCode = sessionStorage.getItem('invitationCode');
-      if (invitationCode) {
-        await supabase
-          .from('invitations')
-          .update({ used: true } as never)
-          .eq('code', invitationCode);
-      }
-
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
       sessionStorage.removeItem('invitationEmail');
       showToast({ title: 'Profil finalisé', variant: 'default' });
-      navigate(invitationType === 'studio' ? '/studio/dashboard' : '/pro/feed');
+      navigate(invitationType === 'studio' ? '/studio/dashboard' : '/pro/dashboard');
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : 'Une erreur est survenue.';
       setError(message);
@@ -455,6 +448,27 @@ export default function OnboardingPage() {
       </div>
     );
   };
+
+  if (!invitationType) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
+        <GlassCard className="relative z-10 w-full max-w-xl p-8 text-center">
+          <h1 className="text-2xl font-semibold text-white">Invitation requise</h1>
+          <p className="mt-2 text-sm text-white/70">
+            Impossible de déterminer le type de profil à créer.
+          </p>
+          <Button
+            type="button"
+            className="mt-6 bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            onClick={() => navigate('/invitation', { replace: true })}
+          >
+            Retour à l&apos;invitation
+          </Button>
+        </GlassCard>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
