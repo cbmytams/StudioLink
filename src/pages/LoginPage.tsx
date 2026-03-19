@@ -281,20 +281,18 @@ export default function LoginPage() {
   const signupBlocked = mode === 'signup' && (invitationState === 'missing' || invitationState === 'invalid');
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
-
-      <GlassCard className="relative z-10 w-full max-w-md p-8">
+    <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <GlassCard className="w-full max-w-md p-8">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
-          <p className="text-sm text-white/70">
+          <h1 className="text-2xl font-semibold text-black">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
+          <p className="text-sm text-stone-500">
             {isSignIn ? 'Bienvenue de retour' : 'Invitation acceptée · Finalise ton inscription'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="login-email" className="block text-sm font-medium text-white/85">
+            <label htmlFor="login-email" className="block text-sm font-medium text-black/80">
               Adresse email
             </label>
             <TextInput
@@ -306,12 +304,12 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Adresse email"
-              className="text-white placeholder:text-white/45"
+              className="text-stone-900 placeholder:text-stone-400"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="login-password" className="block text-sm font-medium text-white/85">
+            <label htmlFor="login-password" className="block text-sm font-medium text-black/80">
               Mot de passe
             </label>
             <TextInput
@@ -323,7 +321,7 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Mot de passe"
-              className="text-white placeholder:text-white/45"
+              className="text-stone-900 placeholder:text-stone-400"
             />
           </div>
 
@@ -336,20 +334,20 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Confirmer le mot de passe"
-              className="text-white placeholder:text-white/45"
+              className="text-stone-900 placeholder:text-stone-400"
             />
           )}
 
           {mode === 'signup' && invitationState === 'checking' ? (
-            <p className="text-xs text-white/60 text-center">Validation de l&apos;invitation...</p>
+            <p className="text-xs text-stone-500 text-center">Validation de l&apos;invitation...</p>
           ) : null}
           {mode === 'signup' && signupBlocked ? (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-xs text-red-300">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-600">
               Invitation invalide ou absente.
               <button
                 type="button"
                 onClick={() => navigate('/invitation')}
-                className="ml-1 text-red-200 underline"
+                className="ml-1 text-red-600 underline"
               >
                 Revenir à la page invitation
               </button>
@@ -364,7 +362,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading || invitationState === 'checking' || signupBlocked}
-            className="w-full bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            className="w-full bg-orange-500 text-white hover:bg-orange-600"
           >
             {loading ? (
               <>
@@ -382,7 +380,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-4 w-full text-center text-sm text-white/75 transition-colors hover:text-white"
+          className="mt-4 w-full text-center text-sm text-stone-500 transition-colors hover:text-black"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
