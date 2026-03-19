@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { useConversations, useMessages, useRealtimeMessages, useSendMessage } from '@/hooks/useMessages';
+import { useConversations, useMessages, useSendMessage } from '@/hooks/useMessages';
 import { messageService } from '@/services/messageService';
 import { useToast } from '@/components/ui/Toast';
 import { ConversationSkeleton } from '@/components/skeletons/ConversationSkeleton';
@@ -59,7 +59,7 @@ export default function ChatPage() {
   const [isPeerTyping, setIsPeerTyping] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const typingTimerRef = useRef<number | null>(null);
   const activeTab = searchParams.get('tab') === 'files' ? 'files' : 'messages';
 
@@ -77,7 +77,6 @@ export default function ChatPage() {
     error: messagesErrorData,
   } = useMessages(selectedConversationId);
 
-  useRealtimeMessages(selectedConversationId);
   const sendMessage = useSendMessage();
 
   useEffect(() => {
@@ -110,10 +109,8 @@ export default function ChatPage() {
   }, [conversationId, conversations, selectedConversationId]);
 
   useEffect(() => {
-    if (activeTab === 'messages') {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [activeTab, messages]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   useEffect(() => {
     if (!selectedConversationId || !userId || !supabase) return;
@@ -172,6 +169,24 @@ export default function ChatPage() {
         content: draft.trim(),
         fileUrl,
       });
+
+      const recipientId = activeConversation
+        ? (activeConversation.participant_1 === userId
+          ? activeConversation.participant_2
+          : activeConversation.participant_1)
+        : null;
+
+      if (recipientId) {
+        const senderName = profile?.display_name || 'Un contact';
+        await supabase.from('notifications').insert({
+          user_id: recipientId,
+          type: 'new_message',
+          title: 'Nouveau message',
+          body: `${senderName} vous a envoyé un message`,
+          read: false,
+        });
+      }
+
       setDraft('');
       setSelectedFile(null);
     } catch (error) {
