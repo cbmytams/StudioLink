@@ -28,8 +28,9 @@ function iconForType(type: NotificationRecord['type']) {
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const userId = session?.user?.id;
+  const fallbackRoute = profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
   const {
     data = [],
     isLoading,
@@ -68,7 +69,7 @@ export default function NotificationsPage() {
             </p>
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(fallbackRoute)}
               className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
             >
               Retour à l’accueil
@@ -80,7 +81,7 @@ export default function NotificationsPage() {
             <p className="text-sm text-stone-500">Aucune notification</p>
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(fallbackRoute)}
               className="mt-4 min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white"
             >
               Retour à l’accueil
@@ -99,7 +100,7 @@ export default function NotificationsPage() {
                   if (!item.read) {
                     await markAsRead.mutateAsync(item.id);
                   }
-                  navigate(item.link || '/');
+                  navigate(item.link || fallbackRoute);
                 }}
               >
                 <div className="flex items-start gap-3">
