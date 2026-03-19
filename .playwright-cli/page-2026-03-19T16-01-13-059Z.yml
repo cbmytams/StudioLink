@@ -1,0 +1,14 @@
+- generic [ref=e2]:
+  - generic [ref=e97]:
+    - paragraph [ref=e100]: Étape 1 sur 3
+    - generic [ref=e101]:
+      - heading "Finaliser mon profil" [level=1] [ref=e102]
+      - paragraph [ref=e103]: Configuration profil pro
+    - generic [ref=e104]:
+      - textbox "Nom complet" [ref=e107]
+      - textbox "Nom d'utilisateur" [ref=e110]
+      - textbox "Bio (optionnel)" [ref=e112]
+    - button "Suivant →" [disabled] [ref=e114]
+  - generic [ref=e115]:
+    - paragraph [ref=e116]: Invitation invalide
+    - paragraph [ref=e117]: insert or update on table "invitations" violates foreign key constraint "invitations_used_by_fkey"
