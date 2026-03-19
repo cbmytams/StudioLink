@@ -68,7 +68,7 @@ $$;
 
 do $$
 begin
-  if to_regclass('public.set_updated_at') is null then
+  if to_regprocedure('public.set_updated_at()') is null then
     execute $fn$
       create function public.set_updated_at()
       returns trigger
