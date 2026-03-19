@@ -1,0 +1,18 @@
+- generic [ref=e97]:
+  - paragraph [ref=e100]: Étape 3 sur 3
+  - generic [ref=e101]:
+    - heading "Finaliser mon profil" [level=1] [ref=e102]
+    - paragraph [ref=e103]: Configuration profil pro
+  - generic [ref=e104]:
+    - paragraph [ref=e127]: "Nom complet : Compositeur testPro Test"
+    - paragraph [ref=e128]: "Username : pro_test"
+    - paragraph [ref=e119]: "Bio : —"
+    - paragraph [ref=e129]: "Compétences : —"
+    - paragraph [ref=e130]: "Ville : —"
+    - paragraph [ref=e131]: "Tarif : —"
+    - generic [ref=e132]:
+      - generic [ref=e133]: Avatar (optionnel)
+      - button "Avatar (optionnel)" [ref=e134]
+  - generic [ref=e113]:
+    - button "← Retour" [ref=e126]
+    - button "Finaliser mon profil" [active] [ref=e135]
