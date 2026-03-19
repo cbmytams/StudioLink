@@ -29,7 +29,6 @@ export function useNotifications(userId?: string) {
       return notificationService.getNotifications(userId);
     },
     enabled: Boolean(userId),
-    refetchInterval: 15000,
   });
 
   useEffect(() => {
