@@ -203,6 +203,7 @@ declare
   row_count integer := 0;
   has_used boolean;
   has_used_at boolean;
+  has_used_by boolean;
 begin
   if v_code = '' or p_user_id is null then
     return false;
@@ -225,8 +226,16 @@ begin
         and column_name = 'used_at'
     ) into has_used_at;
 
+    select exists (
+      select 1
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'invitations'
+        and column_name = 'used_by'
+    ) into has_used_by;
+
     if has_used then
-      if has_used_at then
+      if has_used_at and has_used_by then
         execute format(
           $q$
             update public.invitations
@@ -243,7 +252,20 @@ begin
           v_code,
           p_user_id
         );
-      else
+      elsif has_used_at and not has_used_by then
+        execute format(
+          $q$
+            update public.invitations
+            set
+              used = true,
+              used_at = now()
+            where upper(code) = %L
+              and coalesce(used, false) = false
+              and (expires_at is null or expires_at > now())
+          $q$,
+          v_code
+        );
+      elsif has_used_by then
         execute format(
           $q$
             update public.invitations
@@ -259,19 +281,33 @@ begin
           v_code,
           p_user_id
         );
+      else
+        execute format(
+          $q$
+            update public.invitations
+            set
+              used = true
+            where upper(code) = %L
+              and coalesce(used, false) = false
+              and (expires_at is null or expires_at > now())
+          $q$,
+          v_code
+        );
       end if;
     else
-      execute format(
-        $q$
-          update public.invitations
-          set used_by = %L::uuid
-          where upper(code) = %L
-            and used_by is null
-            and (expires_at is null or expires_at > now())
-        $q$,
-        p_user_id,
-        v_code
-      );
+      if has_used_by then
+        execute format(
+          $q$
+            update public.invitations
+            set used_by = %L::uuid
+            where upper(code) = %L
+              and used_by is null
+              and (expires_at is null or expires_at > now())
+          $q$,
+          p_user_id,
+          v_code
+        );
+      end if;
     end if;
 
     get diagnostics row_count = ROW_COUNT;
