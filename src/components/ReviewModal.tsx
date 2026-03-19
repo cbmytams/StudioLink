@@ -45,8 +45,8 @@ export function ReviewModal({ isOpen, missionId, revieweeId, onClose }: ReviewMo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-5 flex flex-col gap-4">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-5 shadow-[0_12px_32px_rgba(26,26,26,0.08)]">
         <h3 className="text-lg font-semibold">Laisser un avis</h3>
         <div className="flex items-center gap-1">
           {Array.from({ length: 5 }).map((_, index) => {

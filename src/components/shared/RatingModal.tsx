@@ -43,7 +43,7 @@ export function RatingModal({ isOpen, onClose, sessionData }: RatingModalProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
       <AnimatePresence mode="wait">
         {!isSubmitted ? (
           <motion.div
@@ -51,7 +51,7 @@ export function RatingModal({ isOpen, onClose, sessionData }: RatingModalProps) 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="bg-[#f4ece4] w-full max-w-sm rounded-3xl p-6 flex flex-col items-center gap-6 shadow-2xl"
+            className="flex w-full max-w-sm flex-col items-center gap-6 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-[0_16px_40px_rgba(26,26,26,0.10)]"
           >
             <div className="flex flex-col items-center gap-2 text-center">
               <img 
@@ -108,7 +108,7 @@ export function RatingModal({ isOpen, onClose, sessionData }: RatingModalProps) 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="flex flex-col items-center gap-4 text-white"
+            className="flex flex-col items-center gap-4 text-black"
           >
             <motion.div
               animate={{ 

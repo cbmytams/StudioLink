@@ -93,7 +93,7 @@ export function FileUpload({ bucket, onUpload, accept, maxMB = 10 }: FileUploadP
           <button
             type="button"
             onClick={() => setPreview(null)}
-            className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white flex items-center justify-center"
+            className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-white/90 text-orange-600 shadow-sm"
           >
             <X size={14} />
           </button>
