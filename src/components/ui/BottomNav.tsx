@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth';
 import { useUnreadCount } from '@/hooks/useNotifications';
-import { useUnreadConversationCount } from '@/hooks/useMessages';
+import { useUnreadMessages } from '@/hooks/useMessages';
 
 interface BottomNavProps {
   userType: 'studio' | 'pro';
@@ -14,7 +14,7 @@ export function BottomNav({ userType }: BottomNavProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { unreadCount } = useUnreadCount(session?.user?.id);
-  const { data: unreadMessages = 0 } = useUnreadConversationCount(session?.user?.id);
+  const { data: unreadMessages = 0 } = useUnreadMessages(session?.user?.id);
 
   const studioTabs = [
     { icon: Home, label: 'Missions', path: '/studio/dashboard' },
@@ -63,7 +63,7 @@ export function BottomNav({ userType }: BottomNavProps) {
                 {tab.label}
               </span>
               {tab.path === '/chat' && unreadMessages > 0 ? (
-                <span className="absolute top-2 right-2 min-w-[16px] h-4 px-1 rounded-full bg-orange-500 text-white text-[10px] leading-4 text-center">
+                <span className="absolute -top-1 -right-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white border-2 border-[#f4ece4]">
                   {unreadMessages > 9 ? '9+' : unreadMessages}
                 </span>
               ) : null}
