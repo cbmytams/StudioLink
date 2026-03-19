@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { ReviewModal } from '@/components/ReviewModal';
 import { Helmet } from 'react-helmet-async';
+import { reviewService } from '@/services/reviewService';
 
 type MissionRef = {
   id: string
@@ -97,7 +98,8 @@ export default function ProDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'applications' | 'bookings'>('applications');
-  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; revieweeId: string } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; reviewedId: string; reviewedName: string } | null>(null);
+  const [reviewedByMissionId, setReviewedByMissionId] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let active = true;
@@ -211,6 +213,29 @@ export default function ProDashboard() {
 
         setApplications(mappedApplications);
         setBookings(mappedBookings);
+
+        const completedAcceptedMissionIds = Array.from(
+          new Set(
+            mappedApplications
+              .filter((application) =>
+                application.status === 'accepted'
+                && application.missions?.status === 'completed'
+                && Boolean(application.missions?.studio_id))
+              .map((application) => application.mission_id),
+          ),
+        );
+
+        if (completedAcceptedMissionIds.length > 0) {
+          const reviewedEntries = await Promise.all(
+            completedAcceptedMissionIds.map(async (missionId) => {
+              const hasReviewed = await reviewService.hasReviewed(missionId, userId);
+              return [missionId, hasReviewed] as const;
+            }),
+          );
+          setReviewedByMissionId(Object.fromEntries(reviewedEntries));
+        } else {
+          setReviewedByMissionId({});
+        }
       } catch (fetchError) {
         if (!active) return;
         setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le dashboard');
@@ -405,11 +430,15 @@ export default function ProDashboard() {
                       type="button"
                       onClick={() => setReviewTarget({
                         missionId: application.mission_id,
-                        revieweeId: application.missions.studio_id,
+                        reviewedId: application.missions.studio_id,
+                        reviewedName: application.missions.profiles?.company_name ?? 'Ce studio',
                       })}
-                      className="text-orange-600 text-xs hover:underline mt-2 block"
+                      disabled={Boolean(reviewedByMissionId[application.mission_id])}
+                      className={reviewedByMissionId[application.mission_id]
+                        ? 'text-xs text-gray-400 cursor-not-allowed mt-2 block'
+                        : 'text-xs text-orange-500 hover:underline mt-2 block'}
                     >
-                      Laisser un avis
+                      {reviewedByMissionId[application.mission_id] ? '✓ Avis déposé' : 'Noter ce studio →'}
                     </button>
                   ) : null}
                 </article>
@@ -441,7 +470,11 @@ export default function ProDashboard() {
         <ReviewModal
           isOpen={Boolean(reviewTarget)}
           missionId={reviewTarget.missionId}
-          revieweeId={reviewTarget.revieweeId}
+          reviewedId={reviewTarget.reviewedId}
+          reviewedName={reviewTarget.reviewedName}
+          onSubmitted={() => {
+            setReviewedByMissionId((prev) => ({ ...prev, [reviewTarget.missionId]: true }));
+          }}
           onClose={() => setReviewTarget(null)}
         />
       ) : null}
