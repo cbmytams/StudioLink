@@ -240,13 +240,7 @@ export default function ManageApplications() {
           .from('missions')
           .update({ status: 'filled' as never })
           .eq('id', targetMissionId);
-        if (fallbackMissionUpdate.error) {
-          const lastFallbackMissionUpdate = await supabase
-            .from('missions')
-            .update({ status: 'published' as never })
-            .eq('id', targetMissionId);
-          if (lastFallbackMissionUpdate.error) throw lastFallbackMissionUpdate.error;
-        }
+        if (fallbackMissionUpdate.error) throw fallbackMissionUpdate.error;
       }
 
       setApplications((prev) =>
