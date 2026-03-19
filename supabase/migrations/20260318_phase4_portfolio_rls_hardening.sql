@@ -12,8 +12,16 @@ create table if not exists public.portfolio_items (
 
 create index if not exists idx_portfolio_items_pro_id on public.portfolio_items(pro_id);
 
-create unique index if not exists reviews_unique_once_per_mission
-  on public.reviews(reviewer_id, mission_id);
+do $$
+begin
+  if to_regclass('public.reviews') is not null then
+    execute '
+      create unique index if not exists reviews_unique_once_per_mission
+      on public.reviews(reviewer_id, mission_id)
+    ';
+  end if;
+end
+$$;
 
 create or replace function public.is_admin_user()
 returns boolean
@@ -331,4 +339,3 @@ end
 $$;
 
 commit;
-
