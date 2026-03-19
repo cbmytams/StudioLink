@@ -274,7 +274,7 @@ begin
       );
     end if;
 
-    get diagnostics row_count = row_count;
+    get diagnostics row_count = ROW_COUNT;
     if row_count > 0 then
       return true;
     end if;
@@ -290,7 +290,7 @@ begin
       and status = 'available'
       and (expires_at is null or expires_at > now());
 
-    get diagnostics row_count = row_count;
+    get diagnostics row_count = ROW_COUNT;
     if row_count > 0 then
       return true;
     end if;
