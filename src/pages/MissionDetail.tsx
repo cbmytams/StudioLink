@@ -63,6 +63,7 @@ export default function MissionDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('idle');
   const [coverLetter, setCoverLetter] = useState('');
   const [proposedRate, setProposedRate] = useState('');
@@ -85,7 +86,7 @@ export default function MissionDetail() {
       setApplicationStatus('idle');
 
       try {
-        const { data: missionData } = await supabase
+        const { data: missionData, error: missionError } = await supabase
           .from('missions')
           .select(`
             id, title, description, category, mission_type, status,
@@ -94,7 +95,13 @@ export default function MissionDetail() {
             profiles:studio_id (company_name)
           `)
           .eq('id', targetMissionId)
-          .single();
+          .maybeSingle();
+
+        if (missionError) {
+          setFetchError('Erreur backend: impossible de charger la mission.');
+          setLoading(false);
+          return;
+        }
 
         if (!active) return;
 
@@ -107,7 +114,7 @@ export default function MissionDetail() {
         setMission(missionData as unknown as Mission);
 
         if (userId) {
-          const { data: existing } = await supabase
+          const { data: existing, error: existingError } = await supabase
             .from('applications')
             .select('id')
             .eq('mission_id', targetMissionId)
@@ -115,13 +122,21 @@ export default function MissionDetail() {
             .maybeSingle();
 
           if (!active) return;
+          if (existingError) {
+            setFetchError('Erreur backend: impossible de vérifier ta candidature.');
+            return;
+          }
           if (existing) {
             setApplicationStatus('already_applied');
           }
         }
-      } catch {
+      } catch (loadError) {
         if (!active) return;
-        setFetchError('Impossible de charger les détails de la mission.');
+        setFetchError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Impossible de charger les détails de la mission.',
+        );
       } finally {
         if (active) setLoading(false);
       }
@@ -132,7 +147,7 @@ export default function MissionDetail() {
     return () => {
       active = false;
     };
-  }, [targetMissionId, userId]);
+  }, [reloadKey, targetMissionId, userId]);
 
   const handleApply = async () => {
     if (!targetMissionId || !userId || applicationStatus === 'submitting') return;
@@ -199,7 +214,23 @@ export default function MissionDetail() {
     return (
       <div className="app-shell flex items-center justify-center px-4">
         <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 text-sm">
-          {fetchError}
+          <p>{fetchError}</p>
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setReloadKey((prev) => prev + 1)}
+              className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-50"
+            >
+              Réessayer
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/pro/feed')}
+              className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-orange-600"
+            >
+              Retour au feed
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -208,7 +239,25 @@ export default function MissionDetail() {
   if (notFound || !mission) {
     return (
       <div className="app-shell flex items-center justify-center px-4">
-        <p className="text-black/55">Mission introuvable.</p>
+        <div className="text-center">
+          <p className="text-black/55">Mission introuvable.</p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/pro/feed')}
+              className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-orange-600"
+            >
+              Retour au feed
+            </button>
+            <button
+              type="button"
+              onClick={() => setReloadKey((prev) => prev + 1)}
+              className="rounded-lg border border-black/10 bg-white/80 px-3 py-2 text-xs font-medium text-black/70 transition hover:bg-white"
+            >
+              Réessayer
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
