@@ -64,15 +64,27 @@ export default function AdminPage() {
       return;
     }
 
-    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL ?? '').trim().toLowerCase();
-    const currentEmail = (user.email ?? '').trim().toLowerCase();
+    let active = true;
 
-    if (!adminEmail || currentEmail !== adminEmail) {
-      navigate('/', { replace: true });
-      return;
-    }
+    const verifyAdminRights = async () => {
+      const { data, error: rpcError } = await supabase.rpc('is_admin_user_secure');
+      if (!active) return;
 
-    setIsAuthorized(true);
+      const payload = Array.isArray(data) ? data[0] : data;
+      const isAdmin = payload === true;
+      if (rpcError || !isAdmin) {
+        navigate('/', { replace: true });
+        return;
+      }
+
+      setIsAuthorized(true);
+    };
+
+    void verifyAdminRights();
+
+    return () => {
+      active = false;
+    };
   }, [authLoading, navigate, user]);
 
   useEffect(() => {
