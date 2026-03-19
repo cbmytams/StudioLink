@@ -174,8 +174,8 @@ export default function InvitationLanding() {
               </p>
               <h2 className="text-2xl font-bold text-black mb-2">
                 {invitation.type === 'studio'
-                  ? 'Bienvenue sur Frapppe Studio'
-                  : 'Rejoins Frapppe en tant que Pro'}
+                  ? 'Bienvenue sur StudioLink'
+                  : 'Rejoins StudioLink en tant que Pro'}
               </h2>
               <p className="text-stone-500 text-sm mb-6">
                 {invitation.type === 'studio'

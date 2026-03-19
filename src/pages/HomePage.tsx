@@ -26,7 +26,7 @@ export default function HomePage() {
         <title>StudioLink — Plateforme Studios & Créatifs</title>
         <meta
           name="description"
-          content="Frapppe connecte les studios et les professionnels créatifs via une plateforme sur invitation."
+          content="StudioLink connecte les studios et les professionnels creatifs via une plateforme sur invitation."
         />
         <meta property="og:title" content="StudioLink — Plateforme Studios & Créatifs" />
         <meta
@@ -48,7 +48,7 @@ export default function HomePage() {
         </h1>
 
         <p className="text-stone-600 text-lg md:text-xl max-w-xl mb-10">
-          Frapppe réunit les studios de production et les professionnels créatifs
+          StudioLink reunit les studios de production et les professionnels creatifs
           pour des collaborations fluides et efficaces.
         </p>
 
@@ -127,7 +127,7 @@ export default function HomePage() {
       <section className="py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-4">
           <div className="app-card p-10 text-center max-w-xl mx-auto">
-            <h2 className="text-3xl font-semibold mb-3 text-black">Prêt à rejoindre Frapppe ?</h2>
+            <h2 className="text-3xl font-semibold mb-3 text-black">Pret a rejoindre StudioLink ?</h2>
             <p className="text-stone-600 text-sm mb-6">
               Vous avez reçu un lien d&apos;invitation ? Créez votre compte maintenant.
             </p>
@@ -151,7 +151,7 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-black/10 py-6 text-center text-stone-500 text-xs">
-        © 2025 Frapppe. Tous droits réservés.
+        © 2025 StudioLink. Tous droits reserves.
       </footer>
     </div>
   );
