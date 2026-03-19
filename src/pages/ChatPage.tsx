@@ -178,13 +178,20 @@ export default function ChatPage() {
 
       if (recipientId) {
         const senderName = profile?.display_name || 'Un contact';
-        await supabase.from('notifications').insert({
+        const { error: notificationError } = await supabase.from('notifications').insert({
           user_id: recipientId,
           type: 'new_message',
           title: 'Nouveau message',
           body: `${senderName} vous a envoyé un message`,
           read: false,
         });
+        if (notificationError) {
+          showToast({
+            title: 'Message envoyé',
+            description: 'Le message est bien parti, mais la notification destinataire a échoué.',
+            variant: 'destructive',
+          });
+        }
       }
 
       setDraft('');
