@@ -219,25 +219,37 @@ export default function ProFeed() {
             .eq('status', status as never)
             .order('created_at', { ascending: false });
 
-        const [publishedResult, selectingResult] = await Promise.all([
+        const [openResult, publishedResult, selectingResult] = await Promise.all([
+          fetchByStatus('open'),
           fetchByStatus('published'),
           fetchByStatus('selecting'),
         ]);
 
-        if (publishedResult.error) throw publishedResult.error;
-        if (selectingResult.error) throw selectingResult.error;
+        const successfulRows: MissionRow[] = [];
+        const queryErrors = [openResult.error, publishedResult.error, selectingResult.error]
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
-        let missionRows: MissionRow[] = [
-          ...((publishedResult.data ?? []) as unknown as MissionRow[]),
-          ...((selectingResult.data ?? []) as unknown as MissionRow[]),
-        ];
-
-        if (missionRows.length === 0) {
-          const openResult = await fetchByStatus('open');
-          if (!openResult.error) {
-            missionRows = (openResult.data ?? []) as unknown as MissionRow[];
-          }
+        if (!openResult.error) {
+          successfulRows.push(...((openResult.data ?? []) as unknown as MissionRow[]));
         }
+        if (!publishedResult.error) {
+          successfulRows.push(...((publishedResult.data ?? []) as unknown as MissionRow[]));
+        }
+        if (!selectingResult.error) {
+          successfulRows.push(...((selectingResult.data ?? []) as unknown as MissionRow[]));
+        }
+
+        if (successfulRows.length === 0 && queryErrors.length > 0) {
+          throw queryErrors[0];
+        }
+
+        const missionRowsMap = new Map<string, MissionRow>();
+        successfulRows.forEach((row) => {
+          if (!missionRowsMap.has(row.id)) {
+            missionRowsMap.set(row.id, row);
+          }
+        });
+        const missionRows = Array.from(missionRowsMap.values());
 
         missionRows.sort((a, b) => (
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
