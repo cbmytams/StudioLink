@@ -1,0 +1,19 @@
+- generic [ref=e2]:
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - heading "Créer un compte" [level=1] [ref=e30]
+      - paragraph [ref=e16]: Invitation acceptée · Finalise ton inscription
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: Adresse email
+        - textbox "Adresse email" [ref=e22]: test@example.com
+      - generic [ref=e23]:
+        - generic [ref=e24]: Mot de passe
+        - textbox "Mot de passe" [ref=e27]: password123
+      - textbox "Confirmer le mot de passe" [ref=e33]: password123
+      - paragraph [ref=e36]: Invitation requise. Reviens à la page d'invitation.
+      - button "Créer mon compte →" [active] [ref=e34]
+    - button "Déjà un compte ? Se connecter" [ref=e35]
+  - generic [ref=e37]:
+    - paragraph [ref=e38]: Invitation requise
+    - paragraph [ref=e39]: Reviens à la page d'invitation.
