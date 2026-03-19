@@ -45,6 +45,10 @@ export default function NotificationsPage() {
 
   return (
     <main className="app-shell">
+      <Helmet>
+        <title>Notifications — StudioLink</title>
+        <meta name="description" content="Consultez vos notifications StudioLink." />
+      </Helmet>
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
         <header className="mb-4 flex items-center justify-between">
           <h1 className="app-title">Notifications</h1>
