@@ -1,0 +1,6 @@
+- generic [ref=e2]:
+  - generic [ref=e92]:
+    - heading "Invitation requise" [level=1] [ref=e93]
+    - paragraph [ref=e94]: Impossible de déterminer le type de profil à créer.
+    - button "Retour à l'invitation" [ref=e95]
+  - paragraph [ref=e97]: Profil finalisé
