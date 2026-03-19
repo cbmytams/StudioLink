@@ -1,0 +1,14 @@
+- generic [ref=e23]:
+  - generic [ref=e24]:
+    - heading "Créer un compte" [level=1] [ref=e25]
+    - paragraph [ref=e26]: Invitation acceptée · Finalise ton inscription
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]: Adresse email
+      - textbox "Adresse email" [ref=e32]: protest1773936785@example.com
+    - generic [ref=e33]:
+      - generic [ref=e34]: Mot de passe
+      - textbox "Mot de passe" [ref=e37]: Testpass123!
+    - textbox "Confirmer le mot de passe" [active] [ref=e40]: Testpass123!
+    - button "Créer mon compte →" [ref=e41]
+  - button "Déjà un compte ? Se connecter" [ref=e42]
