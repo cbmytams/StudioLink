@@ -210,7 +210,7 @@ with check (
     select 1
     from public.profiles p
     where p.id = auth.uid()
-      and p.user_type = 'studio'
+      and coalesce(to_jsonb(p)->>'user_type', to_jsonb(p)->>'type') = 'studio'
   )
 );
 
@@ -247,7 +247,7 @@ with check (
     select 1
     from public.profiles p
     where p.id = auth.uid()
-      and p.user_type = 'pro'
+      and coalesce(to_jsonb(p)->>'user_type', to_jsonb(p)->>'type') = 'pro'
   )
 );
 
