@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Clock, Folder, MapPin, MessageCircle, Star } from 'lucide-react';
