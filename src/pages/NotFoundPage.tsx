@@ -1,6 +1,6 @@
 import { useAuth } from '@/lib/supabase/auth';
 import { useNavigate } from 'react-router-dom';
-import { GradientButton } from '@/components/ui/GradientButton';
+import { Button } from '@/components/ui/Button';
 
 type AuthProfile = {
   type?: 'studio' | 'pro' | 'admin';
@@ -29,9 +29,9 @@ export const NotFoundPage = () => {
       <p className="text-stone-500 text-sm mb-8">
         Cette page n&apos;existe pas ou a été supprimée.
       </p>
-      <GradientButton onClick={handleBack}>
+      <Button onClick={handleBack} className="bg-orange-500 text-white hover:bg-orange-600">
         Retour à l&apos;accueil
-      </GradientButton>
+      </Button>
     </div>
   );
 };
