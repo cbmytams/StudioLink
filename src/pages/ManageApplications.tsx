@@ -213,7 +213,7 @@ export default function ManageApplications() {
           created_at: new Date().toISOString(),
         } as never);
       if (bookingResult.error) {
-        await supabase
+        const fallbackSession = await supabase
           .from('sessions' as never)
           .insert({
             mission_id: targetMissionId,
@@ -226,6 +226,9 @@ export default function ManageApplications() {
             status: 'confirmed',
             created_at: new Date().toISOString(),
           } as never);
+        if (fallbackSession.error) {
+          throw bookingResult.error;
+        }
       }
 
       const missionUpdate = await supabase
@@ -312,10 +315,11 @@ export default function ManageApplications() {
     setError(null);
 
     try {
-      await supabase
+      const { error: rejectError } = await supabase
         .from('applications')
         .update({ status: 'rejected' })
         .eq('id', applicationId);
+      if (rejectError) throw rejectError;
 
       setApplications((prev) =>
         prev.map((item) => (item.id === applicationId ? { ...item, status: 'rejected' } : item)),
