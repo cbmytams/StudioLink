@@ -14,14 +14,13 @@ type Invitation = {
   created_at: string
 }
 
-type InvitationRow = {
+type InvitationLookup = {
   id: string
   code: string
-  type: 'studio' | 'pro'
-  email?: string | null
-  used?: boolean
-  used_by: string | null
-  expires_at: string
+  invitation_type: 'studio' | 'pro'
+  email: string | null
+  used: boolean
+  expires_at: string | null
   created_at: string
 }
 
@@ -46,11 +45,9 @@ export default function InvitationLanding() {
 
       const normalizedCode = code.trim().toUpperCase()
 
-      const { data, error: fetchError } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('code', normalizedCode)
-        .single()
+      const { data, error: fetchError } = await supabase.rpc('get_invitation_by_code', {
+        p_code: normalizedCode,
+      })
 
       if (cancelled) return
 
@@ -59,14 +56,18 @@ export default function InvitationLanding() {
         return
       }
 
-      const row = data as InvitationRow
-      const dynamicRow = row as unknown as Record<string, unknown>
+      const row = (Array.isArray(data) ? data[0] : data) as InvitationLookup | null
+      if (!row) {
+        setState('invalid')
+        return
+      }
+
       const normalized: Invitation = {
         id: row.id,
         code: row.code,
-        type: row.type,
-        email: typeof dynamicRow.email === 'string' ? dynamicRow.email : null,
-        used: typeof dynamicRow.used === 'boolean' ? dynamicRow.used : row.used_by !== null,
+        type: row.invitation_type,
+        email: row.email ?? null,
+        used: Boolean(row.used),
         expires_at: row.expires_at ?? null,
         created_at: row.created_at,
       }
