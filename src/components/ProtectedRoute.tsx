@@ -33,6 +33,10 @@ export default function ProtectedRoute({ children, requiredType, allowedTypes }:
     return <Navigate to="/onboarding" replace />;
   }
 
+  if (profile.user_type !== 'studio' && profile.user_type !== 'pro') {
+    return <Navigate to="/invitation" replace />;
+  }
+
   if (requiredTypes && !requiredTypes.includes(profile.user_type as UserType)) {
     const defaultRoute = profile.user_type === 'studio'
       ? '/studio/dashboard'
