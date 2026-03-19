@@ -1,0 +1,5 @@
+- generic [ref=e15]:
+  - paragraph [ref=e16]: ❌
+  - heading "Lien invalide" [level=2] [ref=e17]
+  - paragraph [ref=e18]: Ce lien d'invitation n'existe pas ou a été supprimé.
+  - button "Retour à l'accueil" [ref=e19]

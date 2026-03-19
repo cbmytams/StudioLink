@@ -1,0 +1,13 @@
+- generic [ref=e13]:
+  - generic [ref=e14]:
+    - heading "Connexion" [level=1] [ref=e15]
+    - paragraph [ref=e16]: Bienvenue de retour
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]: Adresse email
+      - textbox "Adresse email" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: Mot de passe
+      - textbox "Mot de passe" [ref=e27]
+    - button "Se connecter →" [ref=e28]
+  - button "Pas encore de compte ? S'inscrire" [ref=e29]

@@ -1,0 +1,14 @@
+- generic [ref=e13]:
+  - generic [ref=e14]:
+    - heading "Créer un compte" [level=1] [ref=e30]
+    - paragraph [ref=e16]: Invitation acceptée · Finalise ton inscription
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]: Adresse email
+      - textbox "Adresse email" [ref=e22]
+    - generic [ref=e23]:
+      - generic [ref=e24]: Mot de passe
+      - textbox "Mot de passe" [ref=e27]
+    - textbox "Confirmer le mot de passe" [ref=e33]
+    - button "Créer mon compte →" [ref=e34]
+  - button "Déjà un compte ? Se connecter" [active] [ref=e35]

@@ -1,0 +1,49 @@
+- generic [ref=e12]:
+  - generic [ref=e13]:
+    - generic [ref=e14]: 🔒 Plateforme sur invitation uniquement
+    - heading "La plateforme qui connecte studios & créatifs" [level=1] [ref=e15]:
+      - text: La plateforme qui connecte
+      - text: studios & créatifs
+    - paragraph [ref=e16]: Frapppe réunit les studios de production et les professionnels créatifs pour des collaborations fluides et efficaces.
+    - button "J'ai une invitation →" [ref=e17]
+  - generic [ref=e19]:
+    - heading "Une plateforme, deux univers" [level=2] [ref=e20]
+    - generic [ref=e21]:
+      - article [ref=e22]:
+        - paragraph [ref=e23]: 🎬
+        - heading "Studios de production" [level=3] [ref=e24]
+        - paragraph [ref=e25]: Publiez vos missions, recevez des candidatures qualifiées et gérez vos collaborations en un seul endroit.
+        - list [ref=e26]:
+          - listitem [ref=e27]: ✓ Création de missions en quelques minutes
+          - listitem [ref=e28]: ✓ Accès à des profils vérifiés
+          - listitem [ref=e29]: ✓ Gestion des candidatures intégrée
+      - article [ref=e30]:
+        - paragraph [ref=e31]: 🎨
+        - heading "Professionnels créatifs" [level=3] [ref=e32]
+        - paragraph [ref=e33]: Découvrez des missions adaptées à vos compétences et construisez votre réputation sur la plateforme.
+        - list [ref=e34]:
+          - listitem [ref=e35]: ✓ Feed de missions personnalisé
+          - listitem [ref=e36]: ✓ Candidature en un clic
+          - listitem [ref=e37]: ✓ Suivi de vos collaborations
+  - generic [ref=e39]:
+    - heading "Comment ça marche ?" [level=2] [ref=e40]
+    - generic [ref=e41]:
+      - article [ref=e42]:
+        - paragraph [ref=e43]: "01"
+        - heading "Recevez votre invitation" [level=3] [ref=e44]
+        - paragraph [ref=e45]: La plateforme est accessible sur invitation uniquement. Contactez-nous pour rejoindre.
+      - article [ref=e46]:
+        - paragraph [ref=e47]: "02"
+        - heading "Créez votre profil" [level=3] [ref=e48]
+        - paragraph [ref=e49]: Studio ou pro créatif, complétez votre profil en quelques minutes.
+      - article [ref=e50]:
+        - paragraph [ref=e51]: "03"
+        - heading "Collaborez" [level=3] [ref=e52]
+        - paragraph [ref=e53]: Studios publient leurs missions, les pros postulent. C'est aussi simple que ça.
+  - generic [ref=e56]:
+    - heading "Prêt à rejoindre Frapppe ?" [level=2] [ref=e57]
+    - paragraph [ref=e58]: Vous avez reçu un lien d'invitation ? Créez votre compte maintenant.
+    - generic [ref=e59]:
+      - button "Créer mon compte →" [ref=e60]
+      - button "Déjà un compte ? Se connecter" [ref=e61]
+  - contentinfo [ref=e62]: © 2025 Frapppe. Tous droits réservés.
