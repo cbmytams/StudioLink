@@ -1,0 +1,18 @@
+- generic [ref=e44]:
+  - paragraph [ref=e47]: Étape 3 sur 3
+  - generic [ref=e48]:
+    - heading "Finaliser mon profil" [level=1] [ref=e49]
+    - paragraph [ref=e50]: Configuration profil pro
+  - generic [ref=e51]:
+    - paragraph [ref=e74]: "Nom complet : Pro Flow"
+    - paragraph [ref=e75]: "Username : proflow"
+    - paragraph [ref=e66]: "Bio : —"
+    - paragraph [ref=e76]: "Compétences : —"
+    - paragraph [ref=e77]: "Ville : —"
+    - paragraph [ref=e78]: "Tarif : —"
+    - generic [ref=e79]:
+      - generic [ref=e80]: Avatar (optionnel)
+      - button "Avatar (optionnel)" [ref=e81]
+  - generic [ref=e60]:
+    - button "← Retour" [ref=e73]
+    - button "Finaliser mon profil" [active] [ref=e82]
