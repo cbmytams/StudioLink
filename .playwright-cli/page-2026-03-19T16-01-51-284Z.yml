@@ -1,0 +1,13 @@
+- generic [ref=e97]:
+  - paragraph [ref=e100]: Étape 2 sur 3
+  - generic [ref=e101]:
+    - heading "Finaliser mon profil" [level=1] [ref=e102]
+    - paragraph [ref=e103]: Configuration profil pro
+  - generic [ref=e104]:
+    - textbox "Ajouter une compétence (Entrée)" [ref=e118]
+    - paragraph [ref=e119]: 0/10 compétences
+    - textbox "Ville (optionnel)" [ref=e122]
+    - spinbutton [ref=e125]
+  - generic [ref=e113]:
+    - button "← Retour" [ref=e126]
+    - button "Suivant →" [active] [ref=e114]
