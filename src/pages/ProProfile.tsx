@@ -319,6 +319,10 @@ export default function ProProfile() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>Mon profil — StudioLink</title>
+        <meta name="description" content="Gérez votre profil professionnel sur StudioLink." />
+      </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
