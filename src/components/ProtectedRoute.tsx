@@ -17,14 +17,23 @@ export default function ProtectedRoute({ children, requiredType, allowedTypes }:
   if (loading) return <LoadingScreen />;
   if (!session) return <Navigate to="/login" replace />;
 
-  if (profile && !profile.onboarding_complete) {
-    const onboardingRoute = profile.user_type === 'studio'
-      ? '/onboarding/studio'
-      : '/onboarding/pro';
-    return <Navigate to={onboardingRoute} replace />;
+  if (!profile) {
+    const invitationCode = sessionStorage.getItem('invitationCode');
+    const invitationType = sessionStorage.getItem('invitationType');
+    if (
+      invitationCode
+      && (invitationType === 'studio' || invitationType === 'pro')
+    ) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    return <Navigate to="/invitation" replace />;
   }
 
-  if (requiredTypes && profile && !requiredTypes.includes(profile.user_type as UserType)) {
+  if (!profile.onboarding_complete) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  if (requiredTypes && !requiredTypes.includes(profile.user_type as UserType)) {
     const defaultRoute = profile.user_type === 'studio'
       ? '/studio/dashboard'
       : '/pro/dashboard';
