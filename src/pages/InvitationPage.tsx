@@ -90,13 +90,11 @@ export default function InvitationPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0D0D0F] p-4">
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-violet-500/30 to-cyan-400/30 blur-3xl" />
-
-      <GlassCard className="relative z-10 w-full max-w-md p-8">
+    <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <GlassCard className="w-full max-w-md p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-white">Code d&apos;invitation</h1>
-          <p className="mt-2 text-sm text-white/70">
+          <h1 className="text-2xl font-semibold text-black">Code d&apos;invitation</h1>
+          <p className="mt-2 text-sm text-stone-500">
             Entre ton code pour débloquer la création de compte.
           </p>
         </div>
@@ -111,7 +109,7 @@ export default function InvitationPage() {
               if (error) setError(null);
             }}
             placeholder="EX: STUDIO2026"
-            className="text-white placeholder:text-white/45"
+            className="text-stone-900 placeholder:text-stone-400"
           />
 
           {error ? <p className="text-red-400 text-sm text-center">{error}</p> : null}
@@ -119,7 +117,7 @@ export default function InvitationPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-violet-500 to-cyan-400 text-white hover:opacity-95"
+            className="w-full bg-orange-500 text-white hover:bg-orange-600"
           >
             {loading ? (
               <>
