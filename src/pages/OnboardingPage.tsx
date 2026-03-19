@@ -221,7 +221,7 @@ export default function OnboardingPage() {
         payload.username = proData.username.trim();
         payload.bio = proData.bio.trim() || null;
         payload.skills = proData.skills;
-        payload.city = proData.city.trim() || null;
+        payload.city = proData.city.trim() || 'Paris';
         payload.daily_rate = proData.daily_rate.trim() ? Number(proData.daily_rate) : null;
       }
 
