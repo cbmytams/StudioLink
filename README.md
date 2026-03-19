@@ -1,68 +1,80 @@
-# StudioLink Paris
+# StudioLink
 
-Plateforme de mise en relation entre studios et professionnels créatifs, avec invitation, onboarding, missions, candidatures, chat, notifications et profils publics.
+Marketplace mobile-first connectant des Studios (recruteurs) et des Pros (talents/freelances) dans le secteur créatif et audiovisuel.
 
-## Prérequis
+## Stack technique
 
-- Node.js 20+
-- npm 10+
-- Projet Supabase configuré
+- **Frontend** : React 19, TypeScript, Vite 6
+- **Backend** : Supabase (Auth, Database, Realtime, Storage)
+- **Styling** : Tailwind CSS 4
+- **Routing** : React Router 7
+- **State** : React Query 5, Zustand 5
+- **Animations** : Motion (Framer Motion) 12
 
 ## Installation
 
-1. Installer les dépendances
-
 ```bash
+git clone <repo-url>
+cd studiolink-paris
 npm install
-```
-
-2. Créer votre fichier d’environnement
-
-```bash
 cp .env.example .env
-```
-
-3. Renseigner les variables dans `.env`
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_ADMIN_EMAIL`
-- `VITE_APP_URL`
-
-## Lancement local
-
-```bash
+# Remplir les variables dans .env
 npm run dev
 ```
 
-Application disponible sur `http://localhost:3000`.
+## Variables d'environnement
 
-## Build production
+Voir `.env.example` :
 
-```bash
-npm run build
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | URL du projet Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Clé publique (anon) Supabase |
+| `VITE_ADMIN_EMAIL` | Email autorisé pour /admin |
+| `VITE_APP_URL` | URL de l'application (ex: http://localhost:3000) |
+
+## Scripts
+
+| Commande | Description |
+|----------|-------------|
+| `npm run dev` | Serveur de développement |
+| `npm run build` | Build de production |
+| `npm run preview` | Prévisualiser le build |
+| `npm run lint` | Linter ESLint |
+
+## Architecture
+
+```
+src/
+├── auth/          # AuthProvider, contexte d'authentification
+├── components/    # Composants réutilisables (UI, shared, skeletons)
+├── hooks/         # Hooks React Query + custom
+├── layouts/       # StudioLayout, ProLayout
+├── lib/           # Client Supabase, utilitaires
+├── pages/         # Pages de l'application
+├── services/      # Services Supabase (CRUD)
+├── store/         # Stores Zustand
+└── types/         # Types TypeScript centralisés
 ```
 
-## Vérifications qualité
+## Fonctionnalités
 
-```bash
-npx tsc --noEmit
-npm run lint
-npm run build
-```
+- Authentification Supabase avec système d'invitation
+- Onboarding progressif (studio / pro)
+- Publication et gestion de missions
+- Système de candidatures avec workflow complet
+- Chat en temps réel avec envoi de fichiers
+- Notifications en temps réel (Supabase Realtime)
+- Système d'avis / reviews
+- Calendrier de sessions (vue semaine / mois)
+- Portfolio pro (max 6 éléments)
+- Recherche de professionnels avec filtres
+- Favoris / missions sauvegardées
+- Upload d'avatar
+- SEO avec React Helmet
+- Code-splitting (React.lazy + Suspense)
 
-## Structure projet (principale)
+## Accès
 
-- `src/pages` : pages applicatives et auth
-- `src/components` : composants UI et partagés
-- `src/hooks` : hooks React Query
-- `src/services` : couche Supabase
-- `src/layouts` : layouts studio/pro avec navigation basse
-- `src/lib/supabase` : client et auth
-- `supabase/migrations` : schéma SQL + RLS
-
-## Notes sécurité
-
-- Les routes sont protégées côté front (`ProtectedRoute`) mais la sécurité repose côté Supabase sur les policies RLS.
-- Les données sensibles d’invitation sont nettoyées de `sessionStorage` après onboarding.
-
+L'application est accessible uniquement via lien d'invitation (`/invite/:code`).
+L'interface admin (`/admin`) est protégée par `VITE_ADMIN_EMAIL`.
