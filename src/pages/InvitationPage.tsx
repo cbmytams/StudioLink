@@ -25,14 +25,25 @@ export default function InvitationPage() {
   useEffect(() => {
     if (authLoading || !session) return;
     if (!profile) {
-      const invitationCode = sessionStorage.getItem('invitationCode');
-      const invitationType = sessionStorage.getItem('invitationType');
-      if (invitationCode && (invitationType === 'studio' || invitationType === 'pro')) {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/onboarding', { replace: true });
       return;
     }
-    navigate(profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
+
+    const profileType = (profile as { user_type?: 'studio' | 'pro'; type?: 'studio' | 'pro' } | null)?.user_type
+      ?? (profile as { user_type?: 'studio' | 'pro'; type?: 'studio' | 'pro' } | null)?.type
+      ?? null;
+    const fullName = (
+      profile as { full_name?: string | null; display_name?: string | null } | null
+    )?.full_name?.trim() ?? (
+      profile as { full_name?: string | null; display_name?: string | null } | null
+    )?.display_name?.trim() ?? '';
+
+    if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+      navigate('/onboarding', { replace: true });
+      return;
+    }
+
+    navigate(profileType === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
   }, [authLoading, navigate, profile, session]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
