@@ -302,9 +302,9 @@ export default function LoginPage() {
         />
       </Helmet>
       <GlassCard className="w-full max-w-md p-8">
-        <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
-            <span className="text-3xl font-extrabold text-white tracking-tighter">SL</span>
+        <div className="mb-10 flex flex-col items-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_40px_rgba(249,115,22,0.3)] border border-white/20">
+            <span className="text-2xl font-black text-white tracking-tighter shadow-sm">SL</span>
           </div>
           <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
           <p className="text-sm text-white/70">
@@ -312,9 +312,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="login-email" className="block text-sm font-medium text-white/80">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <label htmlFor="login-email" className="block text-xs font-medium tracking-wide text-white/60 ml-1">
               Adresse email
             </label>
             <TextInput
@@ -330,8 +330,8 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="login-password" className="block text-sm font-medium text-white/80">
+          <div className="space-y-1.5">
+            <label htmlFor="login-password" className="block text-xs font-medium tracking-wide text-white/60 ml-1">
               Mot de passe
             </label>
             <TextInput
@@ -348,13 +348,6 @@ export default function LoginPage() {
           </div>
 
           {mode === 'signup' && (
-            <TextInput
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => {
-                setConfirmPassword(event.target.value);
-                if (error) setError(null);
-              }}
               placeholder="Confirmer le mot de passe"
               className=""
             />
@@ -402,7 +395,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-4 w-full text-center text-sm text-white/60 underline transition-colors hover:text-white"
+          className="mt-6 w-full text-center text-sm font-light text-white/50 transition-colors hover:text-white"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
