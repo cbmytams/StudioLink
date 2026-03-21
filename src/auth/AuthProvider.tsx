@@ -32,6 +32,23 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AUTH_TIMEOUT_MS = 8000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race<T>([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error(`Auth timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -70,10 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const currentSession = await getCurrentSession();
+        const currentSession = await withTimeout(getCurrentSession(), AUTH_TIMEOUT_MS);
         if (!isMounted) return;
         setSession(currentSession);
-        await hydrateProfile(currentSession);
+        await withTimeout(hydrateProfile(currentSession), AUTH_TIMEOUT_MS);
+      } catch {
+        if (!isMounted) return;
+        setSession(null);
+        setProfile(null);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -90,10 +111,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data } = onAuthStateChange(async (_event, nextSession) => {
-      setSession(nextSession);
-      await hydrateProfile(nextSession);
-      if (isMounted) {
-        setLoading(false);
+      try {
+        setSession(nextSession);
+        await withTimeout(hydrateProfile(nextSession), AUTH_TIMEOUT_MS);
+      } catch {
+        if (!isMounted) return;
+        setSession(null);
+        setProfile(null);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     });
 
