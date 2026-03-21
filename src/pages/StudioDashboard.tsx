@@ -257,11 +257,11 @@ export default function StudioDashboard() {
               <img
                 src={profile.avatar_url}
                 alt="Avatar studio"
-                className="h-12 w-12 rounded-full border border-white/50 object-cover"
+                className="h-14 w-14 rounded-full border border-white/20 object-cover shadow-[0_4px_20px_rgba(249,115,22,0.4)]"
               />
             ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
-                {companyName.charAt(0).toUpperCase() || '?'}
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-400 text-xl font-bold text-white shadow-[0_4px_20px_rgba(249,115,22,0.4)] border border-white/20">
+                {profile?.full_name?.charAt(0) || 'S'}
               </div>
             )}
             <div>
@@ -286,8 +286,8 @@ export default function StudioDashboard() {
           >
             <span className="text-xl">📌</span>
             <div>
-              <p className="text-sm font-medium text-white">Mes missions</p>
-              <p className="text-xs text-white/50">Gérer vos offres publiées</p>
+              <p className="text-sm font-semibold tracking-wide text-white">Mes missions</p>
+              <p className="text-xs tracking-wider text-white/50 mt-0.5">Gérer vos offres publiées</p>
             </div>
             <span className="ml-auto text-white/30">›</span>
           </button>
@@ -298,8 +298,8 @@ export default function StudioDashboard() {
           >
             <span className="text-xl">🔍</span>
             <div>
-              <p className="text-sm font-medium text-white">Trouver des pros</p>
-              <p className="text-xs text-white/50">Parcourir les profils disponibles</p>
+              <p className="text-sm font-semibold tracking-wide text-white">Trouver des pros</p>
+              <p className="text-xs tracking-wider text-white/50 mt-0.5">Parcourir les profils disponibles</p>
             </div>
             <span className="ml-auto text-white/30">›</span>
           </button>
@@ -310,8 +310,8 @@ export default function StudioDashboard() {
           >
             <span className="text-xl">💬</span>
             <div>
-              <p className="text-sm font-medium text-white">Mes conversations</p>
-              <p className="text-xs text-white/50">Messages avec les pros</p>
+              <p className="text-sm font-semibold tracking-wide text-white">Mes conversations</p>
+              <p className="text-xs tracking-wider text-white/50 mt-0.5">Messages avec les pros</p>
             </div>
             <span className="ml-auto text-white/30">›</span>
           </button>
@@ -322,8 +322,8 @@ export default function StudioDashboard() {
           >
             <span className="text-xl">⚙️</span>
             <div>
-              <p className="text-sm font-medium text-white">Paramètres</p>
-              <p className="text-xs text-white/50">Sécurité et préférences du compte</p>
+              <p className="text-sm font-semibold tracking-wide text-white">Paramètres</p>
+              <p className="text-xs tracking-wider text-white/50 mt-0.5">Sécurité et préférences du compte</p>
             </div>
             <span className="ml-auto text-white/30">›</span>
           </button>
@@ -364,7 +364,7 @@ export default function StudioDashboard() {
                   <br />
                   <button
                     onClick={() => navigate('/studio/create-mission')}
-                    className="text-orange-400 underline mt-2"
+                    className="text-white/60 hover:text-white transition-colors mt-3 text-sm"
                   >
                     Créer votre première mission
                   </button>
