@@ -14,6 +14,7 @@ type GuardProfile = {
   user_type?: UserType | null;
   type?: UserType | null;
   full_name?: string | null;
+  display_name?: string | null;
   onboarding_complete?: boolean | null;
 } | null;
 
@@ -22,7 +23,7 @@ export default function ProtectedRoute({ children, requiredType, allowedTypes }:
   const requiredTypes = requiredType ? [requiredType] : allowedTypes;
   const guardProfile = profile as GuardProfile;
   const profileType = guardProfile?.user_type ?? guardProfile?.type ?? null;
-  const fullName = guardProfile?.full_name?.trim() ?? '';
+  const fullName = guardProfile?.full_name?.trim() ?? guardProfile?.display_name?.trim() ?? '';
 
   if (loading) return <LoadingScreen />;
   if (!session) return <Navigate to="/login" replace />;
