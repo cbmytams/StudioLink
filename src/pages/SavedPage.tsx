@@ -61,6 +61,14 @@ export default function SavedPage() {
   const { session, profile } = useAuth();
   const { showToast } = useToast();
   const userId = session?.user?.id;
+  const profileType = (
+    profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+  )?.user_type
+    ?? (
+      profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+    )?.type
+    ?? null;
+  const fallbackRoute = profileType === 'studio' ? '/studio/dashboard' : '/pro/feed';
   const [missions, setMissions] = useState<MissionCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -174,7 +182,7 @@ export default function SavedPage() {
             </p>
             <Button
               className="mt-4 bg-orange-500 text-white hover:bg-orange-600"
-              onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
+              onClick={() => navigate(fallbackRoute)}
             >
               Retour
             </Button>
@@ -184,7 +192,7 @@ export default function SavedPage() {
             <p className="text-sm text-stone-500">Aucun élément sauvegardé.</p>
             <Button
               className="mt-4 bg-orange-500 text-white hover:bg-orange-600"
-              onClick={() => navigate(profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/feed')}
+              onClick={() => navigate(fallbackRoute)}
             >
               Explorer
             </Button>
