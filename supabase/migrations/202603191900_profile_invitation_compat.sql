@@ -58,7 +58,7 @@ begin
        select 1
        from pg_constraint
        where conname = 'invitations_used_by_fkey'
-         and conrelid = 'public.invitations'::regclass
+         and conrelid = to_regclass('public.invitations')
      ) then
     execute 'alter table public.invitations drop constraint invitations_used_by_fkey';
     execute 'alter table public.invitations add constraint invitations_used_by_fkey foreign key (used_by) references auth.users(id) on delete set null';
