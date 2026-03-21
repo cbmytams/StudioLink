@@ -282,50 +282,50 @@ export default function StudioDashboard() {
           <button
             type="button"
             onClick={() => navigate('/studio/missions')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
           >
             <span className="text-xl">📌</span>
             <div>
-              <p className="text-sm font-medium text-gray-900">Mes missions</p>
-              <p className="text-xs text-gray-400">Gérer vos offres publiées</p>
+              <p className="text-sm font-medium text-white">Mes missions</p>
+              <p className="text-xs text-white/50">Gérer vos offres publiées</p>
             </div>
-            <span className="ml-auto text-gray-300">›</span>
+            <span className="ml-auto text-white/30">›</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/studio/search-pros')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
           >
             <span className="text-xl">🔍</span>
             <div>
-              <p className="text-sm font-medium text-gray-900">Trouver des pros</p>
-              <p className="text-xs text-gray-400">Parcourir les profils disponibles</p>
+              <p className="text-sm font-medium text-white">Trouver des pros</p>
+              <p className="text-xs text-white/50">Parcourir les profils disponibles</p>
             </div>
-            <span className="ml-auto text-gray-300">›</span>
+            <span className="ml-auto text-white/30">›</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/studio/conversations')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
           >
             <span className="text-xl">💬</span>
             <div>
-              <p className="text-sm font-medium text-gray-900">Mes conversations</p>
-              <p className="text-xs text-gray-400">Messages avec les pros</p>
+              <p className="text-sm font-medium text-white">Mes conversations</p>
+              <p className="text-xs text-white/50">Messages avec les pros</p>
             </div>
-            <span className="ml-auto text-gray-300">›</span>
+            <span className="ml-auto text-white/30">›</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/settings')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
           >
             <span className="text-xl">⚙️</span>
             <div>
-              <p className="text-sm font-medium text-gray-900">Paramètres</p>
-              <p className="text-xs text-gray-400">Sécurité et préférences du compte</p>
+              <p className="text-sm font-medium text-white">Paramètres</p>
+              <p className="text-xs text-white/50">Sécurité et préférences du compte</p>
             </div>
-            <span className="ml-auto text-gray-300">›</span>
+            <span className="ml-auto text-white/30">›</span>
           </button>
         </section>
 
@@ -364,7 +364,7 @@ export default function StudioDashboard() {
                   <br />
                   <button
                     onClick={() => navigate('/studio/create-mission')}
-                    className="text-orange-600 underline mt-2"
+                    className="text-orange-400 underline mt-2"
                   >
                     Créer votre première mission
                   </button>
@@ -397,7 +397,7 @@ export default function StudioDashboard() {
 
                         <button
                           type="button"
-                          className="rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-sm text-black/80 transition hover:bg-white"
+                          className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/20"
                           onClick={() => navigate(`/studio/applications/${mission.id}`)}
                         >
                           Voir les candidatures
