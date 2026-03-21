@@ -303,6 +303,9 @@ export default function LoginPage() {
       </Helmet>
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
+          <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+            <span className="text-3xl font-extrabold text-white tracking-tighter">SL</span>
+          </div>
           <h1 className="text-2xl font-semibold text-black">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
           <p className="text-sm text-stone-500">
             {isSignIn ? 'Bienvenue de retour' : 'Invitation acceptée · Finalise ton inscription'}
