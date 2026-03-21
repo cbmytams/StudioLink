@@ -12,13 +12,31 @@ export default function HomePage() {
   const profileType = (profile as { type?: 'studio' | 'pro'; user_type?: 'studio' | 'pro' } | null)?.type
     ?? (profile as { user_type?: 'studio' | 'pro' } | null)?.user_type
     ?? null;
+  const hasName = Boolean(
+    (
+      profile as {
+        full_name?: string | null
+        display_name?: string | null
+      } | null
+    )?.full_name?.trim()
+    || (
+      profile as {
+        full_name?: string | null
+        display_name?: string | null
+      } | null
+    )?.display_name?.trim(),
+  );
 
   useEffect(() => {
     if (!loading && user) {
+      if (!hasName || (profileType !== 'studio' && profileType !== 'pro')) {
+        navigate('/onboarding');
+        return;
+      }
       if (profileType === 'studio') navigate('/studio/dashboard');
-      else if (profileType === 'pro') navigate('/pro/dashboard');
+      else navigate('/pro/dashboard');
     }
-  }, [user, profileType, loading, navigate]);
+  }, [hasName, user, profileType, loading, navigate]);
 
   return (
     <div className="app-shell">
