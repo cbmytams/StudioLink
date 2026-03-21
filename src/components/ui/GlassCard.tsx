@@ -19,7 +19,7 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        variant === "light" ? "glass-panel" : "glass-dark",
+        "glass-card",
         radius === "normal" && "rounded-2xl",
         radius === "large" && "rounded-[2.5rem]",
         radius === "full" && "rounded-full",
