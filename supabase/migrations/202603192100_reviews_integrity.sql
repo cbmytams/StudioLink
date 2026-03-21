@@ -25,12 +25,12 @@ begin
       and c.contype = 'u'
       and array_length(c.conkey, 1) = 2
       and (
-        select array_agg(a.attname order by a.attname)
+        select array_agg(a.attname::text order by a.attname::text)
         from unnest(c.conkey) as k(attnum)
         join pg_attribute a
           on a.attrelid = c.conrelid
          and a.attnum = k.attnum
-      ) = array['mission_id', 'reviewer_id']
+      ) = array['mission_id', 'reviewer_id']::text[]
   ) into has_unique_pair;
 
   if not has_unique_pair then
