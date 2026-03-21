@@ -105,7 +105,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!profile) return;
-    setUserType(profile.user_type);
+    const profileType = (
+      profile as {
+        user_type?: 'studio' | 'pro' | null
+        type?: 'studio' | 'pro' | null
+      }
+    ).user_type ?? (
+      profile as {
+        user_type?: 'studio' | 'pro' | null
+        type?: 'studio' | 'pro' | null
+      }
+    ).type ?? null;
+    setUserType(profileType);
     setOnboardingComplete(profile.onboarding_complete);
     setCurrentStep(profile.onboarding_step || 1);
   }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);
