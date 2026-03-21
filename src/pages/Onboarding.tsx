@@ -170,28 +170,28 @@ export default function Onboarding() {
         <meta name="description" content="Complétez votre profil pour accéder à StudioLink." />
       </Helmet>
       <GlassCard className="w-full max-w-md p-6">
-        <h1 className="text-2xl font-semibold text-black">Complète ton profil</h1>
-        <p className="mt-1 mb-5 text-sm text-stone-500">
+        <h1 className="text-2xl font-semibold text-white">Complète ton profil</h1>
+        <p className="mt-1 mb-5 text-sm text-white/70">
           Une dernière étape avant d’accéder à ton dashboard.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="onboarding-full-name" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-500">
+            <label htmlFor="onboarding-full-name" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/50">
               Nom complet
             </label>
             <TextInput
               id="onboarding-full-name"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              className="text-stone-900 placeholder:text-stone-400"
+              className=""
               placeholder="Prénom Nom"
             />
           </div>
 
           {existingType === '' ? (
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-500">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/50">
                 Type de compte
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -201,7 +201,7 @@ export default function Onboarding() {
                   className={`min-h-[44px] rounded-xl border px-3 text-sm transition-colors ${
                     userType === 'studio'
                       ? 'border-orange-500 bg-orange-500 text-white'
-                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                      : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
                   Studio
@@ -212,7 +212,7 @@ export default function Onboarding() {
                   className={`min-h-[44px] rounded-xl border px-3 text-sm transition-colors ${
                     userType === 'pro'
                       ? 'border-orange-500 bg-orange-500 text-white'
-                      : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                      : 'border-white/20 bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
                   Pro
@@ -220,9 +220,9 @@ export default function Onboarding() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-white/50 bg-white/70 px-3 py-2">
-              <p className="text-xs text-stone-500">Type de compte</p>
-              <p className="text-sm font-medium text-stone-800">{existingType === 'studio' ? 'Studio' : 'Pro'}</p>
+            <div className="glass-card px-3 py-2">
+              <p className="text-xs text-white/50">Type de compte</p>
+              <p className="text-sm font-medium text-white">{existingType === 'studio' ? 'Studio' : 'Pro'}</p>
             </div>
           )}
 
