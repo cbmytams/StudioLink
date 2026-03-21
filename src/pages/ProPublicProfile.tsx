@@ -179,7 +179,7 @@ export default function ProPublicProfile() {
       </div>
 
       {!loading && !error && profile && (!user || viewerType === 'studio') ? (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f4ece4] border-t border-black/5">
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-[#f4ece4] border-t border-black/5">
           <div className="mx-auto max-w-lg">
             <button
               type="button"
