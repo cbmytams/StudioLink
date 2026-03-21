@@ -435,21 +435,33 @@ begin
     execute 'drop policy if exists missions_select_published_or_owner on public.missions';
     execute 'drop policy if exists missions_select_open_or_owner on public.missions';
 
-    execute $policy$
-      create policy missions_select_open_or_owner
-      on public.missions
-      for select
-      using (
-        status::text in ('open', 'published', 'selecting')
-        or auth.uid() = studio_id
-        or exists (
-          select 1
-          from public.studios s
-          where s.id = missions.studio_id
-            and s.profile_id = auth.uid()
+    if to_regclass('public.studios') is not null then
+      execute $policy$
+        create policy missions_select_open_or_owner
+        on public.missions
+        for select
+        using (
+          status::text in ('open', 'published', 'selecting')
+          or auth.uid() = studio_id
+          or exists (
+            select 1
+            from public.studios s
+            where s.id = missions.studio_id
+              and s.profile_id = auth.uid()
+          )
         )
-      )
-    $policy$;
+      $policy$;
+    else
+      execute $policy$
+        create policy missions_select_open_or_owner
+        on public.missions
+        for select
+        using (
+          status::text in ('open', 'published', 'selecting')
+          or auth.uid() = studio_id
+        )
+      $policy$;
+    end if;
   end if;
 end
 $$;
