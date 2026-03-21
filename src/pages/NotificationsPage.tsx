@@ -49,7 +49,14 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
   const userId = session?.user?.id ?? null;
-  const fallbackRoute = profile?.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
+  const profileType = (
+    profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+  )?.user_type
+    ?? (
+      profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+    )?.type
+    ?? null;
+  const fallbackRoute = profileType === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
 
   const [conversations, setConversations] = useState<ConversationNotification[]>([]);
   const [loading, setLoading] = useState(true);
