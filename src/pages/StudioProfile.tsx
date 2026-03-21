@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { StarDisplay } from '@/components/ui/StarDisplay';
-import { profileService } from '@/services/profileService';
+import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { useReviews } from '@/hooks/useReviews';
 import { useToast } from '@/components/ui/Toast';
 
@@ -36,7 +36,7 @@ function getRelativeDateLabel(dateIso: string): string {
 
 export default function StudioProfile() {
   const navigate = useNavigate();
-  const { session, profile } = useAuth();
+  const { session, profile, refreshProfile } = useAuth();
   const { showToast } = useToast();
 
   const user = session?.user ?? null;
@@ -54,8 +54,6 @@ export default function StudioProfile() {
   const [contactEmail, setContactEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { data: reviews = [] } = useReviews(user?.id);
 
   useEffect(() => {
@@ -66,8 +64,6 @@ export default function StudioProfile() {
     setContactEmail(profileData.contact_email ?? '');
     setPhone(profileData.phone ?? '');
     setAvatarUrl(profileData.avatar_url ?? null);
-    setAvatarPreview(null);
-    setAvatarFile(null);
   }, [profileData]);
 
   useEffect(() => {
@@ -105,6 +101,7 @@ export default function StudioProfile() {
     setBio(profileData?.bio ?? '');
     setContactEmail(profileData?.contact_email ?? '');
     setPhone(profileData?.phone ?? '');
+    setAvatarUrl(profileData?.avatar_url ?? null);
     setFieldErrors({});
     setError(null);
     setSuccessMessage(null);
@@ -127,11 +124,6 @@ export default function StudioProfile() {
 
     setSaving(true);
     try {
-      let uploadedAvatarUrl = avatarUrl;
-      if (avatarFile && user) {
-        uploadedAvatarUrl = await profileService.uploadAvatar(user.id, avatarFile);
-      }
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -140,7 +132,7 @@ export default function StudioProfile() {
           bio: bio.trim() || null,
           contact_email: contactEmail.trim(),
           phone: phone.trim() || null,
-          avatar_url: uploadedAvatarUrl,
+          avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
         } as never)
         .eq('id', user.id);
@@ -158,9 +150,7 @@ export default function StudioProfile() {
       setSuccessMessage('Profil mis à jour ✓');
       showToast({ title: 'Profil mis à jour', variant: 'default' });
       setIsEditing(false);
-      setAvatarUrl(uploadedAvatarUrl);
-      setAvatarFile(null);
-      setAvatarPreview(null);
+      await refreshProfile();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
       showToast({
@@ -203,17 +193,15 @@ export default function StudioProfile() {
 
         <header className="app-header items-start mb-5">
           <div className="flex items-center gap-3">
-            {avatarPreview || avatarUrl ? (
-              <img
-                src={avatarPreview ?? avatarUrl ?? undefined}
-                alt="Avatar studio"
-                className="h-12 w-12 rounded-full border border-white/50 object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-600 text-lg font-semibold">
-                {companyName.trim().charAt(0).toUpperCase() || '?'}
-              </div>
-            )}
+            <AvatarUpload
+              currentUrl={avatarUrl}
+              fallbackLetter={companyName.trim().charAt(0) || profileData?.company_name?.charAt(0) || '?'}
+              userId={user?.id ?? ''}
+              onUploadSuccess={(newUrl) => {
+                setAvatarUrl(newUrl);
+                void refreshProfile();
+              }}
+            />
             <div>
               <h1 className="text-xl font-semibold">{companyName || profileData?.company_name || 'Studio'}</h1>
               <p className="text-sm text-black/50">Studio</p>
@@ -339,28 +327,6 @@ export default function StudioProfile() {
           )
         ) : (
           <section className="app-card-soft p-4 space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-black/75" htmlFor="studio-avatar">
-                Avatar
-              </label>
-              <input
-                id="studio-avatar"
-                type="file"
-                accept="image/*"
-                onChange={(event) => {
-                  const nextFile = event.target.files?.[0] ?? null;
-                  setAvatarFile(nextFile);
-                  if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-                  if (nextFile) {
-                    setAvatarPreview(URL.createObjectURL(nextFile));
-                  } else {
-                    setAvatarPreview(null);
-                  }
-                }}
-                className={baseInputClass}
-              />
-            </div>
-
             <div>
               <input
                 value={companyName}

@@ -1,370 +1,259 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button } from '@/components/ui/Button';
-import { Helmet } from 'react-helmet-async';
-
-const CATEGORIES = [
-  'Photographie',
-  'Vidéo & Montage',
-  'Motion Design',
-  'Direction Artistique',
-  'Illustration',
-  'Musique & Son',
-  'Rédaction',
-  'Social Media',
-  'Autre',
-] as const;
 
 type StudioProfile = {
+  id: string
+  full_name: string | null
   company_name: string | null
-}
+  avatar_url: string | null
+};
 
 type Mission = {
   id: string
   title: string
-  description: string
-  category: string
-  mission_type: 'on_site' | 'remote' | 'hybrid'
-  budget_min: number | null
-  budget_max: number | null
-  location: string | null
-  deadline: string | null
-  required_skills: string[] | null
+  city: string | null
+  daily_rate: number | null
+  skills: string[]
+  start_date: string | null
+  status: string
   created_at: string
-  studio_id: string
-  profiles: StudioProfile | null
-}
+  studio: StudioProfile | null
+};
 
-type MissionRow = {
+type MissionPrimaryRow = {
   id: string
   title: string | null
-  description: string | null
-  category: string | null
-  mission_type: string | null
-  budget_min: number | null
-  budget_max: number | null
-  location: string | null
-  deadline: string | null
-  required_skills: string[] | null
+  city: string | null
+  daily_rate: number | null
+  skills: string[] | null
+  start_date: string | null
+  status: string | null
   created_at: string
-  studio_id: string
-  profiles: StudioProfile | StudioProfile[] | null
-}
+  studio: StudioProfile | StudioProfile[] | null
+};
 
-type MyApplicationRow = {
+type MissionFallbackRow = {
+  id: string
+  title: string | null
+  location: string | null
+  budget_min: number | null
+  required_skills: string[] | null
+  status: string | null
+  created_at: string
+  studio: StudioProfile | StudioProfile[] | null
+};
+
+type AppliedRow = {
   mission_id: string
+};
+
+function asSingle<T>(value: T | T[] | null): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }
 
-interface MissionCardProps {
-  mission: Mission;
-  alreadyApplied: boolean;
-  onOpen: (missionId: string) => void;
+function relativeDate(value: string): string {
+  const now = new Date();
+  const created = new Date(value);
+  const diffMs = now.getTime() - created.getTime();
+  if (Number.isNaN(diffMs)) return '';
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'à l’instant';
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `il y a ${days}j`;
+  return created.toLocaleDateString('fr-FR');
 }
-
-function mapMissionType(value: string | null): Mission['mission_type'] {
-  if (value === 'on_site' || value === 'hybrid') return value;
-  return 'remote';
-}
-
-function missionTypeBadgeClass(type: Mission['mission_type']): string {
-  if (type === 'on_site') return 'bg-orange-100 text-orange-700 border border-orange-200';
-  if (type === 'hybrid') return 'bg-purple-100 text-purple-700 border border-purple-200';
-  return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
-}
-
-function missionTypeLabel(type: Mission['mission_type']): string {
-  if (type === 'on_site') return 'Sur site';
-  if (type === 'hybrid') return 'Hybride';
-  return 'Remote';
-}
-
-function truncate(text: string, max = 120): string {
-  if (text.length <= max) return text;
-  return `${text.slice(0, max).trimEnd()}…`;
-}
-
-function budgetText(mission: Mission): string {
-  if (mission.budget_min !== null && mission.budget_max !== null) {
-    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
-  }
-  if (mission.budget_min !== null) {
-    return `À partir de ${mission.budget_min}€/j`;
-  }
-  return 'Budget non renseigné';
-}
-
-const MissionCard = memo(function MissionCard({ mission, alreadyApplied, onOpen }: MissionCardProps) {
-  const visibleSkills = (mission.required_skills ?? []).slice(0, 3);
-  const remainingSkills = Math.max((mission.required_skills ?? []).length - 3, 0);
-
-  return (
-    <article
-      className="app-card p-5 transition-transform duration-150 hover:-translate-y-0.5"
-      onClick={() => onOpen(mission.id)}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="font-semibold text-lg">{mission.title}</h2>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
-          {missionTypeLabel(mission.mission_type)}
-        </span>
-      </div>
-
-      <p className="mt-1 text-sm app-muted">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
-
-      <div className="mt-2">
-        <span className="app-chip">{mission.category}</span>
-      </div>
-
-      <p className="text-sm text-black/70 mt-2">{truncate(mission.description || '')}</p>
-      <p className="text-sm text-orange-700 mt-2">{budgetText(mission)}</p>
-      {mission.location ? (
-        <p className="text-xs text-black/45 mt-1">Lieu : {mission.location}</p>
-      ) : null}
-      {mission.deadline ? (
-        <p className="text-xs text-black/45 mt-1">
-          Deadline : {new Date(mission.deadline).toLocaleDateString('fr-FR')}
-        </p>
-      ) : null}
-
-      {(mission.required_skills ?? []).length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {visibleSkills.map((skill) => (
-            <span key={skill} className="app-chip">
-              {skill}
-            </span>
-          ))}
-          {remainingSkills > 0 ? (
-            <span className="app-chip text-black/55">
-              +{remainingSkills} autres
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="mt-4">
-        {alreadyApplied ? (
-          <span className="text-green-400 text-sm">✓ Candidature envoyée</span>
-        ) : (
-          <Button
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpen(mission.id);
-            }}
-            className="bg-orange-500 text-white hover:bg-orange-600"
-          >
-            Postuler →
-          </Button>
-        )}
-      </div>
-    </article>
-  );
-});
 
 export default function ProFeed() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { session, profile } = useAuth();
+  const userId = session?.user?.id ?? null;
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const filters = useMemo(
+    () => ({
+      skill: searchParams.get('skill') ?? '',
+      city: searchParams.get('city') ?? '',
+      max_rate: searchParams.get('max_rate') ?? '',
+    }),
+    [searchParams],
+  );
+
+  const [skillInput, setSkillInput] = useState(filters.skill);
+  const [cityInput, setCityInput] = useState(filters.city);
+  const [maxRateInput, setMaxRateInput] = useState(filters.max_rate);
 
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [myApplicationIds, setMyApplicationIds] = useState<string[]>([]);
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterCategory, setFilterCategory] = useState<string>(searchParams.get('category') ?? '');
-  const [filterType, setFilterType] = useState<string>(searchParams.get('type') ?? '');
-  const [filterBudgetMin, setFilterBudgetMin] = useState<string>(searchParams.get('budgetMin') ?? '');
-  const [filterLocation, setFilterLocation] = useState<string>(searchParams.get('location') ?? '');
-  const [visibleCount, setVisibleCount] = useState(20);
+  const hasActiveFilters = useMemo(
+    () => [filters.skill, filters.city, filters.max_rate].some((value) => value.trim().length > 0),
+    [filters.city, filters.max_rate, filters.skill],
+  );
+
+  const updateFilter = useCallback((key: 'skill' | 'city' | 'max_rate', value: string) => {
+    const next = new URLSearchParams(searchParams);
+    const normalized = value.trim();
+    if (normalized) next.set(key, normalized);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const applyFilterOnEnter = useCallback((
+    event: KeyboardEvent<HTMLInputElement>,
+    key: 'skill' | 'city' | 'max_rate',
+    value: string,
+  ) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    updateFilter(key, value);
+  }, [updateFilter]);
+
+  const fetchMissions = useCallback(async () => {
+    if (!userId) {
+      setMissions([]);
+      setAppliedIds(new Set());
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let normalizedMissions: Mission[] = [];
+      const skillFilter = (searchParams.get('skill') ?? '').trim();
+      const cityFilter = (searchParams.get('city') ?? '').trim();
+      const maxRateFilter = (searchParams.get('max_rate') ?? '').trim();
+
+      const baseSelectPrimary = `
+        id, title, city, daily_rate, skills, start_date, status, created_at,
+        studio:studio_id (id, full_name, company_name, avatar_url)
+      `;
+      let primaryQuery = supabase
+        .from('missions')
+        .select(baseSelectPrimary)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+      if (skillFilter) primaryQuery = primaryQuery.contains('skills', [skillFilter]);
+      if (cityFilter) primaryQuery = primaryQuery.ilike('city', `%${cityFilter}%`);
+      if (maxRateFilter) {
+        const maxRate = Number(maxRateFilter);
+        if (!Number.isNaN(maxRate)) primaryQuery = primaryQuery.lte('daily_rate', maxRate);
+      }
+
+      const primaryResult = await primaryQuery;
+
+      if (!primaryResult.error) {
+        normalizedMissions = (primaryResult.data as unknown as MissionPrimaryRow[] | null ?? []).map((row) => ({
+          id: row.id,
+          title: row.title ?? 'Mission',
+          city: row.city ?? null,
+          daily_rate: row.daily_rate,
+          skills: row.skills ?? [],
+          start_date: row.start_date ?? null,
+          status: row.status ?? 'open',
+          created_at: row.created_at,
+          studio: asSingle(row.studio),
+        }));
+      } else {
+        const baseSelectFallback = `
+          id, title, location, budget_min, required_skills, status, created_at,
+          studio:studio_id (id, full_name, company_name, avatar_url)
+        `;
+        let fallbackQuery = supabase
+          .from('missions')
+          .select(baseSelectFallback)
+          .eq('status', 'open')
+          .order('created_at', { ascending: false });
+
+        if (skillFilter) fallbackQuery = fallbackQuery.contains('required_skills', [skillFilter]);
+        if (cityFilter) fallbackQuery = fallbackQuery.ilike('location', `%${cityFilter}%`);
+        if (maxRateFilter) {
+          const maxRate = Number(maxRateFilter);
+          if (!Number.isNaN(maxRate)) fallbackQuery = fallbackQuery.lte('budget_min', maxRate);
+        }
+
+        const fallbackResult = await fallbackQuery;
+        if (fallbackResult.error) throw fallbackResult.error;
+
+        normalizedMissions = (fallbackResult.data as unknown as MissionFallbackRow[] | null ?? []).map((row) => ({
+          id: row.id,
+          title: row.title ?? 'Mission',
+          city: row.location ?? null,
+          daily_rate: row.budget_min,
+          skills: row.required_skills ?? [],
+          start_date: null,
+          status: row.status ?? 'open',
+          created_at: row.created_at,
+          studio: asSingle(row.studio),
+        }));
+      }
+
+      const { data: appliedRows, error: appliedError } = await supabase
+        .from('applications')
+        .select('mission_id')
+        .eq('pro_id', userId);
+      if (appliedError) throw appliedError;
+
+      const appliedSet = new Set((appliedRows as AppliedRow[] | null ?? []).map((row) => row.mission_id));
+      setMissions(normalizedMissions);
+      setAppliedIds(appliedSet);
+    } catch (fetchError) {
+      setMissions([]);
+      setAppliedIds(new Set());
+      setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le feed.');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchParams, userId]);
 
   useEffect(() => {
-    let active = true;
+    void fetchMissions();
+  }, [fetchMissions]);
 
-    const fetchFeed = async () => {
-      const userId = session?.user?.id;
-      if (!userId) {
-        if (!active) return;
-        setMissions([]);
-        setMyApplicationIds([]);
-        setLoading(false);
-        return;
-      }
+  useEffect(() => {
+    setSkillInput(filters.skill);
+    setCityInput(filters.city);
+    setMaxRateInput(filters.max_rate);
+  }, [filters.city, filters.max_rate, filters.skill]);
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        const missionColumns: string = `
-          id,
-          title,
-          description,
-          category,
-          mission_type,
-          budget_min,
-          budget_max,
-          location,
-          deadline,
-          required_skills,
-          created_at,
-          studio_id,
-          profiles:studio_id (
-            company_name
-          )
-        `;
-        const fetchByStatus = async (status: string) =>
-          supabase
-            .from('missions')
-            .select(missionColumns)
-            .eq('status', status as never)
-            .order('created_at', { ascending: false });
-
-        const [openResult, publishedResult, selectingResult] = await Promise.all([
-          fetchByStatus('open'),
-          fetchByStatus('published'),
-          fetchByStatus('selecting'),
-        ]);
-
-        const successfulRows: MissionRow[] = [];
-        const queryErrors = [openResult.error, publishedResult.error, selectingResult.error]
-          .filter((item): item is NonNullable<typeof item> => Boolean(item));
-
-        if (!openResult.error) {
-          successfulRows.push(...((openResult.data ?? []) as unknown as MissionRow[]));
-        }
-        if (!publishedResult.error) {
-          successfulRows.push(...((publishedResult.data ?? []) as unknown as MissionRow[]));
-        }
-        if (!selectingResult.error) {
-          successfulRows.push(...((selectingResult.data ?? []) as unknown as MissionRow[]));
-        }
-
-        if (successfulRows.length === 0 && queryErrors.length > 0) {
-          throw queryErrors[0];
-        }
-
-        const missionRowsMap = new Map<string, MissionRow>();
-        successfulRows.forEach((row) => {
-          if (!missionRowsMap.has(row.id)) {
-            missionRowsMap.set(row.id, row);
-          }
-        });
-        const missionRows = Array.from(missionRowsMap.values());
-
-        missionRows.sort((a, b) => (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
-
-        const normalizedMissions: Mission[] = (missionRows as unknown as MissionRow[] | null ?? []).map((mission) => {
-          const studioProfile = Array.isArray(mission.profiles)
-            ? mission.profiles[0] ?? null
-            : mission.profiles;
-
-          return {
-            id: mission.id,
-            title: mission.title ?? 'Mission sans titre',
-            description: mission.description ?? '',
-            category: mission.category ?? 'Autre',
-            mission_type: mapMissionType(mission.mission_type),
-            budget_min: mission.budget_min,
-            budget_max: mission.budget_max,
-            location: mission.location ?? null,
-            deadline: mission.deadline,
-            required_skills: mission.required_skills ?? [],
-            created_at: mission.created_at,
-            studio_id: mission.studio_id,
-            profiles: studioProfile,
-          };
-        });
-
-        const { data: myApplications, error: myApplicationsError } = await supabase
-          .from('applications')
-          .select('mission_id')
-          .eq('pro_id', userId);
-
-        if (myApplicationsError) throw myApplicationsError;
-
-        if (!active) return;
-        setMissions(normalizedMissions);
-        setMyApplicationIds((myApplications as MyApplicationRow[] | null ?? []).map((item) => item.mission_id));
-      } catch (fetchError) {
-        if (!active) return;
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le feed');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void fetchFeed();
+  useEffect(() => {
+    const channel = supabase
+      .channel('missions-feed')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'missions',
+        filter: 'status=eq.open',
+      }, () => {
+        void fetchMissions();
+      })
+      .subscribe();
 
     return () => {
-      active = false;
+      void supabase.removeChannel(channel);
     };
-  }, [session?.user?.id]);
+  }, [fetchMissions]);
 
-  useEffect(() => {
-    const nextParams = new URLSearchParams();
-    if (filterCategory) nextParams.set('category', filterCategory);
-    if (filterType) nextParams.set('type', filterType);
-    if (filterBudgetMin) nextParams.set('budgetMin', filterBudgetMin);
-    if (filterLocation) nextParams.set('location', filterLocation);
-    setSearchParams(nextParams, { replace: true });
-  }, [filterBudgetMin, filterCategory, filterLocation, filterType, setSearchParams]);
-
-  useEffect(() => {
-    setVisibleCount(20);
-  }, [filterBudgetMin, filterCategory, filterLocation, filterType]);
-
-  const filteredMissions = useMemo(
-    () =>
-      missions.filter((mission) => {
-        if (filterCategory && mission.category !== filterCategory) return false;
-        if (filterType && mission.mission_type !== filterType) return false;
-        if (filterBudgetMin) {
-          const minBudget = Number(filterBudgetMin);
-          if (!Number.isNaN(minBudget)) {
-            if (mission.budget_min === null || mission.budget_min < minBudget) return false;
-          }
-        }
-        if (filterLocation && !(mission.location ?? '').toLowerCase().includes(filterLocation.toLowerCase())) {
-          return false;
-        }
-        return true;
-      }),
-    [filterBudgetMin, filterCategory, filterLocation, filterType, missions],
-  );
-
-  const visibleMissions = useMemo(
-    () => filteredMissions.slice(0, visibleCount),
-    [filteredMissions, visibleCount],
-  );
-
-  const profileName = (profile as { full_name?: string | null; username?: string | null; display_name?: string | null } | null);
-  const greetingName =
-    profileName?.full_name ??
-    profileName?.username ??
-    profileName?.display_name ??
-    'Pro';
-
-  const resetFilters = useCallback(() => {
-    setFilterCategory('');
-    setFilterType('');
-    setFilterBudgetMin('');
-    setFilterLocation('');
-  }, []);
-  const openMission = useCallback((missionId: string) => {
-    navigate(`/mission/${missionId}`);
-  }, [navigate]);
-
-  if (loading) {
-    return (
-      <div className="app-shell">
-        <div className="app-container flex min-h-screen items-center justify-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
-        </div>
-      </div>
-    );
-  }
+  const profileIdentity = profile as {
+    full_name?: string | null
+    username?: string | null
+    display_name?: string | null
+  } | null;
+  const greetingName = profileIdentity?.full_name
+    ?? profileIdentity?.username
+    ?? profileIdentity?.display_name
+    ?? 'Pro';
 
   return (
     <div className="app-shell">
@@ -372,95 +261,176 @@ export default function ProFeed() {
         <title>StudioLink — Feed des missions</title>
         <meta
           name="description"
-          content="Découvrez les missions ouvertes, filtrez selon vos critères et candidatez en quelques clics."
+          content="Découvrez les missions ouvertes des studios et postulez rapidement."
         />
       </Helmet>
-      <div className="app-container">
+      <div className="app-container-compact">
         <header className="mb-5">
           <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
-          <p className="app-subtitle">{filteredMissions.length} mission(s) trouvée(s)</p>
+          <p className="app-subtitle">{missions.length} mission(s) disponible(s)</p>
         </header>
 
-        {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
-
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <select
-            value={filterCategory}
-            onChange={(event) => setFilterCategory(event.target.value)}
-            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
-          >
-            <option value="" className="bg-[#f4ece4] text-stone-500">
-              Toutes catégories
-            </option>
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category} className="bg-[#f4ece4] text-stone-900">
-                {category}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={filterType}
-            onChange={(event) => setFilterType(event.target.value)}
-            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900"
-          >
-            <option value="" className="bg-[#f4ece4] text-stone-500">
-              Tous types
-            </option>
-            <option value="remote" className="bg-[#f4ece4] text-stone-900">Remote</option>
-            <option value="on_site" className="bg-[#f4ece4] text-stone-900">Sur site</option>
-            <option value="hybrid" className="bg-[#f4ece4] text-stone-900">Hybride</option>
-          </select>
-        </div>
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <input
-            value={filterBudgetMin}
-            onChange={(event) => setFilterBudgetMin(event.target.value)}
-            inputMode="numeric"
-            placeholder="Budget min (€)"
-            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
-          />
-          <input
-            value={filterLocation}
-            onChange={(event) => setFilterLocation(event.target.value)}
-            placeholder="Localisation"
-            className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
-          />
-          <button
-            type="button"
-            onClick={resetFilters}
-            className="min-h-[44px] rounded-xl border border-black/10 bg-white/70 px-4 text-sm font-medium text-black/70 transition hover:bg-white"
-          >
-            Réinitialiser les filtres
-          </button>
-        </div>
-
-        {!error && missions.length === 0 ? (
-          <p className="app-empty-state">Aucune mission disponible pour l&apos;instant.</p>
-        ) : null}
-
-        {!error && missions.length > 0 && filteredMissions.length === 0 ? (
-          <p className="app-empty-state">Aucune mission ne correspond à tes filtres.</p>
-        ) : null}
-
-        <div className="flex flex-col gap-4">
-          {visibleMissions.map((mission) => (
-            <MissionCard
-              key={mission.id}
-              mission={mission}
-              alreadyApplied={myApplicationIds.includes(mission.id)}
-              onOpen={openMission}
+        <section className="bg-white rounded-2xl border border-white/50 p-3 mb-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <input
+              type="text"
+              value={skillInput}
+              onChange={(event) => setSkillInput(event.target.value)}
+              onBlur={() => updateFilter('skill', skillInput)}
+              onKeyDown={(event) => applyFilterOnEnter(event, 'skill', skillInput)}
+              placeholder="Compétence"
+              className="bg-[#f4ece4] border-0 rounded-xl px-3 py-2 text-sm text-gray-700 w-full"
             />
-          ))}
-        </div>
-        {filteredMissions.length > visibleCount ? (
-          <div className="mt-4 flex justify-center">
-            <Button
-              onClick={() => setVisibleCount((previous) => previous + 20)}
-              className="bg-white/70 text-black/80 hover:bg-white"
+            <input
+              type="text"
+              value={cityInput}
+              onChange={(event) => setCityInput(event.target.value)}
+              onBlur={() => updateFilter('city', cityInput)}
+              onKeyDown={(event) => applyFilterOnEnter(event, 'city', cityInput)}
+              placeholder="Ville"
+              className="bg-[#f4ece4] border-0 rounded-xl px-3 py-2 text-sm text-gray-700 w-full"
+            />
+            <input
+              type="number"
+              value={maxRateInput}
+              onChange={(event) => setMaxRateInput(event.target.value)}
+              onBlur={() => updateFilter('max_rate', maxRateInput)}
+              onKeyDown={(event) => applyFilterOnEnter(event, 'max_rate', maxRateInput)}
+              placeholder="Tarif max (€/j)"
+              className="bg-[#f4ece4] border-0 rounded-xl px-3 py-2 text-sm text-gray-700 w-full"
+            />
+          </div>
+        </section>
+
+        <button
+          type="button"
+          onClick={() => void fetchMissions()}
+          className="flex items-center gap-1 text-xs text-gray-400 hover:text-orange-500 transition-colors mx-auto mb-3"
+        >
+          ↻ Actualiser
+        </button>
+
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-gray-500">
+            {missions.length} mission{missions.length > 1 ? 's' : ''} disponible{missions.length > 1 ? 's' : ''}
+          </p>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => setSearchParams({}, { replace: true })}
+              className="text-xs text-orange-500 hover:underline"
             >
-              Charger plus
-            </Button>
+              Réinitialiser les filtres
+            </button>
+          ) : null}
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-2xl border border-white/50 p-4 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-stone-200" />
+                  <div className="h-3 w-24 rounded bg-stone-200" />
+                  <div className="ml-auto h-3 w-16 rounded bg-stone-200" />
+                </div>
+                <div className="mt-3 h-4 w-3/4 rounded bg-stone-200" />
+                <div className="mt-2 h-3 w-1/2 rounded bg-stone-200" />
+                <div className="mt-2 h-3 w-2/3 rounded bg-stone-200" />
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {!loading && error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        ) : null}
+
+        {!loading && !error && missions.length === 0 && !hasActiveFilters ? (
+          <div className="text-center py-12">
+            <p className="text-4xl mb-3">🎯</p>
+            <p className="text-gray-500 text-sm">Aucune mission disponible pour l&apos;instant.</p>
+          </div>
+        ) : null}
+
+        {!loading && !error && missions.length === 0 && hasActiveFilters ? (
+          <div className="text-center py-12">
+            <p className="text-4xl mb-3">🔍</p>
+            <p className="text-gray-500 text-sm">Aucune mission ne correspond à ces critères.</p>
+            <button
+              type="button"
+              onClick={() => setSearchParams({}, { replace: true })}
+              className="text-orange-500 text-sm hover:underline mt-2 block mx-auto"
+            >
+              Effacer les filtres
+            </button>
+          </div>
+        ) : null}
+
+        {!loading && !error && missions.length > 0 ? (
+          <div className="app-list">
+            {missions.map((mission) => {
+              const studioName = mission.studio?.company_name ?? mission.studio?.full_name ?? 'Studio';
+              const visibleSkills = mission.skills.slice(0, 3);
+              const alreadyApplied = appliedIds.has(mission.id);
+
+              return (
+                <button
+                  key={mission.id}
+                  type="button"
+                  onClick={() => navigate(`/pro/offer/${mission.id}`)}
+                  className="w-full bg-white rounded-2xl border border-white/50 p-4 text-left cursor-pointer transition-colors hover:bg-orange-50"
+                >
+                  <div className="flex items-center gap-2">
+                    {mission.studio?.avatar_url ? (
+                      <img
+                        src={mission.studio.avatar_url}
+                        alt={studioName}
+                        className="h-8 w-8 rounded-full object-cover border border-white/50"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                        <span className="text-xs font-bold text-orange-600">
+                          {studioName.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-gray-900">{studioName}</p>
+                    <span className="text-xs text-gray-400 ml-auto">{relativeDate(mission.created_at)}</span>
+                  </div>
+
+                  <p className="text-base font-bold text-gray-900 mt-1">{mission.title}</p>
+
+                  <p className="text-xs text-gray-500 mt-2">
+                    {mission.city ? `📍 ${mission.city}` : '📍 Localisation à définir'}
+                    {mission.daily_rate !== null ? ` · 💰 ${mission.daily_rate} €/j` : ''}
+                  </p>
+
+                  {visibleSkills.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {visibleSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex justify-end">
+                    {alreadyApplied ? (
+                      <span className="text-xs text-green-600 font-medium">✓ Candidature envoyée</span>
+                    ) : (
+                      <span className="text-xs text-orange-500 font-medium">Voir &amp; postuler →</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>

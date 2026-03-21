@@ -177,23 +177,37 @@ export default function StudioDashboard() {
     setStatusActionMissionId(missionId);
     setError(null);
     try {
-      const dbStatus =
-        status === 'open'
-          ? 'published'
-          : status === 'in_progress'
-            ? 'in_progress'
-            : status === 'completed'
-              ? 'completed'
-              : status === 'closed'
-                ? 'cancelled'
-                : status;
+      const preferredStatus =
+        status === 'closed'
+          ? 'closed'
+          : status === 'open'
+            ? 'open'
+            : status;
 
-      const { error: updateError } = await supabase
+      const { error: preferredError } = await supabase
         .from('missions')
-        .update({ status: dbStatus } as never)
+        .update({ status: preferredStatus } as never)
         .eq('id', missionId);
 
-      if (updateError) throw updateError;
+      if (preferredError) {
+        const fallbackStatus =
+          status === 'open'
+            ? 'published'
+            : status === 'closed'
+              ? 'cancelled'
+              : status === 'in_progress'
+                ? 'filled'
+                : status === 'completed'
+                  ? 'rated'
+                  : status;
+
+        const { error: fallbackError } = await supabase
+          .from('missions')
+          .update({ status: fallbackStatus } as never)
+          .eq('id', missionId);
+
+        if (fallbackError) throw fallbackError;
+      }
 
       setMissions((previous) =>
         (previous ?? []).map((mission) =>
@@ -251,15 +265,8 @@ export default function StudioDashboard() {
               </div>
             )}
             <div>
-            <h1 className="app-title">Bonjour, {companyName} 👋</h1>
-            <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
-            <button
-              type="button"
-              onClick={() => navigate('/studio/search-pros')}
-              className="mt-2 text-sm text-orange-600 hover:underline"
-            >
-              Trouver des pros →
-            </button>
+              <h1 className="app-title">Bonjour, {companyName} 👋</h1>
+              <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
             </div>
           </div>
 
@@ -270,6 +277,57 @@ export default function StudioDashboard() {
             + Créer une mission
           </Button>
         </header>
+
+        <section className="mb-5 space-y-3">
+          <button
+            type="button"
+            onClick={() => navigate('/studio/missions')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">📌</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Mes missions</p>
+              <p className="text-xs text-gray-400">Gérer vos offres publiées</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/studio/search-pros')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">🔍</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Trouver des pros</p>
+              <p className="text-xs text-gray-400">Parcourir les profils disponibles</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/studio/conversations')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">💬</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Mes conversations</p>
+              <p className="text-xs text-gray-400">Messages avec les pros</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">⚙️</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Paramètres</p>
+              <p className="text-xs text-gray-400">Sécurité et préférences du compte</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+        </section>
 
         {error ? (
           <p className="text-red-400 text-center">{error}</p>

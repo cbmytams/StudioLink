@@ -13,6 +13,7 @@ type ProProfile = {
   skills: string[] | null
   city: string | null
   daily_rate: number | null
+  avatar_url: string | null
 }
 
 type Application = {
@@ -136,7 +137,8 @@ export default function ManageApplications() {
             username,
             skills,
             city,
-            daily_rate
+            daily_rate,
+            avatar_url
           )
         `;
         const { data: applicationData, error: applicationsError } = await supabase
@@ -256,18 +258,6 @@ export default function ManageApplications() {
         }
       }
 
-      const missionUpdate = await supabase
-        .from('missions')
-        .update({ status: 'in_progress' as never })
-        .eq('id', targetMissionId);
-      if (missionUpdate.error) {
-        const fallbackMissionUpdate = await supabase
-          .from('missions')
-          .update({ status: 'filled' as never })
-          .eq('id', targetMissionId);
-        if (fallbackMissionUpdate.error) throw fallbackMissionUpdate.error;
-      }
-
       setApplications((prev) =>
         prev.map((item) =>
           item.id === application.id
@@ -277,13 +267,52 @@ export default function ManageApplications() {
               : item,
         ),
       );
-      setMission((prev) => (prev ? { ...prev, status: 'in_progress' } : prev));
-      showToast({ title: 'Candidature acceptée', description: 'Mission passée en cours', variant: 'default' });
+      showToast({
+        title: 'Candidature acceptée',
+        description: 'Vous pouvez maintenant passer la mission en cours.',
+        variant: 'default',
+      });
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature");
       showToast({
         title: 'Action impossible',
         description: actionError instanceof Error ? actionError.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSetInProgress = async () => {
+    if (!targetMissionId) return;
+    setActionLoading(`mission:in-progress:${targetMissionId}`);
+    setError(null);
+    try {
+      const update = await supabase
+        .from('missions')
+        .update({ status: 'in_progress' as never })
+        .eq('id', targetMissionId);
+
+      if (update.error) {
+        const fallback = await supabase
+          .from('missions')
+          .update({ status: 'filled' as never })
+          .eq('id', targetMissionId);
+        if (fallback.error) throw fallback.error;
+      }
+
+      setMission((prev) => (prev ? { ...prev, status: 'in_progress' } : prev));
+      showToast({ title: 'Mission passée en cours', variant: 'default' });
+    } catch (inProgressError) {
+      setError(
+        inProgressError instanceof Error
+          ? inProgressError.message
+          : 'Impossible de mettre la mission en cours.',
+      );
+      showToast({
+        title: 'Mise à jour impossible',
+        description: inProgressError instanceof Error ? inProgressError.message : undefined,
         variant: 'destructive',
       });
     } finally {
@@ -397,6 +426,16 @@ export default function ManageApplications() {
           <p className="app-subtitle mt-0">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
+          {mission?.status === 'open' && applications.some((item) => item.status === 'accepted') ? (
+            <button
+              type="button"
+              onClick={() => void handleSetInProgress()}
+              disabled={actionLoading === `mission:in-progress:${targetMissionId}`}
+              className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-60"
+            >
+              Passer en cours
+            </button>
+          ) : null}
           {mission?.status === 'in_progress' ? (
             <button
               type="button"
@@ -428,8 +467,22 @@ export default function ManageApplications() {
             return (
               <div key={application.id} className="app-card-soft p-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{displayName}</p>
+                  <div className="flex items-start gap-3">
+                    {application.profiles?.avatar_url ? (
+                      <img
+                        src={application.profiles.avatar_url}
+                        alt={displayName}
+                        className="h-10 w-10 rounded-full object-cover border border-white/50"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
+                        <span className="text-sm font-bold text-orange-600">
+                          {displayName.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold">{displayName}</p>
                     {application.pro_id ? (
                       <button
                         type="button"
@@ -442,6 +495,7 @@ export default function ManageApplications() {
                     {application.profiles?.city ? (
                       <p className="text-sm app-muted">{application.profiles.city}</p>
                     ) : null}
+                    </div>
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${applicationStatusClass(application.status)}`}>
                     {application.status === 'pending'
@@ -508,7 +562,7 @@ export default function ManageApplications() {
                         : 'border-stone-300 bg-stone-100 text-stone-500'
                     }`}
                   >
-                    Rejeter ✗
+                    Refuser ✗
                   </button>
                 </div>
                 {mission?.status === 'completed' && application.status === 'accepted' && application.pro_id ? (

@@ -1,5 +1,6 @@
 import { useAuth } from '@/lib/supabase/auth';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/Button';
 
 type AuthProfile = {
@@ -7,7 +8,7 @@ type AuthProfile = {
   user_type?: 'studio' | 'pro' | 'admin';
 } | null;
 
-export const NotFoundPage = () => {
+export default function NotFound() {
   const { session, profile } = useAuth();
   const navigate = useNavigate();
 
@@ -22,6 +23,10 @@ export const NotFoundPage = () => {
 
   return (
     <div className="app-shell flex flex-col items-center justify-center text-center px-4">
+      <Helmet>
+        <title>404 — StudioLink</title>
+        <meta name="description" content="Page introuvable sur StudioLink." />
+      </Helmet>
       <p className="text-8xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-4">
         404
       </p>
@@ -34,6 +39,4 @@ export const NotFoundPage = () => {
       </Button>
     </div>
   );
-};
-
-export default NotFoundPage;
+}

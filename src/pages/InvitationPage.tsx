@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
@@ -91,6 +92,10 @@ export default function InvitationPage() {
 
   return (
     <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <Helmet>
+        <title>Invitation — StudioLink</title>
+        <meta name="description" content="Saisissez votre code d’invitation pour rejoindre StudioLink." />
+      </Helmet>
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold text-black">Code d&apos;invitation</h1>

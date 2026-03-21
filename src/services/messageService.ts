@@ -12,13 +12,38 @@ function ensureClient() {
 export const messageService = {
   async getConversations(userId: string): Promise<ConversationRecord[]> {
     const client = ensureClient();
-    const { data, error } = await client
+    const primary = await client
+      .from('conversations')
+      .select('id, created_at, studio_id, pro_id, participant_1, participant_2, last_message_at')
+      .or(`studio_id.eq.${userId},pro_id.eq.${userId}`)
+      .order('last_message_at', { ascending: false });
+
+    if (!primary.error) {
+      const rows = (primary.data ?? []) as Array<{
+        id: string
+        created_at: string
+        studio_id?: string | null
+        pro_id?: string | null
+        participant_1?: string | null
+        participant_2?: string | null
+      }>;
+
+      return rows.map((row) => ({
+        id: row.id,
+        participant_1: row.participant_1 ?? row.studio_id ?? '',
+        participant_2: row.participant_2 ?? row.pro_id ?? '',
+        created_at: row.created_at,
+      }));
+    }
+
+    const fallback = await client
       .from('conversations')
       .select('*')
       .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
       .order('created_at', { ascending: false });
-    if (error) throw error;
-    return (data ?? []) as ConversationRecord[];
+
+    if (fallback.error) throw fallback.error;
+    return (fallback.data ?? []) as ConversationRecord[];
   },
 
   async getUnreadConversationCount(userId: string): Promise<number> {
@@ -67,23 +92,72 @@ export const messageService = {
 
   async getOrCreateConversation(userId1: string, userId2: string): Promise<ConversationRecord> {
     const client = ensureClient();
-    const { data: existing, error: existingError } = await client
+    const primaryExisting = await client
       .from('conversations')
-      .select('*')
+      .select('id, created_at, studio_id, pro_id, participant_1, participant_2')
       .or(
-        `and(participant_1.eq.${userId1},participant_2.eq.${userId2}),and(participant_1.eq.${userId2},participant_2.eq.${userId1})`,
+        `and(studio_id.eq.${userId1},pro_id.eq.${userId2}),and(studio_id.eq.${userId2},pro_id.eq.${userId1})`,
       )
       .maybeSingle();
-    if (existingError) throw existingError;
-    if (existing) return existing as ConversationRecord;
 
-    const { data, error } = await client
+    if (!primaryExisting.error && primaryExisting.data) {
+      const row = primaryExisting.data as {
+        id: string
+        created_at: string
+        studio_id?: string | null
+        pro_id?: string | null
+        participant_1?: string | null
+        participant_2?: string | null
+      };
+      return {
+        id: row.id,
+        participant_1: row.participant_1 ?? row.studio_id ?? '',
+        participant_2: row.participant_2 ?? row.pro_id ?? '',
+        created_at: row.created_at,
+      };
+    }
+
+    if (primaryExisting.error) {
+      const legacyExisting = await client
+        .from('conversations')
+        .select('*')
+        .or(
+          `and(participant_1.eq.${userId1},participant_2.eq.${userId2}),and(participant_1.eq.${userId2},participant_2.eq.${userId1})`,
+        )
+        .maybeSingle();
+      if (legacyExisting.error) throw legacyExisting.error;
+      if (legacyExisting.data) return legacyExisting.data as ConversationRecord;
+    }
+
+    const primaryInsert = await client
+      .from('conversations')
+      .insert({ studio_id: userId1, pro_id: userId2, last_message_at: new Date().toISOString() } as never)
+      .select('id, created_at, studio_id, pro_id')
+      .single();
+
+    if (!primaryInsert.error) {
+      const row = primaryInsert.data as {
+        id: string
+        created_at: string
+        studio_id?: string | null
+        pro_id?: string | null
+      };
+      return {
+        id: row.id,
+        participant_1: row.studio_id ?? '',
+        participant_2: row.pro_id ?? '',
+        created_at: row.created_at,
+      };
+    }
+
+    const fallbackInsert = await client
       .from('conversations')
       .insert({ participant_1: userId1, participant_2: userId2 })
       .select('*')
       .single();
-    if (error) throw error;
-    return data as ConversationRecord;
+
+    if (fallbackInsert.error) throw fallbackInsert.error;
+    return fallbackInsert.data as ConversationRecord;
   },
 
   subscribeToMessages(conversationId: string, onMessage: (message: MessageRecord) => void): RealtimeChannel {

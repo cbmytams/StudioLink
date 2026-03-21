@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
@@ -81,6 +82,14 @@ export default function LoginPage() {
   useEffect(() => {
     if (authLoading || !session) return;
 
+    const authProfile = profile as {
+      user_type?: 'studio' | 'pro' | null;
+      type?: 'studio' | 'pro' | null;
+      full_name?: string | null;
+    } | null;
+    const profileType = authProfile?.user_type ?? authProfile?.type ?? null;
+    const fullName = authProfile?.full_name?.trim() ?? '';
+
     if (!profile) {
       const invitationCode = sessionStorage.getItem('invitationCode');
       const invitationType = sessionStorage.getItem('invitationType');
@@ -92,7 +101,12 @@ export default function LoginPage() {
       return;
     }
 
-    if (profile.user_type === 'studio') {
+    if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+      navigate('/onboarding', { replace: true });
+      return;
+    }
+
+    if (profileType === 'studio') {
       navigate('/studio/dashboard', { replace: true });
       return;
     }
@@ -279,6 +293,13 @@ export default function LoginPage() {
 
   return (
     <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <Helmet>
+        <title>{isSignIn ? 'Connexion — StudioLink' : 'Inscription — StudioLink'}</title>
+        <meta
+          name="description"
+          content={isSignIn ? 'Connectez-vous à votre compte StudioLink.' : 'Créez votre compte StudioLink avec invitation.'}
+        />
+      </Helmet>
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-semibold text-black">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>

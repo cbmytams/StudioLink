@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
@@ -252,6 +253,10 @@ export default function AdminPage() {
 
   return (
     <div className="app-shell">
+      <Helmet>
+        <title>Admin — StudioLink</title>
+        <meta name="description" content="Générez et gérez les invitations StudioLink." />
+      </Helmet>
       <div className="app-container-wide">
         <header className="mb-6">
           <h1 className="app-title">Panel Admin</h1>

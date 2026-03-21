@@ -118,6 +118,16 @@ export interface ReviewRecord {
   created_at: string;
 }
 
+export type PortfolioItem = {
+  id: string;
+  pro_id: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  image_url: string | null;
+  created_at: string;
+};
+
 export interface SavedItemRecord {
   id: string;
   user_id: string;

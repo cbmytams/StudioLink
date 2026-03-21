@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button } from '@/components/ui/Button';
 import { ReviewModal } from '@/components/ReviewModal';
 import { Helmet } from 'react-helmet-async';
 import { reviewService } from '@/services/reviewService';
@@ -335,14 +334,59 @@ export default function ProDashboard() {
           </div>
         </section>
 
-        <div className="mb-5">
-          <Button
-            onClick={() => navigate('/pro/feed')}
-            className="bg-orange-500 text-white hover:bg-orange-600"
+        <section className="mb-5 space-y-3">
+          <button
+            type="button"
+            onClick={() => navigate('/pro/applications')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
           >
-            Voir les missions disponibles →
-          </Button>
-        </div>
+            <span className="text-xl">📋</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Mes candidatures</p>
+              <p className="text-xs text-gray-400">Voir le statut de tes candidatures</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/pro/feed')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">🎯</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Explorer les missions</p>
+              <p className="text-xs text-gray-400">Trouve ta prochaine mission</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/pro/conversations')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">💬</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Mes messages</p>
+              <p className="text-xs text-gray-400">Accéder à mes conversations</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+          >
+            <span className="text-xl">⚙️</span>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Paramètres</p>
+              <p className="text-xs text-gray-400">Sécurité et préférences du compte</p>
+            </div>
+            <span className="ml-auto text-gray-300">›</span>
+          </button>
+        </section>
 
         <div className="mb-4 flex gap-5 border-b border-black/10">
           <button

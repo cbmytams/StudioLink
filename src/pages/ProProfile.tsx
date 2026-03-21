@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
-import { profileService } from '@/services/profileService';
+import { AvatarUpload } from '@/components/ui/AvatarUpload';
+import { portfolioService } from '@/services/portfolioService';
 import { useToast } from '@/components/ui/Toast';
+import type { PortfolioItem } from '@/types/backend';
 
 type EditableProfile = {
   full_name?: string | null
@@ -23,18 +25,9 @@ type FieldErrors = {
   dailyRate?: string
 }
 
-type PortfolioItem = {
-  id: string
-  title: string
-  description: string | null
-  url: string
-  image_url: string | null
-  created_at: string
-}
-
 export default function ProProfile() {
   const navigate = useNavigate();
-  const { session, profile } = useAuth();
+  const { session, profile, refreshProfile } = useAuth();
   const { showToast } = useToast();
 
   const user = session?.user ?? null;
@@ -54,8 +47,6 @@ export default function ProProfile() {
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [portfolioTitle, setPortfolioTitle] = useState('');
   const [portfolioDescription, setPortfolioDescription] = useState('');
@@ -71,8 +62,6 @@ export default function ProProfile() {
     setDailyRate(profileData.daily_rate ? String(profileData.daily_rate) : '');
     setSkills(profileData.skills ?? []);
     setAvatarUrl(profileData.avatar_url ?? null);
-    setAvatarPreview(null);
-    setAvatarFile(null);
   }, [profileData]);
 
   useEffect(() => {
@@ -80,14 +69,9 @@ export default function ProProfile() {
     const loadPortfolio = async () => {
       if (!user?.id) return;
       try {
-        const { data, error: fetchError } = await supabase
-          .from('portfolio_items' as never)
-          .select('id, title, description, url, image_url, created_at')
-          .eq('pro_id', user.id)
-          .order('created_at', { ascending: false });
-        if (fetchError) throw fetchError;
+        const data = await portfolioService.getPortfolioItems(user.id);
         if (!active) return;
-        setPortfolioItems((data ?? []) as PortfolioItem[]);
+        setPortfolioItems(data);
       } catch {
         // Ignoré: la section portfolio reste facultative.
       }
@@ -149,11 +133,6 @@ export default function ProProfile() {
 
     setSaving(true);
     try {
-      let uploadedAvatarUrl = avatarUrl;
-      if (avatarFile) {
-        uploadedAvatarUrl = await profileService.uploadAvatar(user.id, avatarFile);
-      }
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -163,7 +142,7 @@ export default function ProProfile() {
           city: city.trim() || null,
           daily_rate: dailyRate ? Number(dailyRate) : null,
           skills,
-          avatar_url: uploadedAvatarUrl,
+          avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
         } as never)
         .eq('id', user.id);
@@ -181,9 +160,7 @@ export default function ProProfile() {
       setSuccessMessage('Profil mis à jour ✓');
       showToast({ title: 'Profil mis à jour', variant: 'default' });
       setIsEditing(false);
-      setAvatarUrl(uploadedAvatarUrl);
-      setAvatarFile(null);
-      setAvatarPreview(null);
+      await refreshProfile();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
       showToast({
@@ -198,16 +175,25 @@ export default function ProProfile() {
 
   const handleAddPortfolioItem = async () => {
     if (!user?.id) return;
-    if (!portfolioTitle.trim() || !portfolioUrl.trim()) {
-      setError('Titre et URL du portfolio requis');
+    if (!portfolioTitle.trim()) {
+      setError('Titre du projet requis');
       showToast({
         title: 'Validation',
-        description: 'Titre et URL du portfolio requis',
+        description: 'Titre du projet requis',
         variant: 'destructive',
       });
       return;
     }
-    if (!/^https?:\/\//i.test(portfolioUrl.trim())) {
+    if (portfolioDescription.length > 200) {
+      setError('Description trop longue (200 caractères max)');
+      showToast({
+        title: 'Validation',
+        description: 'Description trop longue (200 caractères max)',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (portfolioUrl.trim() && !/^https?:\/\//i.test(portfolioUrl.trim())) {
       setError("L'URL du portfolio doit commencer par http:// ou https://");
       showToast({
         title: 'Validation',
@@ -229,23 +215,18 @@ export default function ProProfile() {
     setPortfolioLoading(true);
     setError(null);
     try {
-      const { data, error: insertError } = await supabase
-        .from('portfolio_items' as never)
-        .insert({
-          pro_id: user.id,
-          title: portfolioTitle.trim(),
-          description: portfolioDescription.trim() || null,
-          url: portfolioUrl.trim(),
-        } as never)
-        .select('id, title, description, url, image_url, created_at')
-        .single();
+      const data = await portfolioService.addPortfolioItem(
+        user.id,
+        portfolioTitle.trim(),
+        portfolioDescription,
+        portfolioUrl,
+      );
 
-      if (insertError) throw insertError;
-      setPortfolioItems((prev) => [data as PortfolioItem, ...prev]);
+      setPortfolioItems((prev) => [data, ...prev]);
       setPortfolioTitle('');
       setPortfolioDescription('');
       setPortfolioUrl('');
-      showToast({ title: 'Élément portfolio ajouté', variant: 'default' });
+      showToast({ title: 'Projet ajouté au portfolio', variant: 'default' });
     } catch (portfolioError) {
       setError(
         portfolioError instanceof Error
@@ -264,13 +245,9 @@ export default function ProProfile() {
 
   const handleDeletePortfolioItem = async (itemId: string) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('portfolio_items' as never)
-        .delete()
-        .eq('id', itemId);
-      if (deleteError) throw deleteError;
+      await portfolioService.deletePortfolioItem(itemId);
       setPortfolioItems((prev) => prev.filter((item) => item.id !== itemId));
-      showToast({ title: 'Élément portfolio supprimé', variant: 'default' });
+      showToast({ title: 'Projet retiré du portfolio', variant: 'default' });
     } catch (portfolioError) {
       setError(
         portfolioError instanceof Error
@@ -334,17 +311,15 @@ export default function ProProfile() {
 
         <header className="app-header items-start mb-5">
           <div className="flex items-center gap-3">
-            {avatarPreview || avatarUrl ? (
-              <img
-                src={avatarPreview ?? avatarUrl ?? undefined}
-                alt="Avatar"
-                className="h-12 w-12 rounded-full object-cover border border-white/50"
-              />
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-lg font-semibold text-white">
-                {fullName.trim().charAt(0).toUpperCase() || '?'}
-              </div>
-            )}
+            <AvatarUpload
+              currentUrl={avatarUrl}
+              fallbackLetter={fullName.trim().charAt(0) || profileData?.full_name?.charAt(0) || '?'}
+              userId={user?.id ?? ''}
+              onUploadSuccess={(newUrl) => {
+                setAvatarUrl(newUrl);
+                void refreshProfile();
+              }}
+            />
             <div>
               <h1 className="text-xl font-semibold">{fullName || profileData?.full_name || 'Profil Pro'}</h1>
               <p className="text-sm text-black/50">@{username || profileData?.username || 'username'}</p>
@@ -380,6 +355,7 @@ export default function ProProfile() {
                     setCity(profileData.city ?? '');
                     setDailyRate(profileData.daily_rate ? String(profileData.daily_rate) : '');
                     setSkills(profileData.skills ?? []);
+                    setAvatarUrl(profileData.avatar_url ?? null);
                   }
                 }}
                 className="rounded-xl bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white"
@@ -456,28 +432,6 @@ export default function ProProfile() {
             )
           ) : (
             <section className="app-card-soft p-4 space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-black/75" htmlFor="pro-avatar">
-                  Avatar
-                </label>
-                <input
-                  id="pro-avatar"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => {
-                    const nextFile = event.target.files?.[0] ?? null;
-                    setAvatarFile(nextFile);
-                    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-                    if (nextFile) {
-                      setAvatarPreview(URL.createObjectURL(nextFile));
-                    } else {
-                      setAvatarPreview(null);
-                    }
-                  }}
-                  className={baseInputClass}
-                />
-              </div>
-
               <div>
                 <input
                   value={fullName}
@@ -577,61 +531,76 @@ export default function ProProfile() {
           )}
 
           <section className="app-card-soft p-4">
-            <h2 className="mb-2 text-sm font-semibold text-black/80">Portfolio</h2>
+            <h2 className="mb-2 text-sm font-semibold text-black/80">Mon portfolio</h2>
             <p className="text-xs app-muted mb-3">{portfolioItems.length}/6 éléments</p>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <input
-                value={portfolioTitle}
-                onChange={(event) => setPortfolioTitle(event.target.value)}
-                placeholder="Titre"
-                className={baseInputClass}
-              />
-              <input
-                value={portfolioDescription}
-                onChange={(event) => setPortfolioDescription(event.target.value)}
-                placeholder="Description"
-                className={baseInputClass}
-              />
-              <input
-                value={portfolioUrl}
-                onChange={(event) => setPortfolioUrl(event.target.value)}
-                placeholder="https://..."
-                className={baseInputClass}
-              />
-            </div>
-            <div className="mt-3">
-              <Button
-                className="bg-orange-500 text-white hover:bg-orange-600"
-                disabled={portfolioLoading || portfolioItems.length >= 6}
-                onClick={() => void handleAddPortfolioItem()}
-              >
-                {portfolioLoading ? 'Ajout...' : 'Ajouter au portfolio'}
-              </Button>
-            </div>
+
+            {portfolioItems.length < 6 ? (
+              <div className="space-y-2">
+                <input
+                  value={portfolioTitle}
+                  onChange={(event) => setPortfolioTitle(event.target.value)}
+                  placeholder="Titre du projet"
+                  className={baseInputClass}
+                />
+                <textarea
+                  rows={3}
+                  maxLength={200}
+                  value={portfolioDescription}
+                  onChange={(event) => setPortfolioDescription(event.target.value)}
+                  placeholder="Description (optionnel, 200 caractères max)"
+                  className={baseInputClass}
+                />
+                <input
+                  type="url"
+                  value={portfolioUrl}
+                  onChange={(event) => setPortfolioUrl(event.target.value)}
+                  placeholder="https://..."
+                  className={baseInputClass}
+                />
+                <Button
+                  className="bg-orange-500 text-white hover:bg-orange-600"
+                  disabled={portfolioLoading}
+                  onClick={() => void handleAddPortfolioItem()}
+                >
+                  {portfolioLoading ? 'Ajout...' : 'Ajouter'}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 text-center">Maximum 6 projets atteint</p>
+            )}
+
             <div className="mt-4 space-y-2">
               {portfolioItems.length === 0 ? (
                 <p className="text-sm app-muted">Aucun élément portfolio.</p>
               ) : (
                 portfolioItems.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-white/50 bg-white/70 p-3">
-                    <p className="text-sm font-medium text-black/80">{item.title}</p>
-                    {item.description ? (
-                      <p className="text-xs text-black/60 mt-1">{item.description}</p>
-                    ) : null}
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-orange-600 underline mt-1 block"
-                    >
-                      {item.url}
-                    </a>
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-white/50 p-3 flex items-start justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                      {item.description ? (
+                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                      ) : null}
+                      {item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-500 text-xs mt-1 block hover:underline"
+                        >
+                          Voir le projet →
+                        </a>
+                      ) : null}
+                    </div>
                     <button
                       type="button"
                       onClick={() => void handleDeletePortfolioItem(item.id)}
-                      className="text-xs text-red-500 hover:underline mt-2"
+                      className="text-gray-400 hover:text-red-500"
+                      aria-label="Retirer du portfolio"
                     >
-                      Supprimer
+                      ×
                     </button>
                   </div>
                 ))

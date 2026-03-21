@@ -1,248 +1,172 @@
 import { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
-import { useReviews } from '@/hooks/useReviews';
-import { Helmet } from 'react-helmet-async';
-import { StarDisplay } from '@/components/ui/StarDisplay';
+import { useAuth } from '@/lib/supabase/auth';
 
-type ProProfile = {
+type PublicProProfile = {
   id: string
   full_name: string | null
-  username: string | null
   bio: string | null
   city: string | null
   daily_rate: number | null
   skills: string[] | null
   avatar_url: string | null
   type: string
-}
+};
 
-type PortfolioItem = {
-  id: string
-  title: string
-  description: string | null
-  url: string
-  image_url: string | null
-  created_at: string
-}
-
-function getRelativeDateLabel(dateIso: string): string {
-  const diffMs = Date.now() - new Date(dateIso).getTime();
-  const dayMs = 24 * 60 * 60 * 1000;
-  if (diffMs < dayMs) return 'Aujourd’hui';
-  if (diffMs < 2 * dayMs) return 'Hier';
-  const days = Math.floor(diffMs / dayMs);
-  if (days < 7) return `Il y a ${days} jours`;
-  return new Date(dateIso).toLocaleDateString('fr-FR');
-}
-
-export function ProPublicProfile() {
+export default function ProPublicProfile() {
   const navigate = useNavigate();
-  const { proId } = useParams<{ proId: string }>();
+  const { id } = useParams<{ id: string }>();
+  const { session, profile: viewerProfile } = useAuth();
+  const user = session?.user ?? null;
+  const viewerType = (viewerProfile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.user_type
+    ?? (viewerProfile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.type
+    ?? null;
 
-  const [proProfile, setProProfile] = useState<ProProfile | null>(null);
+  const [profile, setProfile] = useState<PublicProProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
-  const { data: reviews = [] } = useReviews(proId);
 
   useEffect(() => {
+    let active = true;
+
     const fetchProfile = async () => {
-      if (!proId) {
-        setNotFound(true);
-        setLoading(false);
+      if (!id) {
+        if (active) {
+          setProfile(null);
+          setLoading(false);
+        }
         return;
       }
 
       setLoading(true);
-      setNotFound(false);
       setError(null);
-      setProProfile(null);
 
       try {
-        const { data } = await supabase
+        const { data, error: queryError } = await supabase
           .from('profiles')
-          .select('id, full_name, username, bio, city, daily_rate, skills, avatar_url, type')
-          .eq('id', proId)
+          .select('id, full_name, bio, city, daily_rate, skills, avatar_url, type')
+          .eq('id', id)
           .eq('type', 'pro')
-          .single();
+          .maybeSingle();
 
-        if (!data) {
-          setNotFound(true);
-        } else {
-          setProProfile(data as unknown as ProProfile);
-          const { data: portfolioRows } = await supabase
-            .from('portfolio_items' as never)
-            .select('id, title, description, url, image_url, created_at')
-            .eq('pro_id', proId)
-            .order('created_at', { ascending: false });
-          setPortfolioItems((portfolioRows ?? []) as PortfolioItem[]);
-        }
+        if (queryError) throw queryError;
+        if (!active) return;
+        setProfile((data as PublicProProfile | null) ?? null);
       } catch (fetchError) {
+        if (!active) return;
         setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger ce profil.');
+      } finally {
+        if (active) setLoading(false);
       }
-      setLoading(false);
     };
 
     void fetchProfile();
-  }, [proId, reloadKey]);
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
-  const hasAnyInfo = Boolean(
-    proProfile?.bio ||
-    proProfile?.city ||
-    proProfile?.daily_rate ||
-    (proProfile?.skills?.length ?? 0) > 0 ||
-    portfolioItems.length > 0 ||
-    reviews.length > 0,
-  );
-  const averageRating = reviews.length > 0
-    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
-    : null;
-
-  if (loading) {
-    return (
-      <div className="app-shell flex items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
-      </div>
-    );
-  }
-
-  if (error && !proProfile && !notFound) {
-    return (
-      <div className="app-shell">
-        <div className="app-container-compact">
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">⚠️</p>
-            <p className="text-red-500">{error}</p>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="text-orange-600 underline text-sm mt-4 block mx-auto"
-            >
-              Retour
-            </button>
-            <button
-              type="button"
-              onClick={() => setReloadKey((prev) => prev + 1)}
-              className="text-orange-600 underline text-sm mt-2 block mx-auto"
-            >
-              Réessayer
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (notFound || !proProfile) {
-    return (
-      <div className="app-shell">
-        <div className="app-container-compact">
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">👤</p>
-            <p className="app-muted">Profil introuvable.</p>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="text-orange-600 underline text-sm mt-4 block mx-auto"
-            >
-              Retour
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/studio/dashboard')}
-              className="text-orange-600 underline text-sm mt-2 block mx-auto"
-            >
-              Retour au dashboard
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const displayName = profile?.full_name ?? 'Profil pro';
+  const hasSkills = (profile?.skills?.length ?? 0) > 0;
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen pb-24">
       <Helmet>
-        <title>{`${proProfile.full_name ?? proProfile.username ?? 'Profil Pro'} — StudioLink`}</title>
-        <meta
-          name="description"
-          content={proProfile.bio ? proProfile.bio.slice(0, 160) : 'Profil public professionnel sur StudioLink.'}
-        />
-        <meta property="og:title" content={`${proProfile.full_name ?? proProfile.username ?? 'Profil Pro'} — StudioLink`} />
-        <meta
-          property="og:description"
-          content={proProfile.bio ? proProfile.bio.slice(0, 160) : 'Profil public professionnel sur StudioLink.'}
-        />
+        <title>{profile ? `${displayName} — StudioLink` : 'Profil public — StudioLink'}</title>
+        <meta name="description" content="Consultez le profil public d’un pro sur StudioLink." />
+        <meta property="og:title" content={profile ? `${displayName} — StudioLink` : 'Profil public — StudioLink'} />
+        <meta property="og:description" content="Consultez les compétences et le profil public d’un pro sur StudioLink." />
       </Helmet>
+
       <div className="app-container-compact">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="text-sm app-muted hover:text-black mb-6 flex items-center gap-1 transition-colors"
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
         >
-          ← Retour
+          <span>←</span> Retour
         </button>
 
-        {error ? (
-          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </p>
+        {loading ? (
+          <div className="animate-pulse space-y-4 pt-6">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-gray-200" />
+              <div className="space-y-2 flex-1">
+                <div className="h-5 bg-gray-200 rounded w-40" />
+                <div className="h-3 bg-gray-200 rounded w-24" />
+              </div>
+            </div>
+            <div className="h-3 bg-gray-200 rounded w-full mt-6" />
+            <div className="h-3 bg-gray-200 rounded w-3/4" />
+          </div>
         ) : null}
 
-        <header className="mt-6">
-          <div className="flex items-start gap-4">
-            {proProfile.avatar_url ? (
-              <img
-                src={proProfile.avatar_url}
-                alt="Avatar pro"
-                className="w-16 h-16 rounded-full border border-white/50 object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-2xl font-semibold text-white">
-                {proProfile.full_name?.[0]?.toUpperCase() ?? '?'}
-              </div>
-            )}
-            <div>
-              <h1 className="app-title text-2xl">
-                {proProfile.full_name ?? proProfile.username ?? 'Anonyme'}
-              </h1>
-              {proProfile.username ? (
-                <p className="app-muted text-sm">@{proProfile.username}</p>
-              ) : null}
-              {proProfile.city ? (
-                <p className="text-sm app-muted mt-1">{proProfile.city}</p>
-              ) : null}
-            </div>
+        {!loading && error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm text-red-600">{error}</p>
           </div>
-        </header>
+        ) : null}
 
-        {hasAnyInfo ? (
+        {!loading && !error && !profile ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-3">👤</p>
+            <p className="text-gray-500 text-sm">Ce profil n&apos;existe pas ou n&apos;est plus disponible.</p>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="text-orange-500 text-sm hover:underline mt-2 block mx-auto"
+            >
+              Retour
+            </button>
+          </div>
+        ) : null}
+
+        {!loading && !error && profile ? (
           <>
-            {proProfile.bio ? (
-              <section className="app-card-soft p-4 mt-4">
-                <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">À propos</p>
-                <p className="text-sm text-black/70">{proProfile.bio}</p>
-              </section>
-            ) : null}
+            <header>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  className="w-20 h-20 rounded-full object-cover border border-white/50"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">
+                    {displayName.charAt(0).toUpperCase() || '?'}
+                  </span>
+                </div>
+              )}
 
-            {proProfile.daily_rate ? (
-              <section className="app-card-soft p-4 mt-4">
-                <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">Tarif journalier</p>
-                <p className="text-orange-700 font-medium">{proProfile.daily_rate}€/j</p>
-              </section>
-            ) : null}
+              <h1 className="text-2xl font-bold text-gray-900 mt-3">{displayName}</h1>
+              <p className="text-sm text-gray-400 mt-1">
+                {profile.city ? <span>{profile.city}</span> : null}
+                {profile.city && profile.daily_rate ? <span> · </span> : null}
+                {profile.daily_rate ? (
+                  <span className="text-orange-500 font-medium">{profile.daily_rate} €/j</span>
+                ) : null}
+              </p>
+            </header>
 
-            {proProfile.skills?.length ? (
-              <section className="app-card-soft p-4 mt-4">
-                <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Compétences</p>
+            <section className="mt-8">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">À propos</h2>
+              {profile.bio ? (
+                <p className="text-sm text-gray-700 leading-relaxed">{profile.bio}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">Aucune bio renseignée.</p>
+              )}
+            </section>
+
+            {hasSkills ? (
+              <section className="mt-6">
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compétences</h2>
                 <div className="flex flex-wrap gap-2">
-                  {proProfile.skills.map((skill) => (
+                  {profile.skills?.map((skill) => (
                     <span
                       key={skill}
-                      className="app-chip"
+                      className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full"
                     >
                       {skill}
                     </span>
@@ -250,58 +174,31 @@ export function ProPublicProfile() {
                 </div>
               </section>
             ) : null}
-            <section className="app-card-soft p-4 mt-4">
-              <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Avis reçus</p>
-              {averageRating !== null ? (
-                <div className="mb-3 flex items-center gap-2">
-                  <StarDisplay rating={averageRating} />
-                  <p className="text-sm text-black/70">
-                    <span className="font-semibold text-orange-700">{averageRating.toFixed(1)} ★</span> · {reviews.length} avis
-                  </p>
-                </div>
-              ) : (
-                <p className="text-sm app-muted">Aucun avis pour l&apos;instant</p>
-              )}
-              {reviews.slice(0, 5).map((review) => (
-                <div key={review.id} className="rounded-xl border border-white/50 bg-white/70 p-3 mt-2">
-                  <p className="text-xs text-stone-500">{review.reviewer_name}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <StarDisplay rating={review.rating} />
-                    <span className="text-xs text-orange-700 font-medium">{review.rating}/5</span>
-                  </div>
-                  {review.comment ? <p className="text-sm text-black/70 mt-1">{review.comment}</p> : null}
-                  <p className="text-xs app-muted mt-1">{getRelativeDateLabel(review.created_at)}</p>
-                </div>
-              ))}
-            </section>
-            {portfolioItems.length > 0 ? (
-              <section className="app-card-soft p-4 mt-4">
-                <p className="text-xs text-stone-500 uppercase tracking-wider mb-2">Portfolio</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {portfolioItems.map((item) => (
-                    <div key={item.id} className="rounded-xl border border-white/50 bg-white/70 p-3">
-                      <p className="text-sm font-medium text-black/80">{item.title}</p>
-                      {item.description ? <p className="text-xs text-black/60 mt-1">{item.description}</p> : null}
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-orange-600 underline mt-2 block"
-                      >
-                        Ouvrir le projet
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ) : null}
           </>
-        ) : (
-          <p className="app-muted text-sm mt-6">Ce profil est incomplet.</p>
-        )}
+        ) : null}
       </div>
+
+      {!loading && !error && profile && (!user || viewerType === 'studio') ? (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f4ece4] border-t border-black/5">
+          <div className="mx-auto max-w-lg">
+            <button
+              type="button"
+              onClick={() => {
+                if (!user) {
+                  navigate('/login');
+                  return;
+                }
+                navigate('/studio/new-conversation', {
+                  state: { proId: profile.id, proName: profile.full_name },
+                });
+              }}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-2xl transition-colors"
+            >
+              Contacter ce pro
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
-
-export default ProPublicProfile;

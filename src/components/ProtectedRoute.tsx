@@ -10,35 +10,33 @@ interface Props {
   allowedTypes?: UserType[];
 }
 
+type GuardProfile = {
+  user_type?: UserType | null;
+  type?: UserType | null;
+  full_name?: string | null;
+  onboarding_complete?: boolean | null;
+} | null;
+
 export default function ProtectedRoute({ children, requiredType, allowedTypes }: Props) {
   const { session, profile, loading } = useAuth();
   const requiredTypes = requiredType ? [requiredType] : allowedTypes;
+  const guardProfile = profile as GuardProfile;
+  const profileType = guardProfile?.user_type ?? guardProfile?.type ?? null;
+  const fullName = guardProfile?.full_name?.trim() ?? '';
 
   if (loading) return <LoadingScreen />;
   if (!session) return <Navigate to="/login" replace />;
 
-  if (!profile) {
-    const invitationCode = sessionStorage.getItem('invitationCode');
-    const invitationType = sessionStorage.getItem('invitationType');
-    if (
-      invitationCode
-      && (invitationType === 'studio' || invitationType === 'pro')
-    ) {
-      return <Navigate to="/onboarding" replace />;
-    }
-    return <Navigate to="/invitation" replace />;
-  }
-
-  if (!profile.onboarding_complete) {
+  if (!guardProfile) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  if (profile.user_type !== 'studio' && profile.user_type !== 'pro') {
-    return <Navigate to="/invitation" replace />;
+  if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+    return <Navigate to="/onboarding" replace />;
   }
 
-  if (requiredTypes && !requiredTypes.includes(profile.user_type as UserType)) {
-    const defaultRoute = profile.user_type === 'studio'
+  if (requiredTypes && !requiredTypes.includes(profileType as UserType)) {
+    const defaultRoute = profileType === 'studio'
       ? '/studio/dashboard'
       : '/pro/dashboard';
     return <Navigate to={defaultRoute} replace />;

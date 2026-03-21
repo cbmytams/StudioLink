@@ -1,78 +1,107 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { Button } from '@/components/ui/Button';
-import { Helmet } from 'react-helmet-async';
-import { useToast } from '@/components/ui/Toast';
+
+type StudioProfile = {
+  id: string
+  full_name: string | null
+  company_name: string | null
+  avatar_url: string | null
+  bio: string | null
+};
 
 type Mission = {
   id: string
   title: string
   description: string | null
-  category: string
-  mission_type: string
-  status: string
+  city: string | null
+  daily_rate: number | null
   budget_min: number | null
   budget_max: number | null
-  location: string | null
+  skills: string[]
   start_date: string | null
-  duration_days: number | null
+  end_date: string | null
+  status: string
+  studio: StudioProfile | null
+};
+
+type MissionPrimaryRow = {
+  id: string
+  title: string
+  description: string | null
+  city: string | null
+  daily_rate: number | null
+  skills: string[] | null
+  start_date: string | null
+  end_date: string | null
+  status: string | null
+  profiles: StudioProfile | StudioProfile[] | null
+};
+
+type MissionFallbackRow = {
+  id: string
+  title: string
+  description: string | null
+  location: string | null
+  budget_min: number | null
+  budget_max: number | null
+  required_skills: string[] | null
+  start_date: string | null
+  deadline: string | null
+  status: string | null
+  profiles: StudioProfile | StudioProfile[] | null
+};
+
+type Application = {
+  id: string
+  status: 'pending' | 'accepted' | 'rejected'
   created_at: string
-  studio_id: string
-  profiles: { company_name: string | null } | null
+};
+
+type ApplicationRow = {
+  id: string
+  status: string | null
+  created_at: string
+};
+
+function normalizeApplicationStatus(status: string | null): Application['status'] {
+  if (status === 'accepted' || status === 'selected') return 'accepted';
+  if (status === 'rejected') return 'rejected';
+  return 'pending';
 }
 
-type ApplicationStatus = 'idle' | 'submitting' | 'submitted' | 'already_applied' | 'error'
-
-function isMissionOpen(status: string): boolean {
-  return status === 'open' || status === 'published' || status === 'selecting';
+function asSingle<T>(value: T | T[] | null): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }
 
-function missionTypeBadgeClass(type: string): string {
-  if (type === 'on_site') return 'bg-orange-100 text-orange-700 border border-orange-200';
-  if (type === 'hybrid') return 'bg-purple-100 text-purple-700 border border-purple-200';
-  return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
-}
-
-function missionTypeLabel(type: string): string {
-  if (type === 'on_site') return 'Sur site';
-  if (type === 'hybrid') return 'Hybride';
-  return 'Remote';
-}
-
-function budgetText(mission: Mission): string {
-  if (mission.budget_min !== null && mission.budget_max !== null) {
-    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
-  }
-  if (mission.budget_min !== null) {
-    return `À partir de ${mission.budget_min}€/j`;
-  }
-  return 'Budget non précisé';
+function formatDate(value: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString('fr-FR');
 }
 
 export default function MissionDetail() {
-  const { missionId, id } = useParams<{ missionId?: string; id?: string }>();
-  const targetMissionId = missionId ?? id ?? '';
+  const { id, missionId } = useParams<{ id?: string; missionId?: string }>();
+  const targetMissionId = id ?? missionId ?? '';
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { showToast } = useToast();
-  const userId = session?.user?.id ?? '';
 
   const [mission, setMission] = useState<Mission | null>(null);
+  const [application, setApplication] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-  const [applicationStatus, setApplicationStatus] = useState<ApplicationStatus>('idle');
-  const [coverLetter, setCoverLetter] = useState('');
-  const [proposedRate, setProposedRate] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    const fetchMission = async () => {
+    const fetchMissionAndApplication = async () => {
       if (!targetMissionId) {
         if (!active) return;
         setNotFound(true);
@@ -82,155 +111,186 @@ export default function MissionDetail() {
 
       setLoading(true);
       setNotFound(false);
-      setFetchError(null);
-      setApplicationStatus('idle');
+      setError(null);
+      setApplyError(null);
 
       try {
-        const { data: missionData, error: missionError } = await supabase
+        let normalizedMission: Mission | null = null;
+
+        const primarySelect = `
+          id, title, description, city, daily_rate, skills, start_date, end_date, status,
+          profiles:studio_id (id, full_name, company_name, avatar_url, bio)
+        `;
+        const primaryResult = await supabase
           .from('missions')
-          .select(`
-            id, title, description, category, mission_type, status,
-            budget_min, budget_max, location, start_date, duration_days,
-            created_at, studio_id,
-            profiles:studio_id (company_name)
-          `)
+          .select(primarySelect)
           .eq('id', targetMissionId)
           .maybeSingle();
 
-        if (missionError) {
-          setFetchError('Erreur backend: impossible de charger la mission.');
-          setLoading(false);
-          return;
+        if (!primaryResult.error && primaryResult.data) {
+          const row = primaryResult.data as unknown as MissionPrimaryRow;
+          normalizedMission = {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            city: row.city,
+            daily_rate: row.daily_rate,
+            budget_min: null,
+            budget_max: null,
+            skills: row.skills ?? [],
+            start_date: row.start_date,
+            end_date: row.end_date,
+            status: row.status ?? 'open',
+            studio: asSingle(row.profiles),
+          };
+        } else {
+          const fallbackSelect = `
+            id, title, description, location, budget_min, budget_max, required_skills, start_date, deadline, status,
+            profiles:studio_id (id, full_name, company_name, avatar_url, bio)
+          `;
+          const fallbackResult = await supabase
+            .from('missions')
+            .select(fallbackSelect)
+            .eq('id', targetMissionId)
+            .maybeSingle();
+
+          if (fallbackResult.error) throw fallbackResult.error;
+          if (fallbackResult.data) {
+            const row = fallbackResult.data as unknown as MissionFallbackRow;
+            normalizedMission = {
+              id: row.id,
+              title: row.title,
+              description: row.description,
+              city: row.location,
+              daily_rate: row.budget_min,
+              budget_min: row.budget_min,
+              budget_max: row.budget_max,
+              skills: row.required_skills ?? [],
+              start_date: row.start_date,
+              end_date: row.deadline,
+              status: row.status ?? 'open',
+              studio: asSingle(row.profiles),
+            };
+          }
         }
 
         if (!active) return;
 
-        if (!missionData) {
+        if (!normalizedMission) {
           setNotFound(true);
           setLoading(false);
           return;
         }
 
-        setMission(missionData as unknown as Mission);
+        setMission(normalizedMission);
 
+        const userId = session?.user?.id;
         if (userId) {
-          const { data: existing, error: existingError } = await supabase
+          const { data: existingApplication, error: applicationError } = await supabase
             .from('applications')
-            .select('id')
+            .select('id, status, created_at')
             .eq('mission_id', targetMissionId)
             .eq('pro_id', userId)
             .maybeSingle();
 
           if (!active) return;
-          if (existingError) {
-            setFetchError('Erreur backend: impossible de vérifier ta candidature.');
-            return;
-          }
+          if (applicationError) throw applicationError;
+
+          const existing = existingApplication as ApplicationRow | null;
           if (existing) {
-            setApplicationStatus('already_applied');
+            setApplication({
+              id: existing.id,
+              status: normalizeApplicationStatus(existing.status),
+              created_at: existing.created_at,
+            });
+          } else {
+            setApplication(null);
           }
+        } else {
+          setApplication(null);
         }
-      } catch (loadError) {
+      } catch (fetchError) {
         if (!active) return;
-        setFetchError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Impossible de charger les détails de la mission.',
-        );
+        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger la mission.');
       } finally {
         if (active) setLoading(false);
       }
     };
 
-    void fetchMission();
+    void fetchMissionAndApplication();
 
     return () => {
       active = false;
     };
-  }, [reloadKey, targetMissionId, userId]);
+  }, [session?.user?.id, targetMissionId]);
 
   const handleApply = async () => {
-    if (!targetMissionId || !userId || applicationStatus === 'submitting') return;
-
-    if (coverLetter.trim().length < 20) {
-      setFormError('Message trop court (minimum 20 caractères)');
-      showToast({
-        title: 'Validation',
-        description: 'Le message doit contenir au moins 20 caractères.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    if (proposedRate && (Number.isNaN(Number(proposedRate)) || Number(proposedRate) <= 0)) {
-      setFormError('Tarif invalide');
-      showToast({
-        title: 'Validation',
-        description: 'Le tarif proposé est invalide.',
-        variant: 'destructive',
-      });
+    if (!targetMissionId) return;
+    if (!session?.user?.id) {
+      navigate('/login');
       return;
     }
 
-    setFormError(null);
-    setApplicationStatus('submitting');
+    setApplying(true);
+    setApplyError(null);
 
-    const { error } = await supabase
+    const { data, error: insertError } = await supabase
       .from('applications')
       .insert({
         mission_id: targetMissionId,
-        pro_id: userId,
-        cover_letter: coverLetter.trim(),
-        proposed_rate: proposedRate ? Number(proposedRate) : null,
+        pro_id: session.user.id,
         status: 'pending',
-      } as never);
+      } as never)
+      .select('id, status, created_at')
+      .single();
 
-  if (error) {
-      setFormError(error.message);
-      setApplicationStatus('error');
-      showToast({
-        title: 'Candidature impossible',
-        description: error.message,
-        variant: 'destructive',
-      });
+    if (insertError) {
+      setApplyError(insertError.message);
     } else {
-      setApplicationStatus('submitted');
-      showToast({
-        title: 'Candidature envoyée',
-        description: 'Le studio a bien reçu ta candidature.',
-        variant: 'default',
+      const inserted = data as unknown as ApplicationRow;
+      setApplication({
+        id: inserted.id,
+        status: normalizeApplicationStatus(inserted.status),
+        created_at: inserted.created_at,
       });
     }
+
+    setApplying(false);
   };
+
+  const missionMeta = useMemo(() => {
+    if (!mission) return null;
+    const tokens: string[] = [];
+    if (mission.city) tokens.push(`📍 ${mission.city}`);
+
+    if (mission.daily_rate !== null) {
+      tokens.push(`💰 ${mission.daily_rate} €/j`);
+    } else if (mission.budget_min !== null && mission.budget_max !== null) {
+      tokens.push(`💰 ${mission.budget_min}€ – ${mission.budget_max}€/j`);
+    } else if (mission.budget_min !== null) {
+      tokens.push(`💰 À partir de ${mission.budget_min} €/j`);
+    }
+
+    const startDate = formatDate(mission.start_date);
+    const endDate = formatDate(mission.end_date);
+    if (startDate) tokens.push(`📅 ${startDate}`);
+    if (endDate) tokens.push(`→ ${endDate}`);
+
+    return tokens;
+  }, [mission]);
 
   if (loading) {
     return (
-      <div className="app-shell flex items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
-      </div>
-    );
-  }
-
-  if (fetchError && !mission) {
-    return (
-      <div className="app-shell flex items-center justify-center px-4">
-        <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-4 text-red-600 text-sm">
-          <p>{fetchError}</p>
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setReloadKey((prev) => prev + 1)}
-              className="rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 transition hover:bg-red-50"
-            >
-              Réessayer
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/pro/feed')}
-              className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-orange-600"
-            >
-              Retour au feed
-            </button>
+      <div className="app-shell min-h-screen pb-28">
+        <div className="animate-pulse space-y-4 pt-6 px-4 max-w-2xl mx-auto">
+          <div className="h-7 bg-gray-200 rounded w-3/4" />
+          <div className="flex items-center gap-3 mt-2">
+            <div className="w-8 h-8 rounded-full bg-gray-200" />
+            <div className="h-4 bg-gray-200 rounded w-32" />
           </div>
+          <div className="h-3 bg-gray-200 rounded w-full mt-6" />
+          <div className="h-3 bg-gray-200 rounded w-5/6" />
+          <div className="h-3 bg-gray-200 rounded w-4/6" />
         </div>
       </div>
     );
@@ -238,23 +298,17 @@ export default function MissionDetail() {
 
   if (notFound || !mission) {
     return (
-      <div className="app-shell flex items-center justify-center px-4">
-        <div className="text-center">
-          <p className="text-black/55">Mission introuvable.</p>
-          <div className="mt-3 flex items-center justify-center gap-2">
+      <div className="app-shell min-h-screen pb-28">
+        <div className="app-container-compact">
+          <div className="text-center py-16">
+            <p className="text-4xl mb-3">📋</p>
+            <p className="text-gray-500 text-sm">Cette mission n&apos;existe pas ou n&apos;est plus disponible.</p>
             <button
               type="button"
-              onClick={() => navigate('/pro/feed')}
-              className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-orange-600"
+              onClick={() => navigate(-1)}
+              className="text-orange-500 text-sm hover:underline mt-2 block mx-auto"
             >
-              Retour au feed
-            </button>
-            <button
-              type="button"
-              onClick={() => setReloadKey((prev) => prev + 1)}
-              className="rounded-lg border border-black/10 bg-white/80 px-3 py-2 text-xs font-medium text-black/70 transition hover:bg-white"
-            >
-              Réessayer
+              Retour
             </button>
           </div>
         </div>
@@ -263,155 +317,140 @@ export default function MissionDetail() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell min-h-screen pb-28">
       <Helmet>
-        <title>{`Mission ${mission.title} — StudioLink`}</title>
+        <title>{`${mission.title} — StudioLink`}</title>
         <meta
           name="description"
-          content={mission.description ? mission.description.slice(0, 160) : 'Détails de mission sur StudioLink.'}
+          content={mission.description ? mission.description.slice(0, 160) : 'Détail mission StudioLink'}
+        />
+        <meta property="og:title" content={`${mission.title} — StudioLink`} />
+        <meta
+          property="og:description"
+          content={mission.description ? mission.description.slice(0, 160) : 'Découvrez cette mission sur StudioLink.'}
         />
       </Helmet>
       <div className="app-container-compact">
         <button
           type="button"
-          onClick={() => navigate('/pro/feed')}
-          className="text-sm app-muted hover:text-black mb-6 flex items-center gap-1"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
         >
-          ← Retour au feed
+          <span>←</span> Retour
         </button>
 
-        {fetchError ? (
-          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {fetchError}
-          </p>
+        {error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 mb-4">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
         ) : null}
 
-        <header>
-          <h1 className="app-title mb-1">{mission.title}</h1>
-          <p className="app-subtitle mt-0">{mission.profiles?.company_name ?? 'Studio inconnu'}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="app-chip">{mission.category}</span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${missionTypeBadgeClass(mission.mission_type)}`}>
-              {missionTypeLabel(mission.mission_type)}
+        <section className="app-card p-5">
+          <h1 className="text-2xl font-bold text-gray-900">{mission.title}</h1>
+
+          <div className="flex items-center gap-2 mt-2">
+            {mission.studio?.avatar_url ? (
+              <img
+                src={mission.studio.avatar_url}
+                alt={mission.studio.full_name ?? mission.studio.company_name ?? 'Studio'}
+                className="h-8 w-8 rounded-full object-cover border border-white/50"
+              />
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                <span className="text-xs font-bold text-orange-600">
+                  {(mission.studio?.company_name ?? mission.studio?.full_name ?? 'S').charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <span className="text-sm text-gray-600 font-medium">
+              {mission.studio?.company_name ?? mission.studio?.full_name ?? 'Studio'}
             </span>
-            {!isMissionOpen(mission.status) ? (
-              <span className="rounded-full bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 text-xs font-medium">
-                Mission fermée
-              </span>
-            ) : null}
           </div>
-        </header>
 
-        <section className="app-card p-5 mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mb-1">Budget</p>
-              <p className="text-black/80">{budgetText(mission)}</p>
+          {missionMeta && missionMeta.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mt-3 text-xs text-gray-500">
+              {missionMeta.map((token) => (
+                <span key={token} className={token.includes('💰') ? 'text-orange-500 font-medium' : ''}>
+                  {token}
+                </span>
+              ))}
             </div>
-            <div>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mb-1">Localisation</p>
-              <p className="text-black/80">{mission.location ?? 'Non précisée'}</p>
-            </div>
-            <div>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mb-1">Date de début</p>
-              <p className="text-black/80">
-                {mission.start_date ? new Date(mission.start_date).toLocaleDateString('fr-FR') : 'À définir'}
-              </p>
-            </div>
-            <div>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mb-1">Durée</p>
-              <p className="text-black/80">
-                {mission.duration_days ? `${mission.duration_days} jour(s)` : 'Non précisée'}
-              </p>
-            </div>
-            <div className="sm:col-span-2">
-              <p className="text-stone-500 text-xs uppercase tracking-wider mb-1">Publiée le</p>
-              <p className="text-black/80">{new Date(mission.created_at).toLocaleDateString('fr-FR')}</p>
-            </div>
-          </div>
-        </section>
+          ) : null}
 
-        {mission.description ? (
-          <section className="app-card p-5 mt-4">
-            <h2 className="text-sm font-semibold text-black mb-2">Description</h2>
-            <p className="text-black/70 text-sm leading-relaxed whitespace-pre-wrap">
-              {mission.description}
+          <section className="mt-6">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description</h2>
+            {mission.description ? (
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                {mission.description}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">Aucune description.</p>
+            )}
+          </section>
+
+          {mission.skills.length > 0 ? (
+            <section className="mt-5">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Compétences recherchées
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {mission.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section className="mt-5">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">À propos du studio</h2>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {mission.studio?.bio ?? '—'}
             </p>
           </section>
-        ) : null}
+        </section>
+      </div>
 
-        <section className="app-card p-5 mt-4">
-          <h2 className="text-sm font-semibold text-black mb-3">Postuler à cette mission</h2>
-
-          {applicationStatus === 'already_applied' ? (
-            <div className="text-center py-4">
-              <p className="text-green-400 font-medium">✓ Tu as déjà postulé à cette mission</p>
-              <p className="text-sm app-muted mt-1">Ta candidature est en cours de traitement.</p>
-            </div>
-          ) : null}
-
-          {applicationStatus === 'submitted' ? (
-            <div className="text-center py-4">
-              <p className="text-green-400 font-medium">✓ Candidature envoyée !</p>
-              <p className="text-sm app-muted mt-1">Le studio a été notifié.</p>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f4ece4] border-t border-black/5">
+        <div className="mx-auto max-w-2xl">
+          {!application ? (
+            <>
               <button
                 type="button"
-                onClick={() => navigate('/pro/dashboard')}
-                className="text-orange-600 underline text-sm mt-3 block mx-auto"
+                onClick={() => void handleApply()}
+                disabled={applying}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-3 rounded-2xl transition-colors"
               >
-                Voir mes candidatures
+                {applying ? 'Envoi en cours…' : 'Postuler à cette mission'}
               </button>
+              {applyError ? (
+                <p className="mt-2 text-xs text-red-500 text-center">{applyError}</p>
+              ) : null}
+            </>
+          ) : null}
+
+          {application?.status === 'pending' ? (
+            <div className="w-full bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-medium py-3 rounded-2xl text-center">
+              ⏳ Candidature envoyée · En attente
             </div>
           ) : null}
 
-          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && !isMissionOpen(mission.status) ? (
-            <p className="text-sm app-muted text-center py-4">
-              Cette mission n&apos;accepte plus de candidatures.
-            </p>
-          ) : null}
-
-          {applicationStatus !== 'already_applied' && applicationStatus !== 'submitted' && isMissionOpen(mission.status) ? (
-            <div>
-              <label className="text-sm text-black/80 block mb-2" htmlFor="cover-letter">
-                Ton message au studio *
-              </label>
-              <textarea
-                id="cover-letter"
-                rows={4}
-                maxLength={500}
-                value={coverLetter}
-                onChange={(event) => setCoverLetter(event.target.value)}
-                placeholder="Présente-toi et explique pourquoi tu es le bon profil..."
-                className="w-full glass-input rounded-xl px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400"
-              />
-              <p className="text-xs app-muted text-right mt-1">{coverLetter.length}/500</p>
-
-              <label className="text-sm text-black/80 block mt-4 mb-2" htmlFor="proposed-rate">
-                Ton tarif journalier (€)
-              </label>
-              <input
-                id="proposed-rate"
-                type="number"
-                value={proposedRate}
-                onChange={(event) => setProposedRate(event.target.value)}
-                placeholder="ex: 300"
-                className="w-full glass-input rounded-xl px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400"
-              />
-
-              {formError ? <p className="text-red-400 text-xs mt-2">{formError}</p> : null}
-
-              <div className="mt-4">
-                <Button
-                  onClick={handleApply}
-                  disabled={applicationStatus === 'submitting'}
-                  className="bg-orange-500 text-white hover:bg-orange-600"
-                >
-                  {applicationStatus === 'submitting' ? 'Envoi...' : 'Envoyer ma candidature'}
-                </Button>
-              </div>
+          {application?.status === 'accepted' ? (
+            <div className="w-full bg-green-50 border border-green-200 text-green-700 text-sm font-medium py-3 rounded-2xl text-center">
+              ✓ Candidature acceptée
             </div>
           ) : null}
-        </section>
+
+          {application?.status === 'rejected' ? (
+            <div className="w-full bg-red-50 border border-red-200 text-red-500 text-sm font-medium py-3 rounded-2xl text-center">
+              ✗ Candidature refusée
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

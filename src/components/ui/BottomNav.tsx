@@ -2,8 +2,8 @@ import { Home, Plus, MessageCircle, User, Zap, List } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth';
-import { useUnreadCount } from '@/hooks/useNotifications';
-import { useUnreadMessages } from '@/hooks/useMessages';
+import { useUnreadCount as useUnreadNotifications } from '@/hooks/useNotifications';
+import { useUnreadCount as useUnreadMessages } from '@/hooks/useUnreadCount';
 
 interface BottomNavProps {
   userType: 'studio' | 'pro';
@@ -13,8 +13,8 @@ export function BottomNav({ userType }: BottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { unreadCount } = useUnreadCount(session?.user?.id);
-  const { data: unreadMessages = 0 } = useUnreadMessages(session?.user?.id);
+  const { unreadCount } = useUnreadNotifications(session?.user?.id);
+  const unreadMessages = useUnreadMessages();
 
   const studioTabs = [
     { icon: Home, label: 'Missions', path: '/studio/dashboard' },

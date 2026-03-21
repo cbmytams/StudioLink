@@ -17,27 +17,54 @@ const HomePage = lazy(() => import('@/pages/HomePage'));
 const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
 const InvitationLandingPage = lazy(() => import('@/pages/InvitationLanding'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallback'));
-const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
+const OnboardingPage = lazy(() => import('@/pages/Onboarding'));
 const StudioDashboardPage = lazy(() => import('@/pages/StudioDashboard'));
-const CreateMissionPage = lazy(() => import('@/pages/CreateMission'));
+const MissionFormPage = lazy(() => import('@/pages/MissionForm'));
+const StudioMissionsPage = lazy(() => import('@/pages/StudioMissions'));
 const MissionDetailPage = lazy(() => import('@/pages/MissionDetail'));
 const ManageApplicationsPage = lazy(() => import('@/pages/ManageApplications'));
 const StudioProfilePage = lazy(() => import('@/pages/StudioProfile'));
-const StudioSearchProsPage = lazy(() => import('@/pages/StudioSearchPros'));
+const SearchProsPage = lazy(() => import('@/pages/SearchPros'));
 const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
 const ProDashboardPage = lazy(() => import('@/pages/ProDashboard'));
 const ProApplicationsPage = lazy(() => import('@/pages/ProApplications'));
 const ProProfilePage = lazy(() => import('@/pages/ProProfile'));
 const ProPublicProfilePage = lazy(() => import('@/pages/ProPublicProfile'));
+const StudioPublicProfilePage = lazy(() => import('@/pages/StudioPublicProfile'));
+const NewConversationPage = lazy(() => import('@/pages/NewConversation'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 const CalendarPage = lazy(() => import('@/pages/CalendarPage'));
-const ChatWrapperPage = lazy(() => import('@/components/ChatWrapper'));
+const ConversationListPage = lazy(() => import('@/pages/ConversationList'));
+const ChatPage = lazy(() => import('@/pages/ChatPage'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+
+type AppProfile = {
+  user_type?: 'studio' | 'pro' | null;
+  type?: 'studio' | 'pro' | null;
+  full_name?: string | null;
+} | null;
+
+function resolveProfileType(profile: AppProfile): 'studio' | 'pro' | null {
+  const value = profile?.user_type ?? profile?.type ?? null;
+  return value === 'studio' || value === 'pro' ? value : null;
+}
+
+function getDashboardPath(type: 'studio' | 'pro' | null): string {
+  return type === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
+}
+
+function hasCompleteProfile(profile: AppProfile): boolean {
+  const profileType = resolveProfileType(profile);
+  const fullName = profile?.full_name?.trim() ?? '';
+  return Boolean(profileType && fullName.length > 0);
+}
 
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
+  const appProfile = profile as AppProfile;
 
   if (loading) {
     return <LoadingScreen />;
@@ -47,21 +74,16 @@ function PublicOnlyRoute({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!profile || !profile.onboarding_complete) {
+  if (!hasCompleteProfile(appProfile)) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard'} replace />;
+  return <Navigate to={getDashboardPath(resolveProfileType(appProfile))} replace />;
 }
 
-function OnboardingRoute({
-  type,
-  children,
-}: {
-  type?: 'studio' | 'pro';
-  children: ReactNode;
-}) {
+function OnboardingRoute({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
+  const appProfile = profile as AppProfile;
 
   if (loading) {
     return <LoadingScreen />;
@@ -71,23 +93,8 @@ function OnboardingRoute({
     return <Navigate to="/login" replace />;
   }
 
-  const effectiveType =
-    profile?.user_type
-    ?? ((sessionStorage.getItem('invitationType') === 'studio' || sessionStorage.getItem('invitationType') === 'pro')
-      ? sessionStorage.getItem('invitationType')
-      : null);
-
-  if (profile?.onboarding_complete) {
-    return <Navigate to={profile.user_type === 'studio' ? '/studio/dashboard' : '/pro/dashboard'} replace />;
-  }
-
-  if (
-    type
-    && effectiveType
-    && effectiveType !== type
-    && (effectiveType === 'studio' || effectiveType === 'pro')
-  ) {
-    return <Navigate to={`/onboarding/${effectiveType}`} replace />;
+  if (hasCompleteProfile(appProfile)) {
+    return <Navigate to={getDashboardPath(resolveProfileType(appProfile))} replace />;
   }
 
   return <>{children}</>;
@@ -149,28 +156,16 @@ export default function App() {
               </OnboardingRoute>
             )}
           />
-          <Route
-            path="/onboarding/studio"
-            element={(
-              <OnboardingRoute type="studio">
-                <OnboardingPage />
-              </OnboardingRoute>
-            )}
-          />
-          <Route
-            path="/onboarding/pro"
-            element={(
-              <OnboardingRoute type="pro">
-                <OnboardingPage />
-              </OnboardingRoute>
-            )}
-          />
+          <Route path="/onboarding/studio" element={<Navigate to="/onboarding" replace />} />
+          <Route path="/onboarding/pro" element={<Navigate to="/onboarding" replace />} />
 
           <Route
             path="/chat"
             element={(
               <ProtectedRoute>
-                <ChatWrapperPage />
+                <RoleLayout>
+                  <ConversationListPage />
+                </RoleLayout>
               </ProtectedRoute>
             )}
           />
@@ -178,7 +173,29 @@ export default function App() {
             path="/chat/:conversationId"
             element={(
               <ProtectedRoute>
-                <ChatWrapperPage />
+                <RoleLayout>
+                  <ChatPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studio/conversations"
+            element={(
+              <ProtectedRoute requiredType="studio">
+                <RoleLayout>
+                  <ConversationListPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studio/chat/:conversationId"
+            element={(
+              <ProtectedRoute requiredType="studio">
+                <RoleLayout>
+                  <ChatPage />
+                </RoleLayout>
               </ProtectedRoute>
             )}
           />
@@ -198,6 +215,42 @@ export default function App() {
               <ProtectedRoute>
                 <RoleLayout>
                   <SavedPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/settings"
+            element={(
+              <ProtectedRoute>
+                <RoleLayout>
+                  <SettingsPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studio/settings"
+            element={(
+              <ProtectedRoute>
+                <Navigate to="/settings" replace />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/pro/settings"
+            element={(
+              <ProtectedRoute>
+                <Navigate to="/settings" replace />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/studio/new-conversation"
+            element={(
+              <ProtectedRoute>
+                <RoleLayout>
+                  <NewConversationPage />
                 </RoleLayout>
               </ProtectedRoute>
             )}
@@ -233,44 +286,50 @@ export default function App() {
             )}
           />
           <Route
-            path="/pro/public/:proId"
+            path="/pro/public/:id"
+            element={<ProPublicProfilePage />}
+          />
+          <Route
+            path="/studio/public/:id"
+            element={<StudioPublicProfilePage />}
+          />
+          <Route
+            path="/admin"
             element={(
-              <ProtectedRoute requiredType="studio">
-                <StudioLayout>
-                  <ProPublicProfilePage />
-                </StudioLayout>
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             )}
           />
-          <Route path="/admin" element={<AdminPage />} />
 
           <Route element={<ProtectedRoute requiredType="studio"><StudioLayout /></ProtectedRoute>}>
             <Route path="/studio/dashboard" element={<StudioDashboardPage />} />
-            <Route path="/studio/missions" element={<StudioDashboardPage />} />
-            <Route path="/studio/create-mission" element={<CreateMissionPage />} />
-            <Route path="/studio/missions/create" element={<CreateMissionPage />} />
+            <Route path="/studio/missions" element={<StudioMissionsPage />} />
+            <Route path="/studio/create-mission" element={<MissionFormPage />} />
+            <Route path="/studio/missions/create" element={<MissionFormPage />} />
+            <Route path="/studio/missions/new" element={<MissionFormPage />} />
             <Route path="/studio/missions/:id" element={<ManageApplicationsPage />} />
-            <Route path="/studio/missions/:id/edit" element={<CreateMissionPage />} />
+            <Route path="/studio/missions/:id/edit" element={<MissionFormPage />} />
             <Route path="/studio/applications/:missionId" element={<ManageApplicationsPage />} />
             <Route path="/studio/missions/:id/applications" element={<ManageApplicationsPage />} />
             <Route path="/studio/profile" element={<StudioProfilePage />} />
-            <Route path="/studio/settings" element={<StudioProfilePage />} />
             <Route path="/studio/calendrier" element={<CalendarPage />} />
-            <Route path="/studio/search-pros" element={<StudioSearchProsPage />} />
+            <Route path="/studio/search-pros" element={<SearchProsPage />} />
           </Route>
 
           <Route element={<ProtectedRoute requiredType="pro"><ProLayout /></ProtectedRoute>}>
             <Route path="/pro/feed" element={<ProFeedPage />} />
             <Route path="/pro/dashboard" element={<ProDashboardPage />} />
             <Route path="/pro/applications" element={<ProApplicationsPage />} />
+            <Route path="/pro/conversations" element={<ConversationListPage />} />
             <Route path="/pro/profile" element={<ProProfilePage />} />
             <Route path="/pro/profile/:id" element={<ProProfilePage />} />
-            <Route path="/pro/settings" element={<ProProfilePage />} />
             <Route path="/pro/missions/:id" element={<MissionDetailPage />} />
+            <Route path="/pro/offer/:id" element={<MissionDetailPage />} />
             <Route path="/pro/calendrier" element={<CalendarPage />} />
           </Route>
 
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <Toaster />

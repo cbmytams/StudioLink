@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import LoadingScreen from '@/components/LoadingScreen';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
@@ -57,11 +58,23 @@ export default function AuthCallback() {
   }, [navigate, searchParams]);
 
   if (!error) {
-    return <LoadingScreen />;
+    return (
+      <>
+        <Helmet>
+          <title>Authentification — StudioLink</title>
+          <meta name="description" content="Finalisation de votre connexion StudioLink." />
+        </Helmet>
+        <LoadingScreen />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+      <Helmet>
+        <title>Erreur de connexion — StudioLink</title>
+        <meta name="description" content="Une erreur est survenue pendant l’authentification StudioLink." />
+      </Helmet>
       <GlassCard className="w-full max-w-md p-6 flex flex-col gap-4">
         <h1 className="text-xl font-semibold">Connexion impossible</h1>
         <p className="text-sm text-stone-600">{error}</p>
