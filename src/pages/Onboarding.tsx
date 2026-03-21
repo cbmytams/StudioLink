@@ -48,7 +48,7 @@ export default function Onboarding() {
       return;
     }
 
-    const currentType = resolveType(profileData?.user_type ?? null, sessionStorage.getItem('invitationType'));
+    const currentType = resolveType(profileData?.user_type ?? profileData?.type ?? null, sessionStorage.getItem('invitationType'));
     const currentFullName = profileData?.full_name?.trim() ?? profileData?.display_name?.trim() ?? '';
     if (currentType && currentFullName.length > 0) {
       navigate(currentType === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
