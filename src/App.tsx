@@ -45,6 +45,7 @@ type AppProfile = {
   user_type?: 'studio' | 'pro' | null;
   type?: 'studio' | 'pro' | null;
   full_name?: string | null;
+  display_name?: string | null;
 } | null;
 
 function resolveProfileType(profile: AppProfile): 'studio' | 'pro' | null {
@@ -58,7 +59,7 @@ function getDashboardPath(type: 'studio' | 'pro' | null): string {
 
 function hasCompleteProfile(profile: AppProfile): boolean {
   const profileType = resolveProfileType(profile);
-  const fullName = profile?.full_name?.trim() ?? '';
+  const fullName = profile?.full_name?.trim() ?? profile?.display_name?.trim() ?? '';
   return Boolean(profileType && fullName.length > 0);
 }
 
