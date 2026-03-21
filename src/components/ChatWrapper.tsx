@@ -5,7 +5,13 @@ import ChatPage from '@/pages/ChatPage';
 
 export default function ChatWrapper() {
   const { profile } = useAuth();
-  const userType = profile?.user_type ?? 'pro';
+  const userType = (
+    profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+  )?.user_type
+    ?? (
+      profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+    )?.type
+    ?? 'pro';
 
   if (userType === 'studio') {
     return (
