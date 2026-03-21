@@ -103,7 +103,8 @@ function OnboardingRoute({ children }: { children: ReactNode }) {
 
 function RoleLayout({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
-  if (profile?.user_type === 'studio') {
+  const profileType = resolveProfileType(profile as AppProfile);
+  if (profileType === 'studio') {
     return <StudioLayout>{children}</StudioLayout>;
   }
   return <ProLayout>{children}</ProLayout>;
@@ -111,7 +112,8 @@ function RoleLayout({ children }: { children: ReactNode }) {
 
 function RoleMissionPage() {
   const { profile } = useAuth();
-  if (profile?.user_type === 'studio') {
+  const profileType = resolveProfileType(profile as AppProfile);
+  if (profileType === 'studio') {
     return <ManageApplicationsPage />;
   }
   return <MissionDetailPage />;
