@@ -348,9 +348,20 @@ export default function LoginPage() {
           </div>
 
           {mode === 'signup' && (
-              placeholder="Confirmer le mot de passe"
-              className=""
-            />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium tracking-wide text-white/60 ml-1">
+                Confirmer le mot de passe
+              </label>
+              <TextInput
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder="Confirmer le mot de passe"
+              />
+            </div>
           )}
 
           {mode === 'signup' && invitationState === 'checking' ? (
