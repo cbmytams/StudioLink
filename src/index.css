@@ -87,7 +87,7 @@
     @apply mb-8 grid grid-cols-2 gap-4 md:grid-cols-4;
   }
   .app-stat-card {
-    @apply glass-card p-5 flex flex-col items-center justify-center text-center;
+    @apply bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.15)] p-5 flex flex-col items-center justify-center text-center;
   }
   .app-list {
     @apply space-y-4;
