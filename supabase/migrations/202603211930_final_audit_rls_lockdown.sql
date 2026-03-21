@@ -39,7 +39,7 @@ begin
       on public.missions
       for select
       using (
-        status in ('open', 'published', 'selecting')
+        status::text in ('open', 'published', 'selecting')
         or studio_id = auth.uid()
       )
     $sql$;
