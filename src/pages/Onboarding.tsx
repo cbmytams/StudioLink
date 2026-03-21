@@ -24,6 +24,20 @@ function resolveType(profileType?: string | null, invitationType?: string | null
   return '';
 }
 
+async function tryProfileUpsert(payload: Record<string, string | number | boolean | null>) {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert(payload as never, { onConflict: 'id' });
+  return error;
+}
+
+async function tryProfileUpdate(userId: string, payload: Record<string, string | number | boolean | null>) {
+  await supabase
+    .from('profiles')
+    .update(payload as never)
+    .eq('id', userId);
+}
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const { session, profile, refreshProfile } = useAuth();
@@ -57,7 +71,7 @@ export default function Onboarding() {
 
     setFullName(profileData?.full_name ?? profileData?.display_name ?? '');
     setUserType(currentType);
-  }, [navigate, profileData?.display_name, profileData?.full_name, profileData?.user_type, user]);
+  }, [navigate, profileData?.display_name, profileData?.full_name, profileData?.type, profileData?.user_type, user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -81,42 +95,57 @@ export default function Onboarding() {
 
     try {
       const now = new Date().toISOString();
-      const modernPayload: Record<string, string | number | boolean | null> = {
-        id: user.id,
-        email: user.email ?? null,
-        full_name: trimmedFullName,
-        display_name: trimmedFullName,
-        user_type: userType,
-        onboarding_complete: true,
-        onboarding_step: 1,
-        updated_at: now,
-      };
-
-      let persistError: Error | null = null;
-      const modernPersist = await supabase
-        .from('profiles')
-        .upsert(modernPayload as never, { onConflict: 'id' });
-
-      if (modernPersist.error) {
-        const legacyPayload: Record<string, string | number | boolean | null> = {
+      const payloadVariants: Array<Record<string, string | number | boolean | null>> = [
+        {
           id: user.id,
           email: user.email ?? null,
           display_name: trimmedFullName,
-          type: userType,
-          onboarding_completed: true,
+          user_type: userType,
+          onboarding_complete: true,
           onboarding_step: 1,
           updated_at: now,
-        };
-        const legacyPersist = await supabase
-          .from('profiles')
-          .upsert(legacyPayload as never, { onConflict: 'id' });
+        },
+        {
+          id: user.id,
+          email: user.email ?? null,
+          display_name: trimmedFullName,
+          user_type: userType,
+          type: userType,
+          onboarding_complete: true,
+          onboarding_step: 1,
+          updated_at: now,
+        },
+        {
+          id: user.id,
+          type: userType,
+          full_name: trimmedFullName,
+        },
+      ];
 
-        if (legacyPersist.error) {
-          persistError = new Error(legacyPersist.error.message || modernPersist.error.message);
+      let persisted = false;
+      let lastPersistError: string | null = null;
+
+      for (const payload of payloadVariants) {
+        const persistError = await tryProfileUpsert(payload);
+        if (!persistError) {
+          persisted = true;
+          break;
         }
+        lastPersistError = persistError.message;
       }
 
-      if (persistError) throw persistError;
+      if (!persisted) {
+        throw new Error(lastPersistError ?? 'Impossible de sauvegarder le profil.');
+      }
+
+      // Best-effort compatibility updates across legacy/current schemas.
+      await Promise.allSettled([
+        tryProfileUpdate(user.id, { display_name: trimmedFullName }),
+        tryProfileUpdate(user.id, { full_name: trimmedFullName }),
+        tryProfileUpdate(user.id, { user_type: userType }),
+        tryProfileUpdate(user.id, { type: userType }),
+        tryProfileUpdate(user.id, { onboarding_complete: true, onboarding_step: 1 }),
+      ]);
 
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
