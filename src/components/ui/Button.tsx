@@ -24,10 +24,10 @@ export function Button({
       className={cn(
         "inline-flex items-center justify-center font-medium transition-all active:scale-95 min-h-[44px]",
         // Variants
-        variant === "primary" && "bg-orange-500 hover:bg-orange-600 text-white shadow-sm",
-        variant === "secondary" && "bg-white/40 hover:bg-white/60 text-black border border-white/40",
-        variant === "ghost" && "hover:text-black/60 text-black",
-        variant === "icon" && "bg-white/70 hover:bg-white text-black border border-white/50 backdrop-blur-md",
+        variant === "primary" && "glass-btn-accent",
+        variant === "secondary" && "glass-btn-primary",
+        variant === "ghost" && "hover:bg-white/10 text-white/80 transition-colors",
+        variant === "icon" && "glass-btn-circle",
         
         // Sizes
         size === "sm" && "text-sm h-11 px-4 rounded-full",
