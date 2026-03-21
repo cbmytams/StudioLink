@@ -23,7 +23,7 @@ export function TextInput({ className, icon, error, action, label, id, ...props 
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={id} className="mb-1 px-1 text-sm font-medium text-stone-700">
+        <label htmlFor={id} className="mb-1 px-1 text-sm font-medium text-white/70">
           {label}
         </label>
       )}
@@ -36,10 +36,10 @@ export function TextInput({ className, icon, error, action, label, id, ...props 
         <input
           id={id}
           className={cn(
-            "w-full glass-input rounded-full py-4 text-sm",
-            icon ? "pl-12" : "pl-6",
-            action ? "pr-24" : "pr-6",
-            error && "border-red-400/50 focus:border-red-500/50 bg-red-50/20",
+            "glass-input",
+            icon ? "pl-12" : "",
+            action ? "pr-24" : "",
+            error && "border-red-400/50 focus:border-red-500/50 bg-red-500/10",
             className
           )}
           {...props}
