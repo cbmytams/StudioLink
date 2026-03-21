@@ -306,15 +306,15 @@ export default function LoginPage() {
           <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
             <span className="text-3xl font-extrabold text-white tracking-tighter">SL</span>
           </div>
-          <h1 className="text-2xl font-semibold text-black">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
-          <p className="text-sm text-stone-500">
+          <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
+          <p className="text-sm text-white/70">
             {isSignIn ? 'Bienvenue de retour' : 'Invitation acceptée · Finalise ton inscription'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="login-email" className="block text-sm font-medium text-black/80">
+            <label htmlFor="login-email" className="block text-sm font-medium text-white/80">
               Adresse email
             </label>
             <TextInput
@@ -326,12 +326,12 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Adresse email"
-              className="text-stone-900 placeholder:text-stone-400"
+              className=""
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="login-password" className="block text-sm font-medium text-black/80">
+            <label htmlFor="login-password" className="block text-sm font-medium text-white/80">
               Mot de passe
             </label>
             <TextInput
@@ -343,7 +343,7 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Mot de passe"
-              className="text-stone-900 placeholder:text-stone-400"
+              className=""
             />
           </div>
 
@@ -356,12 +356,12 @@ export default function LoginPage() {
                 if (error) setError(null);
               }}
               placeholder="Confirmer le mot de passe"
-              className="text-stone-900 placeholder:text-stone-400"
+              className=""
             />
           )}
 
           {mode === 'signup' && invitationState === 'checking' ? (
-            <p className="text-xs text-stone-500 text-center">Validation de l&apos;invitation...</p>
+            <p className="text-xs text-white/50 text-center">Validation de l&apos;invitation...</p>
           ) : null}
           {mode === 'signup' && signupBlocked ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-600">
@@ -402,7 +402,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-4 w-full text-center text-sm text-stone-500 transition-colors hover:text-black"
+          className="mt-4 w-full text-center text-sm text-white/60 underline transition-colors hover:text-white"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
