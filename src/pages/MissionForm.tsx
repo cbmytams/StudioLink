@@ -465,7 +465,7 @@ export default function MissionForm() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#f4ece4] border-t border-black/5">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-[#f4ece4] border-t border-black/5">
         <div className="mx-auto max-w-2xl">
           {error ? (
             <div className="mb-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
