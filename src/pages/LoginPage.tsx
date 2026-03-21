@@ -86,9 +86,10 @@ export default function LoginPage() {
       user_type?: 'studio' | 'pro' | null;
       type?: 'studio' | 'pro' | null;
       full_name?: string | null;
+      display_name?: string | null;
     } | null;
     const profileType = authProfile?.user_type ?? authProfile?.type ?? null;
-    const fullName = authProfile?.full_name?.trim() ?? '';
+    const fullName = authProfile?.full_name?.trim() ?? authProfile?.display_name?.trim() ?? '';
 
     if (!profile) {
       const invitationCode = sessionStorage.getItem('invitationCode');
