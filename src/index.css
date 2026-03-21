@@ -3,111 +3,96 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   
-  /* Design System Tokens */
-  --color-background: #f4ece4;
-  --color-ink: #1a1a1a;
-  --color-ink-muted: rgba(26, 26, 26, 0.6);
-  --color-ink-light: rgba(26, 26, 26, 0.4);
-  
-  --color-accent-start: #fb923c; /* orange-400 */
-  --color-accent-end: #ea580c; /* orange-600 */
+  --color-accent-start: #fb923c;
+  --color-accent-end: #ea580c;
   
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  --shadow-glass-btn: 0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-@layer utilities {
-  /* Glass Cards */
-  .glass-panel {
-    @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+@layer components {
+  .glass-card {
+    @apply bg-white/8 backdrop-blur-xl border border-white/15 rounded-2xl shadow-glass;
   }
-  .glass-dark {
-    @apply bg-white/80 text-[#1a1a1a] backdrop-blur-xl border border-white/60 shadow-[0_8px_24px_rgba(26,26,26,0.06)];
+  .glass-card-hover {
+    @apply glass-card hover:bg-white/12 hover:border-white/25 transition-all duration-200;
   }
-  
-  /* Inputs */
   .glass-input {
-    @apply bg-white/80 border border-stone-200 text-stone-800 placeholder:text-stone-400 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 focus:bg-white/90 transition-colors outline-none;
+    @apply bg-white/7 border border-white/15 rounded-2xl text-white placeholder:text-white/40 backdrop-blur-md focus:border-white/30 focus:bg-white/10 outline-none transition-all px-4 py-3 w-full;
   }
-  
-  /* Text */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-orange-600;
+  .glass-btn-primary {
+    @apply bg-white/15 backdrop-blur-md border border-white/30 text-white font-semibold rounded-full px-6 py-3 shadow-glass-btn active:scale-95 transition-all duration-150;
+  }
+  .glass-btn-accent {
+    @apply bg-gradient-to-r from-orange-500 to-orange-400 text-white font-semibold rounded-full px-6 py-3 shadow-lg active:scale-95 transition-all duration-150;
+  }
+  .glass-btn-circle {
+    @apply bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.25),rgba(255,255,255,0.05))] backdrop-blur-md border border-white/20 rounded-full shadow-glass-btn active:scale-90 transition-all duration-150;
+  }
+  .glass-page {
+    @apply min-h-screen bg-gradient-to-br from-gray-800 via-slate-700 to-gray-600 fixed inset-0;
+  }
+  .glass-page-scroll {
+    @apply relative z-10 h-full overflow-y-auto pb-20;
   }
 
-  /* App Shell Rhythm */
+  /* Legacy aliases map to Glass components to prevent unstyled pages */
   .app-shell {
-    @apply min-h-screen bg-[#f4ece4] text-[#1a1a1a];
+    @apply min-h-screen bg-gradient-to-br from-gray-800 via-slate-700 to-gray-600 text-white;
   }
-
   .app-container {
-    @apply mx-auto w-full max-w-4xl px-4 pt-6 pb-24 md:pt-8;
+    @apply mx-auto w-full max-w-4xl px-4 pt-6 pb-24 md:pt-8 relative z-10;
   }
-
   .app-container-wide {
-    @apply mx-auto w-full max-w-5xl px-4 pt-6 pb-24 md:pt-8;
+    @apply mx-auto w-full max-w-5xl px-4 pt-6 pb-24 md:pt-8 relative z-10;
   }
-
   .app-container-compact {
-    @apply mx-auto w-full max-w-2xl px-4 pt-6 pb-24 md:pt-8;
+    @apply mx-auto w-full max-w-lg px-4 pt-12 pb-24 relative z-10;
   }
-
   .app-card {
-    @apply rounded-2xl border border-white/60 bg-white/70 backdrop-blur-md shadow-[0_8px_24px_rgba(26,26,26,0.06)];
+    @apply glass-card;
   }
-
   .app-card-soft {
-    @apply rounded-xl border border-white/50 bg-white/65 backdrop-blur-sm shadow-[0_4px_16px_rgba(26,26,26,0.05)];
+    @apply glass-card-hover;
   }
-
   .app-muted {
-    @apply text-stone-500;
+    @apply text-white/50;
   }
-
   .app-header {
     @apply mb-6 flex flex-wrap items-end justify-between gap-4;
   }
-
   .app-title {
-    @apply text-3xl font-semibold tracking-tight;
+    @apply text-3xl font-bold text-white;
   }
-
   .app-subtitle {
-    @apply mt-1 text-sm text-stone-500;
+    @apply mt-1 text-sm text-white/70;
   }
-
   .app-stats-grid {
     @apply mb-6 grid grid-cols-2 gap-3 md:grid-cols-4;
   }
-
   .app-stat-card {
-    @apply rounded-xl border border-white/50 bg-white/65 p-4 backdrop-blur-sm shadow-[0_4px_16px_rgba(26,26,26,0.05)];
+    @apply glass-card p-4;
   }
-
   .app-list {
     @apply space-y-3;
   }
-
   .app-empty-state {
-    @apply py-10 text-center text-stone-500;
+    @apply py-10 text-center text-white/50;
   }
-
   .app-chip {
-    @apply rounded-full border border-white/50 bg-white/80 px-2.5 py-1 text-xs text-black/75;
+    @apply rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-white/50;
   }
+  .glass-panel { @apply glass-card; }
+  .glass-dark { @apply glass-card; }
 }
 
 body {
-  background-color: var(--color-background);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(255, 230, 200, 1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(200, 230, 255, 0.4) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(255, 200, 200, 0.5) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(255, 180, 150, 0.6) 0px, transparent 50%);
-  background-attachment: fixed;
-  color: var(--color-ink);
-  min-height: 100vh;
   margin: 0;
   font-family: var(--font-sans);
+  background: #1f2937; /* fallback tailwind gray-800 */
+  color: white;
 }
