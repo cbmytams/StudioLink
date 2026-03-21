@@ -15,11 +15,11 @@
 }
 
 @layer components {
-  .glass-card {
+  .glass-card, .app-card, .glass-panel, .glass-dark {
     @apply bg-white/8 backdrop-blur-xl border border-white/15 rounded-2xl shadow-glass;
   }
-  .glass-card-hover {
-    @apply glass-card hover:bg-white/12 hover:border-white/25 transition-all duration-200;
+  .glass-card-hover, .app-card-soft {
+    @apply bg-white/8 backdrop-blur-xl border border-white/15 rounded-2xl shadow-glass hover:bg-white/12 hover:border-white/25 transition-all duration-200;
   }
   .glass-input {
     @apply bg-white/7 border border-white/15 rounded-2xl text-white placeholder:text-white/40 backdrop-blur-md focus:border-white/30 focus:bg-white/10 outline-none transition-all px-4 py-3 w-full;
@@ -53,12 +53,6 @@
   .app-container-compact {
     @apply mx-auto w-full max-w-lg px-4 pt-12 pb-24 relative z-10;
   }
-  .app-card {
-    @apply glass-card;
-  }
-  .app-card-soft {
-    @apply glass-card-hover;
-  }
   .app-muted {
     @apply text-white/50;
   }
@@ -75,7 +69,7 @@
     @apply mb-6 grid grid-cols-2 gap-3 md:grid-cols-4;
   }
   .app-stat-card {
-    @apply glass-card p-4;
+    @apply bg-white/8 backdrop-blur-xl border border-white/15 rounded-2xl shadow-glass p-4;
   }
   .app-list {
     @apply space-y-3;
@@ -86,8 +80,6 @@
   .app-chip {
     @apply rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-white/50;
   }
-  .glass-panel { @apply glass-card; }
-  .glass-dark { @apply glass-card; }
 }
 
 body {
