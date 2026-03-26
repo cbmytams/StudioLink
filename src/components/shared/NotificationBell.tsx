@@ -146,8 +146,9 @@ export function NotificationBell(_props: NotificationBellProps) {
       <button
         id="btn-notification-bell"
         type="button"
+        aria-label={open ? 'Fermer les notifications' : 'Ouvrir les notifications'}
         onClick={() => setOpen((previous) => !previous)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/50 bg-white/60 shadow-sm transition-colors hover:bg-white"
+        className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/50 bg-white/60 shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
       >
         <Bell size={20} className="text-black/70" />
         {unreadCount > 0 ? (
@@ -235,6 +236,7 @@ export function NotificationBell(_props: NotificationBellProps) {
           <div className="mt-3 border-t border-white/60 px-2 pt-3">
             <button
               type="button"
+              aria-label="Voir toutes les notifications"
               onClick={() => {
                 setOpen(false);
                 navigate('/notifications');

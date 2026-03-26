@@ -17,18 +17,18 @@ type MissionCard = {
   id: string;
   title: string | null;
   category: string | null;
-  mission_type: string | null;
-  budget_min: number | null;
-  budget_max: number | null;
+  service_type: string | null;
+  daily_rate: number | null;
+  price: string | null;
   status: string | null;
 };
 
 function budgetText(mission: MissionCard): string {
-  if (mission.budget_min !== null && mission.budget_max !== null) {
-    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
+  if (mission.daily_rate !== null) {
+    return `${mission.daily_rate}€/j`;
   }
-  if (mission.budget_min !== null) {
-    return `À partir de ${mission.budget_min}€/j`;
+  if (mission.price) {
+    return mission.price;
   }
   return 'Budget non renseigné';
 }
@@ -107,7 +107,7 @@ export default function SavedPage() {
         const missionIds = savedMissionRows.map((row) => row.item_id);
         const { data: missionRows, error: missionError } = await supabase
           .from('missions')
-          .select('id, title, category, mission_type, budget_min, budget_max, status')
+          .select('id, title, category, service_type, daily_rate, price, status')
           .in('id', missionIds);
 
         if (missionError) throw missionError;
@@ -211,7 +211,7 @@ export default function SavedPage() {
                     </span>
                   </div>
                   <p className="text-xs text-stone-500">
-                    {mission.category ?? 'Catégorie non renseignée'} · {mission.mission_type ?? 'Type non renseigné'}
+                    {mission.category ?? 'Catégorie non renseignée'} · {mission.service_type ?? 'Type non renseigné'}
                   </p>
                   <p className="mt-2 text-sm text-orange-700">{budgetText(mission)}</p>
                   <div className="mt-4 flex items-center gap-2">

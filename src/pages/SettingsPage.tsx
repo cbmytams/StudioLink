@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
 import { resolveProfileType } from '@/lib/auth/profileCompleteness';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function SettingsPage() {
         variant: 'default',
       });
     } catch (resetError) {
-      const message = resetError instanceof Error ? resetError.message : 'Impossible d’envoyer l’email.';
+      const message = toUserFacingErrorMessage(resetError, 'Impossible d’envoyer l’email.');
       setError(message);
       showToast({
         title: 'Action impossible',
@@ -49,8 +50,7 @@ export default function SettingsPage() {
     try {
       await signOut();
     } catch (logoutError) {
-      message = logoutError instanceof Error ? logoutError.message : 'Impossible de se déconnecter.';
-      console.error('Logout error:', logoutError);
+      message = toUserFacingErrorMessage(logoutError, 'Impossible de se déconnecter.');
       setError(message);
     } finally {
       setLoadingAction(null);
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       showToast({ title: 'Compte supprimé', variant: 'default' });
       navigate('/login', { replace: true });
     } catch (deleteError) {
-      const message = deleteError instanceof Error ? deleteError.message : 'Suppression impossible.';
+      const message = toUserFacingErrorMessage(deleteError, 'Suppression impossible.');
       setError(message);
       showToast({
         title: 'Suppression impossible',

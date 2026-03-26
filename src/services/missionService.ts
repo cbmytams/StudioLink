@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import type { Database } from '@/types/supabase';
 import type { CreateMissionInput, MissionRecord, MissionStatus } from '@/types/backend';
 import type { Mission as LegacyMission } from '@/types/mission';
 
@@ -7,6 +8,24 @@ function ensureClient() {
     throw new Error('Supabase non configuré.');
   }
   return supabase;
+}
+
+type DbMissionStatus = Database['public']['Enums']['mission_status'];
+
+function toDbMissionStatus(status: MissionStatus | undefined, fallback: DbMissionStatus): DbMissionStatus {
+  switch (status) {
+    case 'draft':
+    case 'published':
+    case 'in_progress':
+    case 'completed':
+    case 'cancelled':
+    case 'open':
+      return status;
+    case 'closed':
+      return 'completed';
+    default:
+      return fallback;
+  }
 }
 
 function mapLegacyMission(row: MissionRecord): LegacyMission {
@@ -37,7 +56,7 @@ export const missionService = {
       .eq('studio_id', studioId)
       .order('created_at', { ascending: false });
 
-    if (status) query = query.eq('status', status);
+    if (status) query = query.eq('status', toDbMissionStatus(status, 'draft'));
 
     const { data, error } = await query;
     if (error) throw error;
@@ -81,7 +100,7 @@ export const missionService = {
       price: input.price ?? null,
       location: input.location ?? null,
       expires_at: input.expires_at ?? null,
-      status: input.status ?? 'draft',
+      status: toDbMissionStatus(input.status, 'draft'),
     };
 
     const { data, error } = await client.from('missions').insert(payload).select('*').single();
@@ -91,7 +110,10 @@ export const missionService = {
 
   async updateMissionStatus(id: string, status: MissionStatus): Promise<void> {
     const client = ensureClient();
-    const { error } = await client.from('missions').update({ status }).eq('id', id);
+    const { error } = await client
+      .from('missions')
+      .update({ status: toDbMissionStatus(status, 'draft') })
+      .eq('id', id);
     if (error) throw error;
   },
 

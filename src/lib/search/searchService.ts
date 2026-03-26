@@ -222,11 +222,11 @@ export async function searchMissions(filters: MissionFilters): Promise<SearchMis
   const offset = cleanNumber(filters.offset) ?? Math.max(0, (page - 1) * limit);
 
   const { data, error } = await client.rpc('search_missions', {
-    p_query: cleanString(filters.query) ?? null,
-    p_genre: cleanString(filters.genre) ?? null,
-    p_location: cleanString(filters.location) ?? null,
-    p_budget_min: cleanNumber(filters.budgetMin) ?? null,
-    p_budget_max: cleanNumber(filters.budgetMax) ?? null,
+    p_query: cleanString(filters.query),
+    p_genre: cleanString(filters.genre),
+    p_location: cleanString(filters.location),
+    p_budget_min: cleanNumber(filters.budgetMin),
+    p_budget_max: cleanNumber(filters.budgetMax),
     p_status: cleanString(filters.status) ?? 'published',
     p_limit: limit,
     p_offset: offset,
@@ -260,9 +260,9 @@ export async function searchPros(filters: ProFilters): Promise<SearchProResult[]
   const offset = cleanNumber(filters.offset) ?? Math.max(0, (page - 1) * limit);
 
   const { data, error } = await client.rpc('search_pros', {
-    p_query: cleanString(filters.query) ?? null,
-    p_location: cleanString(filters.location) ?? null,
-    p_skill: cleanString(filters.skill) ?? null,
+    p_query: cleanString(filters.query),
+    p_location: cleanString(filters.location),
+    p_skill: cleanString(filters.skill),
     p_limit: limit,
     p_offset: offset,
   });

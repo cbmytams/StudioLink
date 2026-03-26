@@ -30,8 +30,6 @@ const StudioMissionsPage = lazy(() => import('@/pages/StudioMissions'));
 const MissionDetailPage = lazy(() => import('@/pages/MissionDetail'));
 const ManageApplicationsPage = lazy(() => import('@/pages/ManageApplications'));
 const StudioProfilePage = lazy(() => import('@/pages/StudioProfile'));
-const SearchProsPage = lazy(() => import('@/pages/SearchPros'));
-const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
 const MissionsPage = lazy(() => import('@/pages/MissionsPage'));
 const ProsPage = lazy(() => import('@/pages/ProsPage'));
 const ProMissionsPage = lazy(() => import('@/pages/ProMissionsPage'));

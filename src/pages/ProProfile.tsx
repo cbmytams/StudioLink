@@ -8,6 +8,7 @@ import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { portfolioService } from '@/services/portfolioService';
 import { useToast } from '@/components/ui/Toast';
 import type { PortfolioItem } from '@/types/backend';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type EditableProfile = {
   full_name?: string | null
@@ -54,6 +55,7 @@ export default function ProProfile() {
   const [portfolioDescription, setPortfolioDescription] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [portfolioLoading, setPortfolioLoading] = useState(false);
+  const [deletingPortfolioId, setDeletingPortfolioId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profileData) return;
@@ -154,10 +156,11 @@ export default function ProProfile() {
         .eq('id', user.id);
 
       if (updateError) {
-        setError(updateError.message);
+        const message = toUserFacingErrorMessage(updateError, 'Impossible de sauvegarder le profil');
+        setError(message);
         showToast({
           title: 'Sauvegarde impossible',
-          description: updateError.message,
+          description: message,
           variant: 'destructive',
         });
         return;
@@ -168,10 +171,11 @@ export default function ProProfile() {
       setIsEditing(false);
       await refreshProfile();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Impossible de sauvegarder le profil');
+      const message = toUserFacingErrorMessage(saveError, 'Impossible de sauvegarder le profil');
+      setError(message);
       showToast({
         title: 'Sauvegarde impossible',
-        description: saveError instanceof Error ? saveError.message : undefined,
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -234,14 +238,11 @@ export default function ProProfile() {
       setPortfolioUrl('');
       showToast({ title: 'Projet ajouté au portfolio', variant: 'default' });
     } catch (portfolioError) {
-      setError(
-        portfolioError instanceof Error
-          ? portfolioError.message
-          : "Impossible d'ajouter cet élément portfolio",
-      );
+      const message = toUserFacingErrorMessage(portfolioError, "Impossible d'ajouter cet élément portfolio");
+      setError(message);
       showToast({
         title: 'Ajout impossible',
-        description: portfolioError instanceof Error ? portfolioError.message : undefined,
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -250,21 +251,26 @@ export default function ProProfile() {
   };
 
   const handleDeletePortfolioItem = async (itemId: string) => {
+    const item = portfolioItems.find((portfolioItem) => portfolioItem.id === itemId);
+    if (!window.confirm(`Retirer "${item?.title ?? 'ce projet'}" du portfolio ?`)) {
+      return;
+    }
+
+    setDeletingPortfolioId(itemId);
     try {
       await portfolioService.deletePortfolioItem(itemId);
       setPortfolioItems((prev) => prev.filter((item) => item.id !== itemId));
       showToast({ title: 'Projet retiré du portfolio', variant: 'default' });
     } catch (portfolioError) {
-      setError(
-        portfolioError instanceof Error
-          ? portfolioError.message
-          : "Impossible de supprimer cet élément portfolio",
-      );
+      const message = toUserFacingErrorMessage(portfolioError, "Impossible de supprimer cet élément portfolio");
+      setError(message);
       showToast({
         title: 'Suppression impossible',
-        description: portfolioError instanceof Error ? portfolioError.message : undefined,
+        description: message,
         variant: 'destructive',
       });
+    } finally {
+      setDeletingPortfolioId(null);
     }
   };
 
@@ -613,11 +619,12 @@ export default function ProProfile() {
                     </div>
                     <button
                       type="button"
+                      disabled={deletingPortfolioId === item.id}
                       onClick={() => void handleDeletePortfolioItem(item.id)}
-                      className="text-gray-400 hover:text-red-500"
+                      className="text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label="Retirer du portfolio"
                     >
-                      ×
+                      {deletingPortfolioId === item.id ? '…' : '×'}
                     </button>
                   </div>
                 ))

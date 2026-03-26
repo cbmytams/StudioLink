@@ -8,6 +8,7 @@ import { applicationService } from '@/services/applicationService';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type FilterValue = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -188,7 +189,7 @@ export default function ProApplications() {
         if (!active) return;
         setApplications([]);
         setSessionIdsByMission({});
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger les candidatures.');
+        setError(toUserFacingErrorMessage(fetchError, 'Impossible de charger les candidatures.'));
       } finally {
         if (active) setLoading(false);
       }
@@ -230,6 +231,10 @@ export default function ProApplications() {
   }, [session?.user?.id]);
 
   const handleWithdraw = async (applicationId: string) => {
+    if (!window.confirm('Retirer cette candidature ?')) {
+      return;
+    }
+
     setWithdrawingId(applicationId);
     setError(null);
     try {
@@ -237,7 +242,7 @@ export default function ProApplications() {
       setApplications((previous) => previous.filter((application) => application.id !== applicationId));
       showToast({ title: 'Candidature retirée', variant: 'default' });
     } catch (withdrawError) {
-      const message = withdrawError instanceof Error ? withdrawError.message : 'Impossible de retirer la candidature.';
+      const message = toUserFacingErrorMessage(withdrawError, 'Impossible de retirer la candidature.');
       setError(message);
       showToast({ title: 'Retrait impossible', description: message, variant: 'destructive' });
     } finally {
@@ -250,7 +255,7 @@ export default function ProApplications() {
       const sessionId = existingSessionId ?? (await chatService.getOrCreateSession(missionId)).id;
       navigate(`/chat/${sessionId}`);
     } catch (chatError) {
-      const message = chatError instanceof Error ? chatError.message : "Impossible d'ouvrir le chat.";
+      const message = toUserFacingErrorMessage(chatError, "Impossible d'ouvrir le chat.");
       setError(message);
       showToast({ title: 'Chat indisponible', description: message, variant: 'destructive' });
     }
@@ -357,68 +362,65 @@ export default function ProApplications() {
               const status = STATUS_CONFIG[application.status];
                   const studioName = getPublicProfileDisplayName(application.offer?.studio);
               const offerTitle = application.offer?.title ?? 'Offre supprimée';
-              const studioAvatar = application.offer?.profiles?.avatar_url ?? null;
+              const studioAvatar = application.offer?.studio?.avatar_url ?? null;
               const offerLocation = application.offer?.city ?? application.offer?.location;
               const applicationDate = new Date(application.created_at).toLocaleDateString('fr-FR');
               const sessionId = sessionIdsByMission[application.mission_id];
 
               return (
-                <button
+                <div
                   key={application.id}
-                  type="button"
-                  onClick={() => {
-                    if (application.offer?.id) {
-                      navigate(`/pro/offer/${application.offer.id}`);
-                      return;
-                    }
-                    navigate(`/mission/${application.mission_id}`);
-                  }}
                   className="application-card w-full rounded-2xl border border-white/50 bg-white p-4 text-left transition-colors hover:bg-orange-50"
                 >
-                  <div className="mb-2 flex items-center gap-2">
-                    {studioAvatar ? (
-                      <img
-                        src={studioAvatar}
-                        alt={studioName}
-                        className="h-8 w-8 rounded-full object-cover border border-white/50"
-                      />
-                    ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
-                        <span className="text-xs font-bold text-orange-600">
-                          {studioName.charAt(0).toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
-                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{studioName}</p>
-                    <span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
-                      {status.label}
-                    </span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (application.offer?.id) {
+                        navigate(`/pro/offer/${application.offer.id}`);
+                        return;
+                      }
+                      navigate(`/mission/${application.mission_id}`);
+                    }}
+                    className="w-full text-left"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      {studioAvatar ? (
+                        <img
+                          src={studioAvatar}
+                          alt={studioName}
+                          className="h-8 w-8 rounded-full object-cover border border-white/50"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                          <span className="text-xs font-bold text-orange-600">
+                            {studioName.charAt(0).toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      )}
+                      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{studioName}</p>
+                      <span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
+                        {status.label}
+                      </span>
+                    </div>
 
-                  <p className="text-sm text-gray-700 truncate">{offerTitle}</p>
+                    <p className="text-sm text-gray-700 truncate">{offerTitle}</p>
 
-                  <p className="mt-2 text-xs text-gray-400">
-                    {offerLocation ? `${offerLocation} · ` : ''}
-                    {budgetLabel(application.offer)}
-                    {' · '}
-                    {applicationDate}
-                  </p>
+                    <p className="mt-2 text-xs text-gray-400">
+                      {offerLocation ? `${offerLocation} · ` : ''}
+                      {budgetLabel(application.offer)}
+                      {' · '}
+                      {applicationDate}
+                    </p>
+                  </button>
                   {application.status === 'pending' ? (
-                    <span
+                    <button
                       id={`btn-withdraw-${application.id}`}
-                      role="button"
-                      tabIndex={0}
+                      type="button"
                       onClick={(event) => {
                         event.stopPropagation();
                         void handleWithdraw(application.id);
                       }}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          void handleWithdraw(application.id);
-                        }
-                      }}
+                      disabled={withdrawingId === application.id}
                       className={`mt-3 inline-flex text-xs font-medium ${
                         withdrawingId === application.id
                           ? 'text-stone-400'
@@ -426,30 +428,22 @@ export default function ProApplications() {
                       }`}
                     >
                       {withdrawingId === application.id ? 'Retrait...' : 'Retirer'}
-                    </span>
+                    </button>
                   ) : null}
                   {application.status === 'accepted' ? (
-                    <span
+                    <button
                       id={sessionId ? `btn-open-chat-${sessionId}` : undefined}
-                      role="button"
-                      tabIndex={0}
+                      type="button"
                       onClick={(event) => {
                         event.stopPropagation();
                         void handleOpenChat(application.mission_id, sessionId);
                       }}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          void handleOpenChat(application.mission_id, sessionId);
-                        }
-                      }}
                       className="mt-3 inline-flex text-xs font-medium text-orange-500 hover:underline"
                     >
                       Ouvrir le chat
-                    </span>
+                    </button>
                   ) : null}
-                </button>
+                </div>
               );
             })}
           </div>

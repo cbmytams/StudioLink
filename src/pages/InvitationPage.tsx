@@ -11,6 +11,7 @@ import {
   isProfileIncomplete,
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type InvitationLookup = {
   code: string;
@@ -26,6 +27,11 @@ export default function InvitationPage() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const codeError = !code.trim()
+    ? "Entre un code d'invitation"
+    : code.trim().length < 6
+      ? 'Code trop court'
+      : undefined;
 
   useEffect(() => {
     if (authLoading || !session) return;
@@ -56,12 +62,8 @@ export default function InvitationPage() {
     setError(null);
 
     const normalizedCode = code.trim().toUpperCase();
-    if (!normalizedCode) {
-      setError("Entre un code d'invitation");
-      return;
-    }
-    if (normalizedCode.length < 6) {
-      setError('Code trop court');
+    if (codeError) {
+      setError(codeError);
       return;
     }
 
@@ -107,8 +109,8 @@ export default function InvitationPage() {
           email: invitation.email,
         },
       });
-    } catch {
-      setError('Code invalide ou introuvable');
+    } catch (submitError) {
+      setError(toUserFacingErrorMessage(submitError, 'Code invalide ou introuvable'));
     } finally {
       setLoading(false);
     }
@@ -130,6 +132,10 @@ export default function InvitationPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <TextInput
+            id="invitation-code"
+            label="Code d’invitation"
+            required
+            error={error ?? codeError}
             autoCapitalize="characters"
             maxLength={16}
             value={code}
@@ -141,11 +147,9 @@ export default function InvitationPage() {
             className="text-stone-900 placeholder:text-stone-400"
           />
 
-          {error ? <p className="text-red-400 text-sm text-center">{error}</p> : null}
-
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || Boolean(codeError)}
             className="w-full bg-orange-500 text-white hover:bg-orange-600"
           >
             {loading ? (

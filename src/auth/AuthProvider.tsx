@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { AuthTokenResponsePassword, Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import type { Profile } from '@/types/backend';
 import {
   getCurrentProfile,
@@ -24,7 +24,7 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signInPassword: (email: string, password: string) => Promise<AuthTokenResponsePassword>;
+  signInPassword: (email: string, password: string) => ReturnType<typeof signInPasswordService>;
   sendMagicLink: (email: string, redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -163,7 +163,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         type?: 'studio' | 'pro' | null
       }
     ).type ?? null;
-    setUserType(profileType);
+    if (profileType) {
+      setUserType(profileType);
+    }
     setOnboardingComplete(profile.onboarding_complete);
     setCurrentStep(profile.onboarding_step || 1);
   }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);

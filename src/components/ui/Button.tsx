@@ -17,10 +17,12 @@ export function Button({
   className, 
   variant = "primary", 
   size = "md",
+  type = 'button',
   ...props 
 }: ButtonProps) {
   return (
     <button
+      type={type}
       className={cn(
         "inline-flex items-center justify-center font-medium transition-all active:scale-95 min-h-[44px]",
         // Variants

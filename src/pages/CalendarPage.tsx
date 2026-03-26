@@ -383,13 +383,14 @@ export default function CalendarPage() {
           </div>
           <div>
             <span className="font-medium">{session.location}</span>
-            <button
-              type="button"
-              onClick={() => window.location.assign(`https://maps.google.com/?q=${encodeURIComponent(session.location)}`)}
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(session.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-1 block text-left text-xs font-medium text-orange-600 hover:underline"
             >
               Ouvrir dans Maps
-            </button>
+            </a>
           </div>
         </div>
       </div>
@@ -543,18 +544,20 @@ export default function CalendarPage() {
                             const topOffset = ((hourPart - 8) * 64) + ((minutePart / 60) * 64);
                             const height = Math.max(48, session.durationHours * 64);
                             return (
-                              <div
+                              <button
                                 key={session.id}
+                                type="button"
+                                aria-label={`Ouvrir la session de ${session.artistName}`}
                                 onClick={() => setSelectedSession(session)}
                                 className={cn(
-                                  'absolute left-1 right-1 cursor-pointer overflow-hidden rounded-lg p-2 shadow-sm transition-transform hover:scale-[1.02]',
+                                  'absolute left-1 right-1 overflow-hidden rounded-lg p-2 text-left shadow-sm transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300',
                                   getServiceColor(session.serviceType),
                                 )}
                                 style={{ top: `${topOffset}px`, height: `${height}px` }}
                               >
                                 <div className="truncate text-xs font-bold">{session.artistName}</div>
                                 <div className="truncate text-[10px] opacity-90 capitalize">{session.serviceType}</div>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>
@@ -586,7 +589,13 @@ export default function CalendarPage() {
                       const isToday = date.toDateString() === new Date().toDateString();
                       const daySessions = getSessionsForDate(date);
                       return (
-                        <div key={index} onClick={() => handleDayClick(date)} className="flex h-12 cursor-pointer flex-col items-center gap-1">
+                        <button
+                          key={index}
+                          type="button"
+                          aria-label={`Ouvrir les sessions du ${date.toLocaleDateString('fr-FR')}`}
+                          onClick={() => handleDayClick(date)}
+                          className="flex h-12 flex-col items-center gap-1"
+                        >
                           <span
                             className={cn(
                               'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
@@ -602,7 +611,7 @@ export default function CalendarPage() {
                             ))}
                             {daySessions.length > 3 ? <div className="h-1.5 w-1.5 rounded-full bg-black/30" /> : null}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

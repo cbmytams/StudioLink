@@ -249,6 +249,15 @@ export default function MissionForm() {
     if (saving) return isEdit ? 'Enregistrement en cours…' : 'Création en cours…';
     return isEdit ? 'Enregistrer les modifications' : 'Créer la mission';
   }, [isEdit, saving]);
+  const isFormReady = Boolean(
+    title.trim()
+    && description.trim()
+    && category.trim()
+    && location.trim()
+    && missionDate
+    && dailyRate.trim()
+    && !fieldErrors.end_date,
+  );
 
   const handleReferenceUpload = async (file: File) => {
     if (!activeMissionId) {
@@ -364,7 +373,7 @@ export default function MissionForm() {
           <form id="mission-form" onSubmit={handleSubmit} className="app-card p-5 space-y-4">
             <div>
               <label htmlFor="mission-title" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Titre
+                Titre *
               </label>
               <input
                 id="mission-title"
@@ -379,7 +388,7 @@ export default function MissionForm() {
 
             <div>
               <label htmlFor="mission-description" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Description
+                Description *
               </label>
               <textarea
                 id="mission-description"
@@ -408,7 +417,7 @@ export default function MissionForm() {
 
             <div>
               <label htmlFor="mission-category" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Catégorie
+                Catégorie *
               </label>
               <select
                 id="mission-category"
@@ -426,7 +435,7 @@ export default function MissionForm() {
 
             <div>
               <label htmlFor="mission-location" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Lieu
+                Lieu *
               </label>
               <input
                 id="mission-location"
@@ -455,7 +464,7 @@ export default function MissionForm() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="mission-date" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Date
+                  Date *
                 </label>
                 <input
                   id="mission-date"
@@ -483,7 +492,7 @@ export default function MissionForm() {
 
             <div>
               <label htmlFor="mission-rate" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Tarif journalier (€)
+                Tarif journalier (€) *
               </label>
               <input
                 id="mission-rate"
@@ -562,7 +571,7 @@ export default function MissionForm() {
           <button
             type="submit"
             form="mission-form"
-            disabled={saving || title.trim().length === 0 || loadingMission}
+            disabled={saving || loadingMission || !isFormReady}
             className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-3 rounded-2xl transition-colors"
           >
             {submitLabel}

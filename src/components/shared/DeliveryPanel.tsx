@@ -7,6 +7,7 @@ import { deleteFile, getDeliveryFiles, getSignedUrl, uploadDeliveryFile } from '
 import { formatFileSize } from '@/lib/files/fileUtils';
 import { FileUpload } from './FileUpload';
 import { useToast } from '@/components/ui/Toast';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type DeliveryPanelProps = {
   sessionId: string;
@@ -34,6 +35,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
   const [error, setError] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
 
   const currentUserId = session?.user?.id ?? null;
 
@@ -62,7 +64,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
         setAudioUrls(nextAudioUrls);
       } catch (loadError) {
         if (!active) return;
-        setError(loadError instanceof Error ? loadError.message : 'Impossible de charger les livraisons.');
+        setError(toUserFacingErrorMessage(loadError, 'Impossible de charger les livraisons.'));
       } finally {
         if (active) setLoading(false);
       }
@@ -121,13 +123,35 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
   };
 
   const handleDelete = async (file: MissionFileRecord) => {
-    await deleteFile(file.id, 'delivery-files', file.file_url);
-    setFiles((previous) => previous.filter((entry) => entry.id !== file.id));
-    setAudioUrls((previous) => {
-      const next = { ...previous };
-      delete next[file.id];
-      return next;
-    });
+    if (!window.confirm(`Supprimer définitivement "${file.file_name}" ?`)) {
+      return;
+    }
+
+    setDeletingFileId(file.id);
+    try {
+      await deleteFile(file.id, 'delivery-files', file.file_url);
+      setFiles((previous) => previous.filter((entry) => entry.id !== file.id));
+      setAudioUrls((previous) => {
+        const next = { ...previous };
+        delete next[file.id];
+        return next;
+      });
+      showToast({
+        title: 'Fichier supprimé',
+        description: `${file.file_name} a été retiré des livraisons.`,
+        variant: 'default',
+      });
+    } catch (deleteError) {
+      const message = toUserFacingErrorMessage(deleteError, 'Impossible de supprimer ce fichier.');
+      setError(message);
+      showToast({
+        title: 'Suppression impossible',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingFileId(null);
+    }
   };
 
   const handleDownload = async (file: MissionFileRecord) => {
@@ -137,7 +161,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
     } catch (downloadError) {
       showToast({
         title: 'Téléchargement impossible',
-        description: downloadError instanceof Error ? downloadError.message : 'Impossible de générer le lien.',
+        description: toUserFacingErrorMessage(downloadError, 'Impossible de générer le lien.'),
         variant: 'destructive',
       });
     }
@@ -230,12 +254,13 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
                     <button
                       id={`btn-delete-file-${file.id}`}
                       type="button"
+                      disabled={deletingFileId === file.id}
                       onClick={() => {
                         void handleDelete(file);
                       }}
-                      className="text-xs font-medium text-red-500 hover:underline"
+                      className="text-xs font-medium text-red-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Supprimer
+                      {deletingFileId === file.id ? 'Suppression…' : 'Supprimer'}
                     </button>
                   </div>
                 ) : null}

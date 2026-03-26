@@ -2,7 +2,7 @@ import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useSt
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
-import { chatService, type ChatMessage, type ChatSession, type ChatUpload } from '@/lib/chat/chatService';
+import { chatService, type ChatSession, type ChatUpload } from '@/lib/chat/chatService';
 import type { ChatFileType } from '@/types/backend';
 import { markConversationAsRead } from '@/services/notificationService';
 import { useToast } from '@/components/ui/Toast';
@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { RatingModal } from '@/components/shared/RatingModal';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type CounterpartyProfile = PublicProfileRecord;
 
@@ -274,7 +275,7 @@ export default function ChatPage() {
           setConversation(null);
           setCounterparty(null);
           setMessages([]);
-          setError(loadError instanceof Error ? loadError.message : 'Impossible de charger la conversation.');
+          setError(toUserFacingErrorMessage(loadError, 'Impossible de charger la conversation.'));
         }
       } finally {
         if (active) setLoading(false);
@@ -430,13 +431,18 @@ export default function ChatPage() {
     event.target.value = '';
 
     if (!file || !userId) return;
+    if (mode === 'session' && (!chatId || !sessionData?.mission_id)) {
+      setError('Session introuvable pour joindre un fichier.');
+      return;
+    }
 
     setUploadingAttachment(true);
     setError(null);
 
     try {
-      const uploaded = await (mode === 'session' && sessionData?.mission_id
-        ? uploadDeliveryFile(chatId, sessionData.mission_id, file).then((missionFile) => ({
+      const sessionChatId = mode === 'session' ? chatId : null;
+      const uploaded = await (sessionChatId && sessionData?.mission_id
+        ? uploadDeliveryFile(sessionChatId, sessionData.mission_id, file).then((missionFile) => ({
           fileUrl: missionFile.file_url,
           fileName: missionFile.file_name,
           fileType: classifyMissionAsset({ type: missionFile.mime_type, name: missionFile.file_name }),
@@ -452,7 +458,7 @@ export default function ChatPage() {
         variant: 'default',
       });
     } catch (uploadError) {
-      const message = uploadError instanceof Error ? uploadError.message : 'Impossible de joindre ce fichier.';
+      const message = toUserFacingErrorMessage(uploadError, 'Impossible de joindre ce fichier.');
       setError(message);
       showToast({
         title: 'Pièce jointe refusée',
@@ -501,7 +507,7 @@ export default function ChatPage() {
         variant: 'default',
       });
     } catch (completeError) {
-      const message = completeError instanceof Error ? completeError.message : 'Impossible de terminer la session.';
+      const message = toUserFacingErrorMessage(completeError, 'Impossible de terminer la session.');
       setError(message);
       showToast({
         title: 'Clôture impossible',
@@ -569,9 +575,9 @@ export default function ChatPage() {
           </div>
 
           {canCompleteSession ? (
-            <button
-              id="btn-complete-session"
-              type="button"
+              <button
+                id="btn-complete-session"
+                type="button"
               disabled={completingSession}
               onClick={() => void handleCompleteSession()}
               className="ml-auto rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
@@ -688,6 +694,7 @@ export default function ChatPage() {
               <span className="truncate pr-3">📎 {attachment.fileName}</span>
               <button
                 type="button"
+                aria-label="Retirer la pièce jointe"
                 onClick={() => setAttachment(null)}
                 className="text-xs text-orange-600 hover:underline"
               >
@@ -708,6 +715,7 @@ export default function ChatPage() {
               <button
                 id="btn-attach"
                 type="button"
+                aria-label="Ajouter une pièce jointe"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAttachment || sending}
                 className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-60"
@@ -727,6 +735,7 @@ export default function ChatPage() {
             <button
               id="btn-send"
               type="button"
+              aria-label="Envoyer le message"
               onClick={() => void sendMessage()}
               disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
               className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white disabled:opacity-50"

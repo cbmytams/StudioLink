@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { getNotificationTarget } from '@/lib/notifications/notificationUtils';
 import { useMarkAllRead, useMarkAsRead, useNotifications } from '@/hooks/useNotifications';
 import type { NotificationRecord } from '@/types/backend';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 function formatRelativeTime(dateIso: string): string {
   const timestamp = new Date(dateIso).getTime();
@@ -55,8 +56,8 @@ export default function NotificationsPage() {
   const markAllReadMutation = useMarkAllRead(userId ?? undefined);
   const notifications = notificationsQuery.data ?? [];
   const loading = notificationsQuery.isLoading;
-  const error = notificationsQuery.error instanceof Error
-    ? notificationsQuery.error.message
+  const error = notificationsQuery.error
+    ? toUserFacingErrorMessage(notificationsQuery.error, 'Impossible de charger les notifications.')
     : null;
   const totalUnread = notifications.filter((item) => !item.read).length;
   const groupedNotifications = useMemo(() => notifications.reduce<Record<string, NotificationRecord[]>>((acc, item) => {

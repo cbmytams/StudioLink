@@ -32,9 +32,10 @@ export function Stepper({
     <div className={cn("flex items-center gap-4 bg-white/40 border border-white/50 rounded-full p-1 shadow-sm w-fit", className)}>
       <button
         type="button"
+        aria-label="Diminuer la valeur"
         onClick={handleDecrease}
         disabled={value <= min}
-        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
       >
         <Minus size={16} />
       </button>
@@ -45,9 +46,10 @@ export function Stepper({
 
       <button
         type="button"
+        aria-label="Augmenter la valeur"
         onClick={handleIncrease}
         disabled={value >= max}
-        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
       >
         <Plus size={16} />
       </button>

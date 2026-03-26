@@ -7,6 +7,7 @@ import { PageMeta } from '@/components/shared/PageMeta';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 function buildRecoveryRedirect(origin: string) {
   const callbackUrl = new URL('/auth/callback', origin);
@@ -28,6 +29,17 @@ export default function ForgotPasswordPage() {
 
   const mode = searchParams.get('mode') === 'reset' ? 'reset' : 'request';
   const hasRecoverySession = Boolean(session);
+  const emailError = !email.trim()
+    ? 'Adresse email requise.'
+    : !email.includes('@')
+      ? 'Adresse email invalide.'
+      : undefined;
+  const passwordError = password.length > 0 && password.length < 8
+    ? 'Le mot de passe doit contenir au moins 8 caractères.'
+    : undefined;
+  const confirmPasswordError = confirmPassword.length > 0 && password !== confirmPassword
+    ? 'Les mots de passe ne correspondent pas.'
+    : undefined;
 
   const pageCopy = useMemo(() => {
     if (mode === 'reset') {
@@ -54,8 +66,8 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     try {
-      if (!email.trim() || !email.includes('@')) {
-        throw new Error('Adresse email invalide.');
+      if (emailError) {
+        throw new Error(emailError);
       }
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -71,9 +83,7 @@ export default function ForgotPasswordPage() {
         variant: 'default',
       });
     } catch (requestError) {
-      const nextError = requestError instanceof Error
-        ? requestError.message
-        : "Impossible d'envoyer l'email de réinitialisation.";
+      const nextError = toUserFacingErrorMessage(requestError, "Impossible d'envoyer l'email de réinitialisation.");
       setError(nextError);
       showToast({
         title: 'Envoi impossible',
@@ -96,12 +106,12 @@ export default function ForgotPasswordPage() {
         throw new Error('La session de réinitialisation a expiré. Demande un nouveau lien.');
       }
 
-      if (password.length < 8) {
-        throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
+      if (passwordError) {
+        throw new Error(passwordError);
       }
 
-      if (password !== confirmPassword) {
-        throw new Error('Les mots de passe ne correspondent pas.');
+      if (confirmPasswordError) {
+        throw new Error(confirmPasswordError);
       }
 
       const { error: updateError } = await supabase.auth.updateUser({ password });
@@ -114,9 +124,7 @@ export default function ForgotPasswordPage() {
       });
       navigate('/login', { replace: true });
     } catch (resetError) {
-      const nextError = resetError instanceof Error
-        ? resetError.message
-        : 'Impossible de mettre à jour le mot de passe.';
+      const nextError = toUserFacingErrorMessage(resetError, 'Impossible de mettre à jour le mot de passe.');
       setError(nextError);
       showToast({
         title: 'Réinitialisation impossible',
@@ -148,8 +156,14 @@ export default function ForgotPasswordPage() {
               id="forgot-password-email"
               type="email"
               label="Adresse email"
+              required
+              error={error ? undefined : emailError}
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setError(null);
+                setMessage(null);
+              }}
               placeholder="vous@exemple.com"
             />
 
@@ -165,7 +179,7 @@ export default function ForgotPasswordPage() {
               </div>
             ) : null}
 
-            <Button type="submit" disabled={submitting} className="w-full bg-orange-500 text-white hover:bg-orange-600">
+            <Button type="submit" disabled={submitting || Boolean(emailError)} className="w-full bg-orange-500 text-white hover:bg-orange-600">
               {submitting ? 'Envoi…' : 'Envoyer le lien'}
             </Button>
 
@@ -183,8 +197,13 @@ export default function ForgotPasswordPage() {
               id="reset-password-new"
               type="password"
               label="Nouveau mot de passe"
+              required
+              error={error ? undefined : passwordError}
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError(null);
+              }}
               placeholder="Minimum 8 caractères"
             />
 
@@ -192,8 +211,13 @@ export default function ForgotPasswordPage() {
               id="reset-password-confirm"
               type="password"
               label="Confirmer le mot de passe"
+              required
+              error={error ? undefined : confirmPasswordError}
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                setError(null);
+              }}
               placeholder="Retape ton mot de passe"
             />
 
@@ -209,7 +233,7 @@ export default function ForgotPasswordPage() {
               </div>
             ) : null}
 
-            <Button type="submit" disabled={submitting || !hasRecoverySession} className="w-full bg-orange-500 text-white hover:bg-orange-600">
+            <Button type="submit" disabled={submitting || !hasRecoverySession || Boolean(passwordError) || Boolean(confirmPasswordError)} className="w-full bg-orange-500 text-white hover:bg-orange-600">
               {submitting ? 'Mise à jour…' : 'Mettre à jour le mot de passe'}
             </Button>
 

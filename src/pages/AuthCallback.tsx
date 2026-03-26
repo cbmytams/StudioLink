@@ -10,6 +10,7 @@ import {
   isProfileIncomplete,
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -70,10 +71,10 @@ export default function AuthCallback() {
         }
       } catch (callbackError) {
         if (!cancelled) {
-          const message =
-            callbackError instanceof Error
-              ? callbackError.message
-              : "Impossible de finaliser l'authentification.";
+          const message = toUserFacingErrorMessage(
+            callbackError,
+            "Impossible de finaliser l'authentification.",
+          );
           setError(message);
         }
       }

@@ -19,9 +19,7 @@ type ConversationItem = {
 
 type ConversationRow = {
   id: string
-  last_message_at: string | null
-  studio_id?: string | null
-  pro_id?: string | null
+  created_at: string | null
   participant_1?: string | null
   participant_2?: string | null
 };
@@ -104,41 +102,11 @@ export default function ConversationList() {
           return;
         }
 
-        const primary = await supabase
-          .from('conversations')
-          .select(`
-            id,
-            last_message_at,
-            studio_id,
-            pro_id
-          `)
-          .or(`studio_id.eq.${userId},pro_id.eq.${userId}`)
-          .order('last_message_at', { ascending: false });
-
-        if (!primary.error && primary.data) {
-          const rows = primary.data as ConversationRow[];
-          const contactIds = Array.from(new Set(rows.map((row) => (
-            row.studio_id === userId ? row.pro_id : row.studio_id
-          )).filter((value): value is string => Boolean(value))));
-          const profilesById = await getPublicProfilesMap(contactIds);
-          if (!active) return;
-
-          const mapped = rows.map((row) => ({
-            id: row.id,
-            last_message_at: row.last_message_at ?? new Date().toISOString(),
-            contact: profilesById.get(row.studio_id === userId ? (row.pro_id ?? '') : (row.studio_id ?? '')) ?? null,
-            unreadCount: 0,
-          }));
-          setConversations(mapped);
-          setLoading(false);
-          return;
-        }
-
         const fallback = await supabase
           .from('conversations')
-          .select('id, last_message_at, participant_1, participant_2')
+          .select('id, created_at, participant_1, participant_2')
           .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
-          .order('last_message_at', { ascending: false });
+          .order('created_at', { ascending: false });
         if (fallback.error) throw fallback.error;
 
         const fallbackRows = (fallback.data as ConversationRow[] | null) ?? [];
@@ -156,7 +124,7 @@ export default function ConversationList() {
           const otherId = row.participant_1 === userId ? row.participant_2 : row.participant_1;
           return {
             id: row.id,
-            last_message_at: row.last_message_at ?? new Date().toISOString(),
+            last_message_at: row.created_at ?? new Date().toISOString(),
             contact: otherId ? (profilesMap.get(otherId) ?? null) : null,
             unreadCount: 0,
           };

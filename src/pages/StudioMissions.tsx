@@ -10,17 +10,10 @@ type FilterValue = 'all' | MissionStatus;
 type MissionPrimaryRow = {
   id: string
   title: string
+  location: string | null
   city: string | null
   daily_rate: number | null
-  status: string | null
-  created_at: string
-};
-
-type MissionFallbackRow = {
-  id: string
-  title: string
-  location: string | null
-  budget_min: number | null
+  price: string | null
   status: string | null
   created_at: string
 };
@@ -82,43 +75,24 @@ export default function StudioMissions() {
       try {
         let normalizedMissions: Mission[] = [];
 
-        const primaryResult = await supabase
+        const result = await supabase
           .from('missions')
-          .select('id, title, city, daily_rate, status, created_at')
+          .select('id, title, city, location, daily_rate, price, status, created_at')
           .eq('studio_id', userId)
           .order('created_at', { ascending: false });
 
-        if (!primaryResult.error) {
-          const rows = primaryResult.data as MissionPrimaryRow[] | null ?? [];
-          normalizedMissions = rows.map((row) => ({
-            id: row.id,
-            title: row.title,
-            city: row.city,
-            daily_rate: row.daily_rate,
-            status: normalizeStatus(row.status),
-            created_at: row.created_at,
-            applicationsCount: 0,
-          }));
-        } else {
-          const fallbackResult = await supabase
-            .from('missions')
-            .select('id, title, location, budget_min, status, created_at')
-            .eq('studio_id', userId)
-            .order('created_at', { ascending: false });
+        if (result.error) throw result.error;
 
-          if (fallbackResult.error) throw fallbackResult.error;
-
-          const rows = fallbackResult.data as MissionFallbackRow[] | null ?? [];
-          normalizedMissions = rows.map((row) => ({
-            id: row.id,
-            title: row.title,
-            city: row.location,
-            daily_rate: row.budget_min,
-            status: normalizeStatus(row.status),
-            created_at: row.created_at,
-            applicationsCount: 0,
-          }));
-        }
+        const rows = result.data as MissionPrimaryRow[] | null ?? [];
+        normalizedMissions = rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          city: row.city ?? row.location,
+          daily_rate: row.daily_rate ?? (row.price ? Number.parseInt(row.price.replace(/\D/g, ''), 10) || null : null),
+          status: normalizeStatus(row.status),
+          created_at: row.created_at,
+          applicationsCount: 0,
+        }));
 
         if (normalizedMissions.length > 0) {
           const missionIds = normalizedMissions.map((mission) => mission.id);
@@ -318,4 +292,3 @@ export default function StudioMissions() {
     </div>
   );
 }
-

@@ -9,6 +9,7 @@ import { reviewService } from '@/services/reviewService';
 import { applicationService } from '@/services/applicationService';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type ProProfile = PublicProfileRecord;
 
@@ -167,7 +168,7 @@ export default function ManageApplications() {
         setCurrentPage(1);
       } catch (fetchError) {
         if (!active) return;
-        setError(fetchError instanceof Error ? fetchError.message : 'Erreur de chargement');
+        setError(toUserFacingErrorMessage(fetchError, 'Erreur de chargement'));
       } finally {
         if (active) setLoading(false);
       }
@@ -235,7 +236,7 @@ export default function ManageApplications() {
         navigate(`/chat/${result.sessionId}`);
       }
     } catch (actionError) {
-      const message = actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature";
+      const message = toUserFacingErrorMessage(actionError, "Impossible d'accepter la candidature");
       setError(message);
       showToast({ title: 'Action impossible', description: message, variant: 'destructive' });
     } finally {
@@ -244,6 +245,10 @@ export default function ManageApplications() {
   };
 
   const handleReject = async (applicationId: string) => {
+    if (!window.confirm('Refuser cette candidature ?')) {
+      return;
+    }
+
     setActionLoading(applicationId);
     setError(null);
 
@@ -254,7 +259,7 @@ export default function ManageApplications() {
       );
       showToast({ title: 'Candidature refusée', variant: 'default' });
     } catch (actionError) {
-      const message = actionError instanceof Error ? actionError.message : 'Impossible de rejeter la candidature';
+      const message = toUserFacingErrorMessage(actionError, 'Impossible de rejeter la candidature');
       setError(message);
       showToast({ title: 'Action impossible', description: message, variant: 'destructive' });
     } finally {
@@ -264,6 +269,9 @@ export default function ManageApplications() {
 
   const handleMarkCompleted = async () => {
     if (!targetMissionId) return;
+    if (!window.confirm('Marquer cette mission comme terminée ?')) {
+      return;
+    }
 
     setActionLoading(`mission:${targetMissionId}`);
     setError(null);
@@ -284,7 +292,7 @@ export default function ManageApplications() {
       setMission((previous) => (previous ? { ...previous, status: 'completed' } : previous));
       showToast({ title: 'Mission terminée', variant: 'default' });
     } catch (completeError) {
-      const message = completeError instanceof Error ? completeError.message : 'Impossible de terminer la mission.';
+      const message = toUserFacingErrorMessage(completeError, 'Impossible de terminer la mission.');
       setError(message);
       showToast({ title: 'Mise à jour impossible', description: message, variant: 'destructive' });
     } finally {

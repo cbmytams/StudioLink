@@ -4,8 +4,11 @@ import { BottomNav } from '@/components/ui/BottomNav';
 import { NotificationBell } from '@/components/shared/NotificationBell';
 import { GlobalSearchBar } from '@/components/shared/GlobalSearchBar';
 import { DesktopNav } from '@/components/shared/DesktopNav';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 export default function ProLayout({ children }: { children?: React.ReactNode }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
   return (
     <div className="min-h-screen relative pb-24">
       <GlobalSearchBar userType="pro" />
@@ -18,7 +21,7 @@ export default function ProLayout({ children }: { children?: React.ReactNode }) 
 
       {children || <Outlet />}
       
-      <BottomNav userType="pro" />
+      {isMobile ? <BottomNav userType="pro" /> : null}
     </div>
   );
 }

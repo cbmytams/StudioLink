@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth';
 import { getRatingForSession, submitRating } from '@/lib/ratings/ratingService';
 import { useToast } from '@/components/ui/Toast';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export function RatingModal({
       })
       .catch((loadError) => {
         if (!active) return;
-        setError(loadError instanceof Error ? loadError.message : 'Impossible de charger la note.');
+        setError(toUserFacingErrorMessage(loadError, 'Impossible de charger la note.'));
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -86,7 +87,7 @@ export function RatingModal({
         variant: 'default',
       });
     } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : 'Impossible d’envoyer la note.';
+      const message = toUserFacingErrorMessage(submitError, 'Impossible d’envoyer la note.');
       setError(message);
       showToast({
         title: 'Envoi impossible',
@@ -113,8 +114,9 @@ export function RatingModal({
           </div>
           <button
             type="button"
+            aria-label="Fermer la fenêtre de notation"
             onClick={onClose}
-            className="rounded-full border border-stone-200 p-2 text-stone-500 transition hover:bg-stone-50"
+            className="min-h-[44px] min-w-[44px] rounded-full border border-stone-200 p-2 text-stone-500 transition hover:bg-stone-50"
           >
             <X size={16} />
           </button>
@@ -157,7 +159,7 @@ export function RatingModal({
                     id={`star-${value}`}
                     type="button"
                     onClick={() => setRating(value)}
-                    className={`text-3xl transition ${
+                    className={`min-h-[44px] min-w-[44px] rounded-full text-3xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
                       active ? 'text-orange-500' : 'text-stone-300 hover:text-orange-300'
                     }`}
                     aria-label={`Donner ${value} étoile${value > 1 ? 's' : ''}`}

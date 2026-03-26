@@ -44,8 +44,10 @@ export function BottomNav({ userType }: BottomNavProps) {
           return (
             <button
               key={tab.path}
+              type="button"
+              aria-label={tab.label}
               onClick={() => navigate(tab.path)}
-              className="relative flex flex-col items-center justify-center w-16 h-full gap-1"
+              className="relative flex min-h-[44px] w-16 flex-col items-center justify-center gap-1"
             >
               <Icon 
                 size={24} 

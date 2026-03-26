@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type Invitation = {
   id: string
@@ -56,6 +57,14 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [deletingInvitationId, setDeletingInvitationId] = useState<string | null>(null);
+
+  const buildInvitationCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => chars[byte % chars.length]).join('');
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -123,7 +132,7 @@ export default function AdminPage() {
         }
 
         if (fetchError) {
-          setError(fetchError.message);
+          setError(toUserFacingErrorMessage(fetchError, 'Impossible de charger les invitations.'));
           return;
         }
 
@@ -131,7 +140,7 @@ export default function AdminPage() {
         setInvitations((data ?? []).map(mapRowToInvitation));
       } catch (fetchErr) {
         if (!active) return;
-        setError(fetchErr instanceof Error ? fetchErr.message : 'Impossible de charger les invitations');
+        setError(toUserFacingErrorMessage(fetchErr, 'Impossible de charger les invitations'));
       } finally {
         if (active) setLoading(false);
       }
@@ -148,7 +157,7 @@ export default function AdminPage() {
     setCreating(true);
     setError(null);
 
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const code = buildInvitationCode();
     const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     try {
@@ -185,7 +194,7 @@ export default function AdminPage() {
       }
 
       if (insertError || !data) {
-        const message = insertError?.message ?? "Impossible de créer l'invitation";
+        const message = toUserFacingErrorMessage(insertError, "Impossible de créer l'invitation");
         setError(message);
         showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
         return;
@@ -195,7 +204,7 @@ export default function AdminPage() {
       setNewEmail('');
       showToast({ title: 'Invitation générée', variant: 'default' });
     } catch (createErr) {
-      const message = createErr instanceof Error ? createErr.message : "Impossible de créer l'invitation";
+      const message = toUserFacingErrorMessage(createErr, "Impossible de créer l'invitation");
       setError(message);
       showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
     } finally {
@@ -212,13 +221,18 @@ export default function AdminPage() {
       window.setTimeout(() => setCopySuccess(null), 2000);
       showToast({ title: 'Lien copié', variant: 'default' });
     } catch (copyErr) {
-      const message = copyErr instanceof Error ? copyErr.message : 'Impossible de copier le lien';
+      const message = toUserFacingErrorMessage(copyErr, 'Impossible de copier le lien');
       setError(message);
       showToast({ title: 'Copie impossible', description: message, variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm('Supprimer définitivement cette invitation ?')) {
+      return;
+    }
+
+    setDeletingInvitationId(id);
     setError(null);
     try {
       const { error: deleteError } = await supabase
@@ -227,17 +241,20 @@ export default function AdminPage() {
         .eq('id', id);
 
       if (deleteError) {
-        setError(deleteError.message);
-        showToast({ title: 'Suppression impossible', description: deleteError.message, variant: 'destructive' });
+        const message = toUserFacingErrorMessage(deleteError, 'Impossible de supprimer cette invitation');
+        setError(message);
+        showToast({ title: 'Suppression impossible', description: message, variant: 'destructive' });
         return;
       }
 
       setInvitations((prev) => prev.filter((invitation) => invitation.id !== id));
       showToast({ title: 'Invitation supprimée', variant: 'default' });
     } catch (deleteErr) {
-      const message = deleteErr instanceof Error ? deleteErr.message : 'Impossible de supprimer cette invitation';
+      const message = toUserFacingErrorMessage(deleteErr, 'Impossible de supprimer cette invitation');
       setError(message);
       showToast({ title: 'Suppression impossible', description: message, variant: 'destructive' });
+    } finally {
+      setDeletingInvitationId(null);
     }
   };
 
@@ -286,6 +303,8 @@ export default function AdminPage() {
 
           <div className="mb-4">
             <input
+              id="admin-invitation-email"
+              aria-label="Email destinataire de l’invitation"
               value={newEmail}
               onChange={(event) => setNewEmail(event.target.value)}
               placeholder="Email destinataire (optionnel)"
@@ -359,10 +378,11 @@ export default function AdminPage() {
                       </button>
                       <button
                         type="button"
+                        disabled={deletingInvitationId === invitation.id}
                         onClick={() => void handleDelete(invitation.id)}
-                        className="text-sm text-red-500 hover:text-red-600 transition-colors"
+                        className="text-sm text-red-500 hover:text-red-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Supprimer
+                        {deletingInvitationId === invitation.id ? 'Suppression…' : 'Supprimer'}
                       </button>
                     </div>
                   </div>

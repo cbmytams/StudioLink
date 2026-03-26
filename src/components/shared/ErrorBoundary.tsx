@@ -1,4 +1,5 @@
 import React, { type ReactNode } from 'react';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type Props = {
   children: ReactNode;
@@ -22,7 +23,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      errorMessage: error.message,
+      errorMessage: toUserFacingErrorMessage(error, 'Recharge la page pour reprendre là où tu en étais.'),
     };
   }
 

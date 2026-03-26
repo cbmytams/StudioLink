@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import type { Database, Json } from '@/types/supabase';
 import type {
   AvailabilitySlot,
   NotificationPreferences,
@@ -13,6 +14,63 @@ function ensureClient() {
     throw new Error('Supabase non configuré.');
   }
   return supabase;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeLinks(value: Json): Array<{ platform: string; url: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!isObject(item) || typeof item.platform !== 'string' || typeof item.url !== 'string') {
+      return [];
+    }
+    return [{ platform: item.platform, url: item.url }];
+  });
+}
+
+function normalizeAvailabilitySlots(value: Json | null): AvailabilitySlot[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (
+      !isObject(item)
+      || typeof item.day !== 'string'
+      || typeof item.start !== 'string'
+      || typeof item.end !== 'string'
+    ) {
+      return [];
+    }
+
+    return [{
+      day: item.day as AvailabilitySlot['day'],
+      start: item.start,
+      end: item.end,
+    }];
+  });
+}
+
+function toProfileUpdate(data: Partial<Profile>): Database['public']['Tables']['profiles']['Update'] {
+  return {
+    ...data,
+    notification_preferences: data.notification_preferences
+      ? (data.notification_preferences as unknown as Json)
+      : data.notification_preferences,
+  };
+}
+
+function toProProfileUpsert(
+  userId: string,
+  data: Partial<ProProfileRecord>,
+): Database['public']['Tables']['pro_profiles']['Insert'] {
+  return {
+    ...data,
+    profile_id: userId,
+    links: data.links ? (data.links as unknown as Json) : undefined,
+    availability_slots: data.availability_slots
+      ? (data.availability_slots as unknown as Json)
+      : undefined,
+  };
 }
 
 export const profileService = {
@@ -32,8 +90,9 @@ export const profileService = {
       .single();
     if (error) throw error;
     return {
-      ...(data as ProProfileRecord),
-      availability_slots: ((data as { availability_slots?: AvailabilitySlot[] }).availability_slots ?? []),
+      ...(data as Omit<ProProfileRecord, 'links' | 'availability_slots'>),
+      links: normalizeLinks(data.links),
+      availability_slots: normalizeAvailabilitySlots(data.availability_slots),
     };
   },
 
@@ -50,13 +109,13 @@ export const profileService = {
 
   async updateProfile(userId: string, data: Partial<Profile>): Promise<void> {
     const client = ensureClient();
-    const { error } = await client.from('profiles').update(data).eq('id', userId);
+    const { error } = await client.from('profiles').update(toProfileUpdate(data)).eq('id', userId);
     if (error) throw error;
   },
 
   async upsertProProfile(userId: string, data: Partial<ProProfileRecord>): Promise<void> {
     const client = ensureClient();
-    const payload = { ...data, profile_id: userId };
+    const payload = toProProfileUpsert(userId, data);
     const { error } = await client.from('pro_profiles').upsert(payload);
     if (error) throw error;
   },

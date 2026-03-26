@@ -25,6 +25,7 @@ export function TextInput({ className, icon, error, action, label, id, ...props 
       {label && (
         <label htmlFor={id} className="mb-1 px-1 text-sm font-medium text-white/70">
           {label}
+          {props.required ? <span className="ml-1 text-orange-300">*</span> : null}
         </label>
       )}
       <div className="relative w-full">
@@ -35,6 +36,7 @@ export function TextInput({ className, icon, error, action, label, id, ...props 
         )}
         <input
           id={id}
+          aria-invalid={error ? 'true' : 'false'}
           className={cn(
             "glass-input",
             icon ? "pl-12" : "",

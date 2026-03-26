@@ -17,6 +17,7 @@ import {
   isProfileIncomplete,
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type AuthMode = 'signin' | 'signup';
 type InvitationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
@@ -44,6 +45,28 @@ type RedirectProfile = {
   bio?: string | null;
 } | null;
 
+type FieldErrors = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
+function getEmailError(value: string): string | undefined {
+  if (!value.trim()) return 'Adresse email requise';
+  if (!value.includes('@')) return 'Email invalide';
+  return undefined;
+}
+
+function getPasswordError(value: string): string | undefined {
+  if (value.length < 6) return 'Mot de passe trop court (6 caractères min)';
+  return undefined;
+}
+
+function getConfirmPasswordError(password: string, confirmPassword: string): string | undefined {
+  if (confirmPassword !== password) return 'Les mots de passe ne correspondent pas';
+  return undefined;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,8 +81,8 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [invitationState, setInvitationState] = useState<InvitationState>('idle');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [invitationContext, setInvitationContext] = useState<{
     code: string;
     type: 'studio' | 'pro';
@@ -198,23 +221,17 @@ export default function LoginPage() {
   }
 
   const validateForm = (): boolean => {
-    if (!email.trim()) {
-      setError('Adresse email requise');
-      return false;
-    }
+    const nextFieldErrors: FieldErrors = {
+      email: getEmailError(email),
+      password: getPasswordError(password),
+      confirmPassword: mode === 'signup' ? getConfirmPasswordError(password, confirmPassword) : undefined,
+    };
 
-    if (!email.includes('@')) {
-      setError('Email invalide');
-      return false;
-    }
+    setFieldErrors(nextFieldErrors);
 
-    if (password.length < 6) {
-      setError('Mot de passe trop court (6 caractères min)');
-      return false;
-    }
-
-    if (mode === 'signup' && confirmPassword !== password) {
-      setError('Les mots de passe ne correspondent pas');
+    const firstFieldError = nextFieldErrors.email ?? nextFieldErrors.password ?? nextFieldErrors.confirmPassword ?? null;
+    if (firstFieldError) {
+      setError(firstFieldError);
       return false;
     }
 
@@ -229,7 +246,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccessMessage(null);
 
     if (!validateForm()) return;
 
@@ -287,10 +303,11 @@ export default function LoginPage() {
         },
       });
       if (signUpError) {
-        setError(signUpError.message);
+        const message = toUserFacingErrorMessage(signUpError, 'Création impossible.');
+        setError(message);
         showToast({
           title: 'Création impossible',
-          description: signUpError.message,
+          description: message,
           variant: 'destructive',
         });
         return;
@@ -321,8 +338,7 @@ export default function LoginPage() {
       setPassword('');
       setConfirmPassword('');
     } catch (submitError) {
-      const message =
-        submitError instanceof Error ? submitError.message : 'Une erreur est survenue.';
+      const message = toUserFacingErrorMessage(submitError, 'Une erreur est survenue.');
       setError(message);
       showToast({
         title: isSignIn ? 'Connexion impossible' : 'Création impossible',
@@ -337,8 +353,8 @@ export default function LoginPage() {
   const toggleMode = () => {
     setStep('form');
     setError(null);
-    setSuccessMessage(null);
     setConfirmPassword('');
+    setFieldErrors({});
 
     if (isSignIn) {
       if (invitationContext) {
@@ -364,6 +380,12 @@ export default function LoginPage() {
   const signupSubtitle = invitationContext
     ? 'Invitation validée · Finalise ton inscription'
     : 'Inscription sur invitation uniquement';
+  const submitDisabled = loading
+    || invitationState === 'checking'
+    || signupBlocked
+    || Boolean(getEmailError(email))
+    || Boolean(getPasswordError(password))
+    || (mode === 'signup' && Boolean(getConfirmPasswordError(password, confirmPassword)));
 
   return (
     <div className="app-shell flex min-h-screen items-center justify-center p-4">
@@ -414,37 +436,46 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label htmlFor="login-email" className="block text-xs font-medium tracking-wide text-white/60 ml-1">
-              Adresse email
-            </label>
             <TextInput
               id="login-email"
               type="email"
+              label="Adresse email"
+              required
+              error={fieldErrors.email}
               value={email}
               onChange={(event) => {
-                setEmail(event.target.value);
+                const nextValue = event.target.value;
+                setEmail(nextValue);
+                setFieldErrors((current) => ({ ...current, email: getEmailError(nextValue) }));
                 if (error) setError(null);
               }}
               placeholder="Adresse email"
-              className=""
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="login-password" className="block text-xs font-medium tracking-wide text-white/60 ml-1">
-              Mot de passe
-            </label>
             <TextInput
               id="login-password"
               type="password"
+              label="Mot de passe"
+              required
+              error={fieldErrors.password}
               value={password}
               onChange={(event) => {
-                setPassword(event.target.value);
+                const nextValue = event.target.value;
+                setPassword(nextValue);
+                setFieldErrors((current) => ({
+                  ...current,
+                  password: getPasswordError(nextValue),
+                  confirmPassword: mode === 'signup'
+                    ? getConfirmPasswordError(nextValue, confirmPassword)
+                    : undefined,
+                }));
                 if (error) setError(null);
               }}
               placeholder="Mot de passe"
-              className=""
             />
+            <p className="px-1 text-xs text-white/45">Minimum 6 caractères.</p>
           </div>
 
           {isSignIn ? (
@@ -461,14 +492,20 @@ export default function LoginPage() {
 
           {mode === 'signup' && (
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium tracking-wide text-white/60 ml-1">
-                Confirmer le mot de passe
-              </label>
               <TextInput
+                id="login-confirm-password"
                 type="password"
+                label="Confirmer le mot de passe"
+                required
+                error={fieldErrors.confirmPassword}
                 value={confirmPassword}
                 onChange={(event) => {
-                  setConfirmPassword(event.target.value);
+                  const nextValue = event.target.value;
+                  setConfirmPassword(nextValue);
+                  setFieldErrors((current) => ({
+                    ...current,
+                    confirmPassword: getConfirmPasswordError(password, nextValue),
+                  }));
                   if (error) setError(null);
                 }}
                 placeholder="Confirmer le mot de passe"
@@ -493,13 +530,9 @@ export default function LoginPage() {
           ) : null}
 
           {error ? <p className="text-red-400 text-sm text-center mt-2">{error}</p> : null}
-          {successMessage ? (
-            <p className="text-green-400 text-sm text-center mt-2">{successMessage}</p>
-          ) : null}
-
           <Button
             type="submit"
-            disabled={loading || invitationState === 'checking' || signupBlocked}
+            disabled={submitDisabled}
             className="w-full bg-orange-500 text-white hover:bg-orange-600"
           >
             {loading ? (
