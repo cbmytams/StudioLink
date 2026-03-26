@@ -10,7 +10,7 @@ import type {
 } from '@/types/backend';
 
 const PROFILE_SELECT_COLUMNS =
-  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, created_at, updated_at';
+  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, search_vector, created_at, updated_at';
 const PRO_PROFILE_SELECT_COLUMNS =
   'profile_id, name, bio, phone, services, genres, instruments, min_rate, show_rate, links, is_available, availability_slots, updated_at';
 const STUDIO_PROFILE_SELECT_COLUMNS =
@@ -73,12 +73,44 @@ function normalizeProfile(row: Database['public']['Tables']['profiles']['Row']):
   };
 }
 
+function serializeNotificationPreferences(
+  value: NotificationPreferences | null | undefined,
+): Json | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+
+  return {
+    new_application: Boolean(value.new_application),
+    messages: Boolean(value.messages),
+    status_updates: Boolean(value.status_updates),
+  };
+}
+
+function serializeLinks(
+  value: ProProfileRecord['links'] | undefined,
+): Json | undefined {
+  if (!value) return undefined;
+  return value.map((link) => ({
+    platform: link.platform,
+    url: link.url,
+  }));
+}
+
+function serializeAvailabilitySlots(
+  value: AvailabilitySlot[] | undefined,
+): Json | undefined {
+  if (!value) return undefined;
+  return value.map((slot) => ({
+    day: slot.day,
+    start: slot.start,
+    end: slot.end,
+  }));
+}
+
 function toProfileUpdate(data: Partial<Profile>): Database['public']['Tables']['profiles']['Update'] {
   return {
     ...data,
-    notification_preferences: data.notification_preferences === undefined
-      ? undefined
-      : (data.notification_preferences as Json | null),
+    notification_preferences: serializeNotificationPreferences(data.notification_preferences),
   };
 }
 
@@ -89,10 +121,8 @@ function toProProfileUpsert(
   return {
     ...data,
     profile_id: userId,
-    links: data.links ? (data.links as Json) : undefined,
-    availability_slots: data.availability_slots
-      ? (data.availability_slots as Json)
-      : undefined,
+    links: serializeLinks(data.links),
+    availability_slots: serializeAvailabilitySlots(data.availability_slots),
   };
 }
 
