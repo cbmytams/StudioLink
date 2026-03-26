@@ -11,7 +11,8 @@
     "lint": "npx tsc --noEmit && eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

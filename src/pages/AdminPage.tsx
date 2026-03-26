@@ -13,6 +13,8 @@ type Invitation = {
   type: 'studio' | 'pro'
   email: string | null
   used: boolean
+  uses: number | null
+  max_uses: number | null
   expires_at: string | null
   created_at: string
 }
@@ -37,6 +39,8 @@ function mapRowToInvitation(row: InvitationRow): Invitation {
     type: row.type,
     email: typeof row.email === 'string' ? row.email : null,
     used: typeof row.used === 'boolean' ? row.used : usedBy !== null,
+    uses: typeof row.used === 'boolean' && row.used ? 1 : 0,
+    max_uses: 1,
     expires_at: row.expires_at ?? null,
     created_at: row.created_at,
   };
@@ -53,6 +57,8 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [newType, setNewType] = useState<'studio' | 'pro'>('pro');
   const [newEmail, setNewEmail] = useState('');
+  const [batchCount, setBatchCount] = useState(1);
+  const [maxUses, setMaxUses] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -156,58 +162,83 @@ export default function AdminPage() {
     setCreating(true);
     setError(null);
 
-    const code = buildInvitationCode();
-    const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const count = Math.max(1, Math.min(50, Math.floor(batchCount || 1)));
+    const cappedMaxUses = Math.max(1, Math.min(50, Math.floor(maxUses || 1)));
+    const now = new Date().toISOString();
+    const codes = Array.from({ length: count }, () => buildInvitationCode());
 
     try {
-      const expected = await supabase
+      const { data, error: insertError } = await supabase
         .from('invitations')
-        .insert({
-          code,
-          type: newType,
-          email: newEmail.trim() || null,
-          used: false,
-          expires_at,
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      let data = expected.data as InvitationRow | null;
-      let insertError = expected.error;
-
-      if (insertError) {
-        const fallback = await supabase
-          .from('invitations')
-          .insert({
+        .insert(
+          codes.map((code) => ({
             code,
             type: newType,
-            expires_at,
-            created_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+            email: newEmail.trim() || null,
+            used: false,
+            expires_at: null,
+            created_at: now,
+          })),
+        )
+        .select();
 
-        data = fallback.data as InvitationRow | null;
-        insertError = fallback.error;
-      }
-
-      if (insertError || !data) {
+      if (insertError || !data || data.length === 0) {
         const message = toUserFacingErrorMessage(insertError, "Impossible de créer l'invitation");
         setError(message);
         showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
         return;
       }
 
-      setInvitations((prev) => [mapRowToInvitation(data), ...prev]);
+      setInvitations((prev) => [...data.map(mapRowToInvitation), ...prev]);
       setNewEmail('');
-      showToast({ title: 'Invitation générée', variant: 'default' });
+      if (cappedMaxUses > 1) {
+        showToast({
+          title: `${data.length} invitation(s) générée(s)`,
+          description: 'Schema actuel: max_uses non persiste (limite effective a 1 usage).',
+          variant: 'default',
+        });
+        return;
+      }
+      showToast({ title: `${data.length} invitation(s) générée(s)`, variant: 'default' });
     } catch (createErr) {
       const message = toUserFacingErrorMessage(createErr, "Impossible de créer l'invitation");
       setError(message);
       showToast({ title: 'Création impossible', description: message, variant: 'destructive' });
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeactivate = async (id: string) => {
+    setDeletingInvitationId(id);
+    setError(null);
+
+    const nowIso = new Date().toISOString();
+    try {
+      const { error: deactivateError } = await supabase
+        .from('invitations')
+        .update({ used: true, expires_at: nowIso })
+        .eq('id', id);
+
+      if (deactivateError) {
+        const message = toUserFacingErrorMessage(deactivateError, "Impossible de désactiver l'invitation");
+        setError(message);
+        showToast({ title: 'Désactivation impossible', description: message, variant: 'destructive' });
+        return;
+      }
+
+      setInvitations((prev) => prev.map((invitation) => (
+        invitation.id === id
+          ? { ...invitation, used: true, expires_at: nowIso }
+          : invitation
+      )));
+      showToast({ title: 'Code désactivé', variant: 'default' });
+    } catch (deactivateErr) {
+      const message = toUserFacingErrorMessage(deactivateErr, "Impossible de désactiver l'invitation");
+      setError(message);
+      showToast({ title: 'Désactivation impossible', description: message, variant: 'destructive' });
+    } finally {
+      setDeletingInvitationId(null);
     }
   };
 
@@ -280,6 +311,7 @@ export default function AdminPage() {
         </header>
 
         <section className="app-card p-6 mb-6">
+          <h2 className="text-base font-semibold text-black mb-4">Codes d&apos;invitation</h2>
           <div className="mb-4">
             <p className="text-sm text-black/70 mb-2">Type d&apos;invitation</p>
             <div className="grid grid-cols-2 gap-2 max-w-xs">
@@ -300,13 +332,35 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
             <input
               id="admin-invitation-email"
               aria-label="Email destinataire de l’invitation"
               value={newEmail}
               onChange={(event) => setNewEmail(event.target.value)}
               placeholder="Email destinataire (optionnel)"
+              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400 md:col-span-2"
+            />
+            <input
+              id="admin-invitation-count"
+              aria-label="Nombre de codes à générer"
+              type="number"
+              min={1}
+              max={50}
+              value={batchCount}
+              onChange={(event) => setBatchCount(Number(event.target.value) || 1)}
+              placeholder="Nombre"
+              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+            />
+            <input
+              id="admin-invitation-max-uses"
+              aria-label="Nombre d'utilisations max par code"
+              type="number"
+              min={1}
+              max={50}
+              value={maxUses}
+              onChange={(event) => setMaxUses(Number(event.target.value) || 1)}
+              placeholder="Max usages"
               className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
             />
           </div>
@@ -322,7 +376,7 @@ export default function AdminPage() {
                 Génération...
               </>
             ) : (
-              'Générer un lien'
+              'Generer des codes'
             )}
           </Button>
 
@@ -343,13 +397,18 @@ export default function AdminPage() {
                   invitation.expires_at && new Date(invitation.expires_at) < new Date(),
                 );
                 const statusNode = invitation.used
-                  ? <span className="text-red-400">Utilisée</span>
+                  ? <span className="text-red-400">Desactivee</span>
                   : isExpired
                     ? <span className="text-stone-400">Expirée</span>
                     : <span className="text-green-400">Active</span>;
+                const usageLabel = invitation.max_uses && invitation.max_uses > 0
+                  ? `${invitation.uses ?? 0}/${invitation.max_uses}`
+                  : invitation.used
+                    ? '1/1'
+                    : '0/1';
 
                 return (
-                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto] gap-3 items-center">
+                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto_auto] gap-3 items-center">
                     <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
                       invitation.type === 'studio'
                         ? 'bg-cyan-100 text-cyan-700 border border-cyan-200'
@@ -361,6 +420,7 @@ export default function AdminPage() {
                     <p className="font-mono text-sm">{invitation.code}</p>
                     <p className="text-stone-500 text-sm">{invitation.email || '-'}</p>
                     <div className="text-sm">{statusNode}</div>
+                    <p className="text-sm text-stone-500">{usageLabel}</p>
                     <p className="text-sm text-stone-500">
                       {invitation.expires_at
                         ? new Date(invitation.expires_at).toLocaleDateString('fr-FR')
@@ -374,6 +434,14 @@ export default function AdminPage() {
                         className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
                       >
                         {copySuccess === invitation.code ? '✓ Copié !' : 'Copier le lien'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingInvitationId === invitation.id || invitation.used}
+                        onClick={() => void handleDeactivate(invitation.id)}
+                        className="text-sm text-amber-600 hover:text-amber-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingInvitationId === invitation.id ? 'Desactivation…' : 'Desactiver'}
                       </button>
                       <button
                         type="button"

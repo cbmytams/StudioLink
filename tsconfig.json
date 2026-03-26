@@ -23,7 +23,16 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
+  "include": [
+    "src",
+    "api",
+    "vite.config.ts",
+    "eslint.config.js"
+  ],
   "exclude": [
-    "supabase/functions"
+    "supabase/functions",
+    "dist",
+    "coverage",
+    "node_modules"
   ]
 }
