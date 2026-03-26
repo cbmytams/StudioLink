@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { trackRatingGiven } from '@/lib/analytics/events';
 import type { RatingRecord } from '@/types/backend';
 
 function ensureClient() {
@@ -28,6 +29,20 @@ function mapRating(row: RatingRow): RatingRecord {
     comment: row.comment,
     created_at: row.created_at,
   };
+}
+
+async function resolveRaterRole(sessionId: string, raterId: string): Promise<'studio' | 'pro' | null> {
+  const client = ensureClient();
+  const { data, error } = await client
+    .from('sessions')
+    .select('studio_id, pro_id')
+    .eq('id', sessionId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  if (data.studio_id === raterId) return 'studio';
+  if (data.pro_id === raterId) return 'pro';
+  return null;
 }
 
 export async function getRatingForSession(sessionId: string, raterId: string): Promise<RatingRecord | null> {
@@ -64,5 +79,14 @@ export async function submitRating(input: {
     .single();
 
   if (error) throw error;
-  return mapRating(data as RatingRow);
+  const created = mapRating(data as RatingRow);
+  const role = await resolveRaterRole(input.sessionId, input.raterId);
+  if (role) {
+    trackRatingGiven({
+      score: input.score,
+      role,
+      sessionId: input.sessionId,
+    });
+  }
+  return created;
 }

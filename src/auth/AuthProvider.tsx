@@ -16,6 +16,8 @@ import {
   signInPassword as signInPasswordService,
   signOut as signOutService,
 } from '@/services/authService';
+import { trackUserLoggedOut } from '@/lib/analytics/events';
+import { resetUser } from '@/lib/analytics/posthog';
 import { hasSupabaseConfig } from '@/lib/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
@@ -198,6 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       await signOutService();
+      resetUser();
+      trackUserLoggedOut();
     } finally {
       setProfile(null);
       setSession(null);

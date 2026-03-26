@@ -476,11 +476,7 @@ export default function ChatPage() {
     setError(null);
 
     try {
-      const { error: rpcError } = await supabase.rpc('complete_session', {
-        p_session_id: chatId,
-      });
-
-      if (rpcError) throw rpcError;
+      await chatService.completeSession(chatId);
 
       setSessionData((previous) => (
         previous

@@ -1,6 +1,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
+import { trackFileUploaded, trackSessionCompleted } from '@/lib/analytics/events';
 import type { ChatFileType, SessionRecord } from '@/types/backend';
 import { getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { detectChatFileType, normalizeChatMessageRow, type NormalizedChatMessage } from './chatUtils';
@@ -41,6 +42,14 @@ type MessageRow = {
 function asSingle<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
+}
+
+function computeDurationDays(createdAt: string | null | undefined): number {
+  if (!createdAt) return 0;
+  const start = new Date(createdAt);
+  if (Number.isNaN(start.getTime())) return 0;
+  const elapsedMs = Date.now() - start.getTime();
+  return Math.max(0, Math.ceil(elapsedMs / (1000 * 60 * 60 * 24)));
 }
 
 export type ChatSession = SessionRecord & {
@@ -154,6 +163,28 @@ export const chatService = {
     }
 
     return this.getSession(sessionId);
+  },
+
+  async completeSession(sessionId: string): Promise<void> {
+    const client = ensureClient();
+    const { data: sessionRow, error: sessionError } = await client
+      .from('sessions')
+      .select('created_at')
+      .eq('id', sessionId)
+      .maybeSingle();
+
+    if (sessionError) throw sessionError;
+
+    const { error } = await client.rpc('complete_session', {
+      p_session_id: sessionId,
+    });
+    if (error) throw error;
+
+    const durationDays = computeDurationDays((sessionRow as { created_at: string | null } | null)?.created_at);
+    trackSessionCompleted({
+      sessionId,
+      durationDays,
+    });
   },
 
   async getMessages(sessionId: string): Promise<ChatMessage[]> {
@@ -299,6 +330,7 @@ export const chatService = {
     });
 
     if (error) throw error;
+    trackFileUploaded('chat');
 
     return {
       fileUrl: path,

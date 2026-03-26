@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
+import { trackOnboardingCompleted, trackOnboardingStepCompleted } from '@/lib/analytics/events';
 import type { UserType } from '@/types/backend';
 import type { Database } from '@/types/supabase';
 
@@ -155,6 +156,7 @@ export default function Onboarding() {
     const nextErrors = getCurrentStepErrors(step, draft);
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    trackOnboardingStepCompleted(step, draft.role || 'unknown');
     setStep((currentStep) => Math.min(4, currentStep + 1));
   };
 
@@ -248,6 +250,7 @@ export default function Onboarding() {
       sessionStorage.removeItem('invitationEmail');
 
       await refreshProfile().catch(() => undefined);
+      trackOnboardingCompleted(draft.role || 'unknown', 4);
       showToast({ title: 'Profil complété', variant: 'default' });
       navigate(getDashboardPath(draft.role as UserType), { replace: true });
     } catch (submitError) {

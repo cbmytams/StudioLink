@@ -84,7 +84,7 @@ export default function SettingsPage() {
         return;
       }
 
-      await supabase.auth.signOut();
+      await signOut();
       showToast({ title: 'Compte supprimé', variant: 'default' });
       navigate('/login', { replace: true });
     } catch (deleteError) {

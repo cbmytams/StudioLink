@@ -18,6 +18,8 @@ import {
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
+import { trackUserLoggedIn, trackUserRegistered } from '@/lib/analytics/events';
+import { identifyUser } from '@/lib/analytics/posthog';
 
 type AuthMode = 'signin' | 'signup';
 type InvitationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
@@ -270,6 +272,16 @@ export default function LoginPage() {
 
         const redirectProfile = nextProfile as RedirectProfile;
         const profileType = resolveProfileType(redirectProfile);
+        const trackedRole = profileType ?? invitationContext?.type ?? null;
+
+        if (trackedRole === 'studio' || trackedRole === 'pro') {
+          trackUserLoggedIn(trackedRole);
+          identifyUser(signedInUserId, {
+            role: trackedRole,
+            email: email.trim() || undefined,
+            displayName: redirectProfile?.display_name ?? redirectProfile?.full_name ?? undefined,
+          });
+        }
 
         showToast({ title: 'Connexion réussie', variant: 'default' });
         if (!redirectProfile || isProfileIncomplete(redirectProfile)) {
@@ -325,6 +337,7 @@ export default function LoginPage() {
       }
 
       if (data.session) {
+        trackUserRegistered(invitationContext.type);
         showToast({ title: 'Compte créé', description: 'Complète maintenant ton profil.', variant: 'default' });
         navigate('/onboarding', { replace: true });
         return;

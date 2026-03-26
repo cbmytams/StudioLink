@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode, useEffect } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -16,6 +16,7 @@ import {
   isProfileIncomplete,
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -123,6 +124,14 @@ function RoleDashboardPage() {
 }
 
 export default function App() {
+  const { session } = useAuth();
+  const { identify } = useAnalytics();
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    identify();
+  }, [identify, session?.user?.id]);
+
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>

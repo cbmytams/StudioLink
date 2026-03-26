@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { MissionFileRecord, MissionFileType } from '@/types/backend';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
+import { trackFileUploaded } from '@/lib/analytics/events';
 import { buildScopedStoragePath, getBucketFromMissionFileType } from './fileUtils';
 
 type MissionFileRow = MissionFileRecord;
@@ -81,7 +82,9 @@ async function uploadScopedFile(
       throw insertError;
     }
 
-    return mapMissionFile(data as MissionFileRow);
+    const mapped = mapMissionFile(data as MissionFileRow);
+    trackFileUploaded(fileType === 'reference' ? 'mission' : 'delivery');
+    return mapped;
   } catch (error) {
     const isAuthError = await handleAuthError(error);
     if (isAuthError) {

@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import type { MissionFileRecord } from '@/types/backend';
 import type { Database } from '@/types/supabase';
+import { trackMissionCreated } from '@/lib/analytics/events';
 import { deleteFile, getMissionFiles, uploadMissionFile } from '@/lib/files/fileService';
 import {
   buildMissionWritePayload,
@@ -357,6 +358,13 @@ export default function MissionForm() {
         if (!createdMissionId) {
           throw new Error('Mission créée sans identifiant exploitable.');
         }
+
+        const parsedDailyRate = Number.parseInt(dailyRate, 10);
+        trackMissionCreated({
+          hasDeadline: Boolean(missionDate || endDate),
+          skillsCount: skillsRequired.length,
+          budgetType: Number.isFinite(parsedDailyRate) && parsedDailyRate > 0 ? 'fixed' : 'negotiable',
+        });
 
         showToast({
           title: 'Mission créée',

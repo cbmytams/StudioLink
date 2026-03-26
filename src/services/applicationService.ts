@@ -2,6 +2,12 @@ import { supabase } from '@/lib/supabase/client';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
 import type { ApplicationRecord, ApplicationStatus, CreateApplicationInput } from '@/types/backend';
 import {
+  trackApplicationAccepted,
+  trackApplicationRejected,
+  trackMissionApplied,
+  trackSessionStarted,
+} from '@/lib/analytics/events';
+import {
   buildApplicationWritePayload,
   formatApplicationInsertError,
   normalizeApplicationStatus,
@@ -133,7 +139,12 @@ export const applicationService = {
         throw new Error(formatApplicationInsertError(error));
       }
 
-      return mapApplicationRow(data as ApplicationRow);
+      const created = mapApplicationRow(data as ApplicationRow);
+      trackMissionApplied({
+        fromSearch: false,
+        missionId: created.mission_id,
+      });
+      return created;
     } catch (error) {
       const isAuthError = await handleAuthError(error);
       if (isAuthError) {
@@ -150,7 +161,14 @@ export const applicationService = {
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error('Réponse serveur vide.');
-    return mapRpcRow(row as ApplicationRpcRow);
+    const result = mapRpcRow(row as ApplicationRpcRow);
+    if (result.missionId) {
+      trackApplicationAccepted(result.missionId);
+    }
+    if (result.sessionId) {
+      trackSessionStarted(result.sessionId);
+    }
+    return result;
   },
 
   async rejectApplication(applicationId: string) {
@@ -160,7 +178,11 @@ export const applicationService = {
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error('Réponse serveur vide.');
-    return mapRpcRow(row as ApplicationRpcRow);
+    const result = mapRpcRow(row as ApplicationRpcRow);
+    if (result.missionId) {
+      trackApplicationRejected(result.missionId);
+    }
+    return result;
   },
 
   async withdrawApplication(applicationId: string): Promise<void> {
