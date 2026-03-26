@@ -1,8 +1,8 @@
 import { Activity, BadgeEuro, Percent, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MiniLineChart } from '@/components/shared/MiniLineChart';
-import { PageMeta } from '@/components/shared/PageMeta';
 import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
@@ -85,10 +85,11 @@ export default function ProDashboard() {
 
   return (
     <div id="dashboard-pro" className="app-shell">
-      <PageMeta
-        title="Mon Dashboard"
-        description="Vos statistiques et votre activité récente côté pro."
-        canonicalPath="/dashboard"
+      <SEO
+        title="Mon dashboard"
+        description="Vos statistiques et votre activite recente cote pro."
+        noIndex
+        url="/dashboard"
       />
 
       <div className="app-container">

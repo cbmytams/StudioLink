@@ -37,14 +37,14 @@ export default defineConfig(({mode}) => {
     },
     build: {
       sourcemap: true,
+      chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
           manualChunks: {
-            react: ['react', 'react-dom', 'react-router-dom'],
-            query: ['@tanstack/react-query'],
-            supabase: ['@supabase/supabase-js'],
-            motion: ['motion'],
-            icons: ['lucide-react'],
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-query': ['@tanstack/react-query'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-ui': ['motion'],
           },
         },
       },

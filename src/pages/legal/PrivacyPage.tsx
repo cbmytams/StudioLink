@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
-import { PageMeta } from '@/components/shared/PageMeta';
+import { SEO } from '@/components/SEO';
 
 export default function PrivacyPage() {
   return (
     <div className="app-shell min-h-[100dvh] px-4 py-8">
-      <PageMeta
+      <SEO
         title="Politique de confidentialite"
         description="Politique de confidentialite RGPD de StudioLink Paris."
-        canonicalPath="/legal/privacy"
+        url="/legal/privacy"
       />
       <main className="mx-auto w-full max-w-4xl space-y-6">
         <header className="space-y-2">

@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
-import { PageMeta } from '@/components/shared/PageMeta';
+import { SEO } from '@/components/SEO';
 
 export default function TermsPage() {
   return (
     <div className="app-shell min-h-[100dvh] px-4 py-8">
-      <PageMeta
+      <SEO
         title="Conditions d'utilisation"
         description="Conditions d'utilisation de StudioLink Paris."
-        canonicalPath="/legal/terms"
+        url="/legal/terms"
       />
       <main className="mx-auto w-full max-w-4xl space-y-6">
         <header className="space-y-2">

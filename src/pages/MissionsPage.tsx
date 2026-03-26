@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MissionCard } from '@/components/search/MissionCard';
+import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { PageMeta } from '@/components/shared/PageMeta';
 import { useSearch } from '@/hooks/useSearch';
 import {
   parseFiltersFromURL,
@@ -99,10 +99,10 @@ export default function MissionsPage() {
 
   return (
     <main className="app-shell pb-24">
-      <PageMeta
-        title="Missions disponibles"
-        description="Trouvez des missions de production musicale avec recherche full-text et filtres persistés."
-        canonicalPath="/missions"
+      <SEO
+        title="Missions creatives"
+        description="Trouvez des missions creatives avec recherche full-text et filtres persistes."
+        url="/missions"
       />
 
       <div className="app-container-wide pt-20 md:pt-24">

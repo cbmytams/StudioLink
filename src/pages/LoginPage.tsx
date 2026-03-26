@@ -1,9 +1,9 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
+import { SEO } from '@/components/SEO';
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
 import {
@@ -204,10 +204,12 @@ export default function LoginPage() {
   if (step === 'confirm-email') {
     return (
       <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
-        <Helmet>
-          <title>Confirmation email — StudioLink</title>
-          <meta name="description" content="Confirme ton adresse email pour activer ton compte StudioLink." />
-        </Helmet>
+        <SEO
+          title="Confirmation email"
+          description="Confirme ton adresse email pour activer ton compte StudioLink."
+          noIndex
+          url="/login"
+        />
         <GlassCard className="w-full max-w-sm p-8 text-center">
           <p className="mb-4 text-5xl">📬</p>
           <h2 className="mb-2 text-xl font-bold text-white">Vérifie ta boîte mail</h2>
@@ -420,13 +422,12 @@ export default function LoginPage() {
 
   return (
     <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
-      <Helmet>
-        <title>{isSignIn ? 'Connexion — StudioLink' : 'Inscription — StudioLink'}</title>
-        <meta
-          name="description"
-          content={isSignIn ? 'Connectez-vous à votre compte StudioLink.' : 'Créez votre compte StudioLink avec invitation.'}
-        />
-      </Helmet>
+      <SEO
+        title={isSignIn ? 'Connexion' : 'Inscription'}
+        description={isSignIn ? 'Connectez-vous a votre compte StudioLink.' : 'Creez votre compte StudioLink avec invitation.'}
+        noIndex
+        url={isSignIn ? '/login' : '/register'}
+      />
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-10 flex flex-col items-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_40px_rgba(249,115,22,0.3)] border border-white/20">

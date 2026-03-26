@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
-import { Helmet } from 'react-helmet-async';
+import { SEO } from '@/components/SEO';
 import {
   getDashboardPath,
   isProfileIncomplete,
@@ -69,18 +69,10 @@ export default function HomePage() {
         </div>
       </header>
 
-      <Helmet>
-        <title>StudioLink — Plateforme Studios & Créatifs</title>
-        <meta
-          name="description"
-          content="StudioLink connecte les studios et les professionnels créatifs via une plateforme sur invitation."
-        />
-        <meta property="og:title" content="StudioLink — Plateforme Studios & Créatifs" />
-        <meta
-          property="og:description"
-          content="Rejoins la plateforme sur invitation pour publier des missions ou candidater en tant que pro."
-        />
-      </Helmet>
+      <SEO
+        description="StudioLink connecte les studios et les professionnels creatifs via une plateforme sur invitation."
+        url="/"
+      />
       <section className="min-h-[calc(100dvh-84px)] flex flex-col items-center justify-center text-center px-4 py-24">
         <span className="inline-block rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-orange-700 mb-6">
           🔒 Plateforme sur invitation uniquement

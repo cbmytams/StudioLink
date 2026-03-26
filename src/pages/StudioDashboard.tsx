@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Activity, BadgeEuro, FolderKanban, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MiniLineChart } from '@/components/shared/MiniLineChart';
-import { PageMeta } from '@/components/shared/PageMeta';
 import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
@@ -111,10 +111,11 @@ export default function StudioDashboard() {
 
   return (
     <div id="dashboard-studio" className="app-shell">
-      <PageMeta
-        title="Mon Dashboard"
-        description="Vos statistiques et votre activité récente côté studio."
-        canonicalPath="/dashboard"
+      <SEO
+        title="Dashboard Studio"
+        description="Vos statistiques et votre activite recente cote studio."
+        noIndex
+        url="/dashboard"
       />
 
       <div className="app-container-wide">

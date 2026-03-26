@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SEO } from '@/components/SEO';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
@@ -357,18 +357,11 @@ export default function MissionDetail() {
 
   return (
     <div className="app-shell min-h-[100dvh] pb-28">
-      <Helmet>
-        <title>{`${mission.title} — StudioLink`}</title>
-        <meta
-          name="description"
-          content={mission.description ? mission.description.slice(0, 160) : 'Détail mission StudioLink'}
-        />
-        <meta property="og:title" content={`${mission.title} — StudioLink`} />
-        <meta
-          property="og:description"
-          content={mission.description ? mission.description.slice(0, 160) : 'Découvrez cette mission sur StudioLink.'}
-        />
-      </Helmet>
+      <SEO
+        title={mission.title}
+        description={mission.description ? mission.description.slice(0, 160) : 'Detail mission StudioLink'}
+        url={`/missions/${mission.id}`}
+      />
       <div className="app-container-compact">
           <button
             type="button"
