@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage --coverage.include=src/lib/auth/handleAuthError.ts --coverage.include=src/lib/email/emailService.ts --coverage.include=src/lib/analytics/events.ts --coverage.include=src/lib/analytics/posthog.ts",
-    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs"
+    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs",
+    "uptimerobot:setup": "node scripts/setup-uptimerobot.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
