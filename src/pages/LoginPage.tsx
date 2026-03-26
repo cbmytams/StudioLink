@@ -35,6 +35,7 @@ type AuthRouteState = {
   type?: 'studio' | 'pro';
   code?: string;
   email?: string | null;
+  reason?: 'session_expired';
 } | null;
 
 type RedirectProfile = {
@@ -380,6 +381,9 @@ export default function LoginPage() {
   const signupSubtitle = invitationContext
     ? 'Invitation validée · Finalise ton inscription'
     : 'Inscription sur invitation uniquement';
+  const sessionExpiredMessage = routeState?.reason === 'session_expired'
+    ? 'Votre session a expiré. Reconnectez-vous.'
+    : null;
   const submitDisabled = loading
     || invitationState === 'checking'
     || signupBlocked
@@ -529,6 +533,11 @@ export default function LoginPage() {
             </div>
           ) : null}
 
+          {sessionExpiredMessage ? (
+            <p className="rounded-lg border border-amber-300/70 bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">
+              {sessionExpiredMessage}
+            </p>
+          ) : null}
           {error ? <p className="text-red-400 text-sm text-center mt-2">{error}</p> : null}
           <Button
             type="submit"
