@@ -20,6 +20,7 @@ import {
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { trackUserLoggedIn, trackUserRegistered } from '@/lib/analytics/events';
 import { identifyUser } from '@/lib/analytics/posthog';
+import { emailService } from '@/lib/email/emailService';
 
 type AuthMode = 'signin' | 'signup';
 type InvitationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
@@ -68,6 +69,13 @@ function getPasswordError(value: string): string | undefined {
 function getConfirmPasswordError(password: string, confirmPassword: string): string | undefined {
   if (confirmPassword !== password) return 'Les mots de passe ne correspondent pas';
   return undefined;
+}
+
+function firstNameFromEmail(value: string) {
+  const localPart = value.split('@')[0] ?? '';
+  const cleaned = localPart.replace(/[._-]+/g, ' ').trim();
+  if (!cleaned) return 'there';
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
 export default function LoginPage() {
@@ -335,6 +343,12 @@ export default function LoginPage() {
         });
         return;
       }
+
+      void emailService.sendWelcome({
+        email: email.trim(),
+        firstName: firstNameFromEmail(email.trim()),
+        role: invitationContext.type,
+      }).catch(() => undefined);
 
       if (data.session) {
         trackUserRegistered(invitationContext.type);

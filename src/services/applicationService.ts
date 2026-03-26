@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
 import type { ApplicationRecord, ApplicationStatus, CreateApplicationInput } from '@/types/backend';
+import { emailService } from '@/lib/email/emailService';
 import {
   trackApplicationAccepted,
   trackApplicationRejected,
@@ -46,6 +47,20 @@ type ApplicationRpcRow = {
   rejected_mission_id?: string;
   rejected_pro_id?: string;
   rejected_status?: string | null;
+};
+
+type MissionEmailRow = {
+  id: string;
+  title: string | null;
+  studio_id: string;
+};
+
+type EmailProfileRow = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  full_name: string | null;
+  company_name: string | null;
 };
 
 export interface MissionApplication {
@@ -97,6 +112,98 @@ function mapRpcRow(row: ApplicationRpcRow) {
   };
 }
 
+function getProfileName(profile: EmailProfileRow | null | undefined, fallback: string) {
+  return profile?.display_name ?? profile?.full_name ?? profile?.company_name ?? fallback;
+}
+
+async function getProfilesById(
+  client: ReturnType<typeof ensureClient>,
+  ids: string[],
+): Promise<Map<string, EmailProfileRow>> {
+  if (ids.length === 0) return new Map();
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  if (uniqueIds.length === 0) return new Map();
+
+  const { data, error } = await client
+    .from('profiles')
+    .select('id, email, display_name, full_name, company_name')
+    .in('id', uniqueIds);
+
+  if (error || !data) return new Map();
+  return new Map((data as EmailProfileRow[]).map((profile) => [profile.id, profile]));
+}
+
+async function notifyApplicationCreated(
+  client: ReturnType<typeof ensureClient>,
+  created: ApplicationRecord,
+) {
+  const { data: missionData, error: missionError } = await client
+    .from('missions')
+    .select('id, title, studio_id')
+    .eq('id', created.mission_id)
+    .maybeSingle();
+
+  if (missionError || !missionData) return;
+  const mission = missionData as MissionEmailRow;
+
+  const profilesById = await getProfilesById(client, [mission.studio_id, created.pro_id]);
+  const studioProfile = profilesById.get(mission.studio_id) ?? null;
+  const proProfile = profilesById.get(created.pro_id) ?? null;
+
+  if (!studioProfile?.email) return;
+
+  await emailService.sendApplicationReceived({
+    studioEmail: studioProfile.email,
+    proName: getProfileName(proProfile, 'Un professionnel'),
+    missionTitle: mission.title ?? 'Mission StudioLink',
+    missionId: mission.id,
+    coverLetter: created.cover_letter ?? created.message ?? undefined,
+  });
+}
+
+async function notifyApplicationDecision(
+  client: ReturnType<typeof ensureClient>,
+  result: ReturnType<typeof mapRpcRow>,
+  decision: 'accepted' | 'rejected',
+) {
+  if (!result.missionId || !result.proId) return;
+
+  const { data: missionData, error: missionError } = await client
+    .from('missions')
+    .select('title, studio_id')
+    .eq('id', result.missionId)
+    .maybeSingle();
+
+  if (missionError || !missionData) return;
+  const mission = missionData as Pick<MissionEmailRow, 'title' | 'studio_id'>;
+
+  const profilesById = await getProfilesById(client, [mission.studio_id, result.proId]);
+  const studioProfile = profilesById.get(mission.studio_id) ?? null;
+  const proProfile = profilesById.get(result.proId) ?? null;
+
+  if (!proProfile?.email) return;
+
+  const missionTitle = mission.title ?? 'Mission StudioLink';
+  const studioName = getProfileName(studioProfile, 'Studio');
+
+  if (decision === 'accepted') {
+    if (!result.sessionId) return;
+    await emailService.sendApplicationAccepted({
+      proEmail: proProfile.email,
+      studioName,
+      missionTitle,
+      sessionId: result.sessionId,
+    });
+    return;
+  }
+
+  await emailService.sendApplicationRejected({
+    proEmail: proProfile.email,
+    studioName,
+    missionTitle,
+  });
+}
+
 export const applicationService = {
   async getMissionApplications(missionId: string): Promise<ApplicationRecord[]> {
     const client = ensureClient();
@@ -144,6 +251,7 @@ export const applicationService = {
         fromSearch: false,
         missionId: created.mission_id,
       });
+      void notifyApplicationCreated(client, created).catch(() => undefined);
       return created;
     } catch (error) {
       const isAuthError = await handleAuthError(error);
@@ -168,6 +276,7 @@ export const applicationService = {
     if (result.sessionId) {
       trackSessionStarted(result.sessionId);
     }
+    void notifyApplicationDecision(client, result, 'accepted').catch(() => undefined);
     return result;
   },
 
@@ -182,6 +291,7 @@ export const applicationService = {
     if (result.missionId) {
       trackApplicationRejected(result.missionId);
     }
+    void notifyApplicationDecision(client, result, 'rejected').catch(() => undefined);
     return result;
   },
 

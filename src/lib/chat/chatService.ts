@@ -2,6 +2,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { trackFileUploaded, trackSessionCompleted } from '@/lib/analytics/events';
+import { emailService } from '@/lib/email/emailService';
 import type { ChatFileType, SessionRecord } from '@/types/backend';
 import { getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { detectChatFileType, normalizeChatMessageRow, type NormalizedChatMessage } from './chatUtils';
@@ -39,6 +40,22 @@ type MessageRow = {
   created_at: string;
 };
 
+type SessionCompletionRow = {
+  created_at: string | null;
+  mission_id: string;
+  studio_id: string;
+  pro_id: string;
+  mission?: SessionMissionRow | SessionMissionRow[] | null;
+};
+
+type EmailProfileRow = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  full_name: string | null;
+  company_name: string | null;
+};
+
 function asSingle<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
@@ -50,6 +67,166 @@ function computeDurationDays(createdAt: string | null | undefined): number {
   if (Number.isNaN(start.getTime())) return 0;
   const elapsedMs = Date.now() - start.getTime();
   return Math.max(0, Math.ceil(elapsedMs / (1000 * 60 * 60 * 24)));
+}
+
+const MESSAGE_EMAIL_COOLDOWN_MS = 30 * 60 * 1000;
+const MESSAGE_EMAIL_STORAGE_PREFIX = 'studiolink:message-email';
+
+function getProfileName(profile: EmailProfileRow | null | undefined, fallback: string) {
+  return profile?.display_name ?? profile?.full_name ?? profile?.company_name ?? fallback;
+}
+
+function getMessageEmailStorageKey(sessionId: string, recipientId: string) {
+  return `${MESSAGE_EMAIL_STORAGE_PREFIX}:${sessionId}:${recipientId}`;
+}
+
+function isMessageEmailInCooldown(sessionId: string, recipientId: string) {
+  if (typeof window === 'undefined') return false;
+  try {
+    const rawValue = window.localStorage.getItem(getMessageEmailStorageKey(sessionId, recipientId));
+    if (!rawValue) return false;
+    const lastSent = Number(rawValue);
+    if (Number.isNaN(lastSent)) return false;
+    return (Date.now() - lastSent) < MESSAGE_EMAIL_COOLDOWN_MS;
+  } catch {
+    return false;
+  }
+}
+
+function markMessageEmailSent(sessionId: string, recipientId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(getMessageEmailStorageKey(sessionId, recipientId), String(Date.now()));
+  } catch {
+    // Storage indisponible: non bloquant.
+  }
+}
+
+async function getProfilesById(
+  client: ReturnType<typeof ensureClient>,
+  ids: string[],
+): Promise<Map<string, EmailProfileRow>> {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  if (uniqueIds.length === 0) return new Map();
+
+  const { data, error } = await client
+    .from('profiles')
+    .select('id, email, display_name, full_name, company_name')
+    .in('id', uniqueIds);
+
+  if (error || !data) return new Map();
+  return new Map((data as EmailProfileRow[]).map((profile) => [profile.id, profile]));
+}
+
+async function isRecipientInactive(
+  client: ReturnType<typeof ensureClient>,
+  sessionId: string,
+  recipientId: string,
+) {
+  const cutoff = new Date(Date.now() - MESSAGE_EMAIL_COOLDOWN_MS).toISOString();
+  const { count, error } = await client
+    .from('messages')
+    .select('id', { head: true, count: 'exact' })
+    .eq('session_id', sessionId)
+    .eq('sender_id', recipientId)
+    .gte('created_at', cutoff);
+
+  if (error) return false;
+  return (count ?? 0) === 0;
+}
+
+async function notifySessionCompletedRatingEmails(
+  client: ReturnType<typeof ensureClient>,
+  sessionId: string,
+  sessionRow: SessionCompletionRow,
+) {
+  const profilesById = await getProfilesById(client, [sessionRow.studio_id, sessionRow.pro_id]);
+  const studioProfile = profilesById.get(sessionRow.studio_id) ?? null;
+  const proProfile = profilesById.get(sessionRow.pro_id) ?? null;
+  const missionTitle = asSingle(sessionRow.mission)?.title ?? 'Mission StudioLink';
+
+  if (studioProfile?.email) {
+    await emailService.sendSessionCompletedRating({
+      userEmail: studioProfile.email,
+      otherPartyName: getProfileName(proProfile, 'le professionnel'),
+      missionTitle,
+      sessionId,
+    });
+  }
+
+  if (proProfile?.email) {
+    await emailService.sendSessionCompletedRating({
+      userEmail: proProfile.email,
+      otherPartyName: getProfileName(studioProfile, 'le studio'),
+      missionTitle,
+      sessionId,
+    });
+  }
+}
+
+async function maybeSendNewMessageEmail(
+  client: ReturnType<typeof ensureClient>,
+  params: {
+    sessionId: string;
+    senderId: string;
+    content: string;
+    attachment?: ChatUpload;
+  },
+) {
+  const { data: sessionData, error: sessionError } = await client
+    .from('sessions')
+    .select(`
+      id,
+      mission_id,
+      studio_id,
+      pro_id,
+      mission:missions!sessions_mission_id_fkey (
+        id,
+        title
+      )
+    `)
+    .eq('id', params.sessionId)
+    .maybeSingle();
+
+  if (sessionError || !sessionData) return;
+
+  const session = sessionData as Omit<SessionCompletionRow, 'created_at'>;
+  const recipientId = params.senderId === session.studio_id
+    ? session.pro_id
+    : params.senderId === session.pro_id
+      ? session.studio_id
+      : null;
+
+  if (!recipientId) return;
+  if (isMessageEmailInCooldown(params.sessionId, recipientId)) return;
+
+  const inactiveRecipient = await isRecipientInactive(client, params.sessionId, recipientId);
+  if (!inactiveRecipient) return;
+
+  const profilesById = await getProfilesById(client, [params.senderId, recipientId]);
+  const senderProfile = profilesById.get(params.senderId) ?? null;
+  const recipientProfile = profilesById.get(recipientId) ?? null;
+
+  if (!recipientProfile?.email) return;
+
+  const missionTitle = asSingle(session.mission)?.title ?? 'Mission StudioLink';
+  const senderName = getProfileName(senderProfile, 'StudioLink');
+  const trimmedContent = params.content.trim();
+  const preview = trimmedContent.length > 0
+    ? trimmedContent
+    : params.attachment?.fileName
+      ? `Fichier partage: ${params.attachment.fileName}`
+      : 'Nouveau message recu.';
+
+  await emailService.sendNewMessage({
+    recipientEmail: recipientProfile.email,
+    senderName,
+    missionTitle,
+    sessionId: params.sessionId,
+    preview,
+  });
+
+  markMessageEmailSent(params.sessionId, recipientId);
 }
 
 export type ChatSession = SessionRecord & {
@@ -169,7 +346,16 @@ export const chatService = {
     const client = ensureClient();
     const { data: sessionRow, error: sessionError } = await client
       .from('sessions')
-      .select('created_at')
+      .select(`
+        created_at,
+        mission_id,
+        studio_id,
+        pro_id,
+        mission:missions!sessions_mission_id_fkey (
+          id,
+          title
+        )
+      `)
       .eq('id', sessionId)
       .maybeSingle();
 
@@ -185,6 +371,11 @@ export const chatService = {
       sessionId,
       durationDays,
     });
+
+    if (sessionRow) {
+      void notifySessionCompletedRatingEmails(client, sessionId, sessionRow as SessionCompletionRow)
+        .catch(() => undefined);
+    }
   },
 
   async getMessages(sessionId: string): Promise<ChatMessage[]> {
@@ -235,6 +426,13 @@ export const chatService = {
       if (sessionError) {
         // Non bloquant pour l'expérience chat.
       }
+
+      void maybeSendNewMessageEmail(client, {
+        sessionId,
+        senderId,
+        content,
+        attachment,
+      }).catch(() => undefined);
 
       return normalizeChatMessageRow(data as MessageRow);
     } catch (error) {
