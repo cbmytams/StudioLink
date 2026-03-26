@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import type { PortfolioItem } from '@/types/backend';
+import type { Database } from '@/types/supabase';
 
 const PORTFOLIO_ITEM_SELECT_COLUMNS = 'id, pro_id, title, description, url, image_url, created_at';
 
@@ -30,11 +31,11 @@ export const portfolioService = {
     url?: string | null,
   ): Promise<PortfolioItem> {
     const client = ensureClient();
-    const payload = {
+    const payload: Database['public']['Tables']['portfolio_items']['Insert'] = {
       pro_id: proId,
       title,
       description: description?.trim() ? description.trim() : null,
-      url: url?.trim() ? url.trim() : null,
+      url: url?.trim() || '',
     };
 
     const { data, error } = await client
