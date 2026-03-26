@@ -40,11 +40,64 @@ export default defineConfig(({mode}) => {
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-query': ['@tanstack/react-query'],
-            'vendor-supabase': ['@supabase/supabase-js'],
-            'vendor-ui': ['motion'],
+          manualChunks: (id) => {
+            if (!id.includes('node_modules')) return undefined;
+
+            if (
+              id.includes('/react-dom/')
+              || id.includes('/react/')
+              || id.includes('/scheduler/')
+            ) {
+              return 'vendor-react';
+            }
+
+            if (
+              id.includes('/react-router/')
+              || id.includes('/react-router-dom/')
+              || id.includes('/@remix-run/router/')
+            ) {
+              return 'vendor-router';
+            }
+
+            if (
+              id.includes('/@supabase/supabase-js/')
+              || id.includes('/@supabase/auth-js/')
+              || id.includes('/@supabase/functions-js/')
+              || id.includes('/@supabase/postgrest-js/')
+              || id.includes('/@supabase/realtime-js/')
+              || id.includes('/@supabase/storage-js/')
+            ) {
+              return 'vendor-supabase';
+            }
+
+            if (id.includes('/posthog-js/')) {
+              return 'vendor-posthog';
+            }
+
+            if (id.includes('/@tanstack/react-query/')) {
+              return 'vendor-query';
+            }
+
+            if (
+              id.includes('/motion/')
+              || id.includes('/framer-motion/')
+              || id.includes('/tailwind-merge/')
+            ) {
+              return 'vendor-ui';
+            }
+
+            if (id.includes('/react-helmet-async/')) {
+              return 'vendor-seo';
+            }
+
+            if (
+              id.includes('/@vercel/analytics/')
+              || id.includes('/@vercel/speed-insights/')
+            ) {
+              return 'vendor-vercel';
+            }
+
+            return undefined;
           },
         },
       },

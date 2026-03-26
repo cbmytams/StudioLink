@@ -2,6 +2,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { PageMeta } from '@/components/shared/PageMeta';
+import { SEO } from '@/components/SEO';
 import {
   getDashboardPath,
   resolveProfileType,
@@ -26,6 +27,7 @@ export default function NotFound() {
 
   return (
     <div id="page-404" className="app-shell flex min-h-[100dvh] flex-col items-center justify-center px-4 text-center">
+      <SEO title="Page introuvable" noIndex url="/404" />
       <PageMeta
         title="Page introuvable"
         description="La page demandée n'existe pas ou n'est plus disponible."
@@ -39,13 +41,23 @@ export default function NotFound() {
         <p className="mt-3 text-sm leading-6 text-white/60">
           Le lien est peut-être erroné, expiré ou la page a été déplacée. Tu peux revenir vers ton espace principal.
         </p>
-        <Button
-          id="btn-back-home"
-          onClick={handleBack}
-          className="mt-8 bg-orange-500 text-white hover:bg-orange-600"
-        >
-          Retour au dashboard
-        </Button>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button
+            id="btn-back-home"
+            onClick={handleBack}
+            className="bg-orange-500 text-white hover:bg-orange-600"
+          >
+            Retour
+          </Button>
+          <button
+            id="btn-go-home"
+            type="button"
+            onClick={() => navigate('/')}
+            className="min-h-[44px] rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/75 transition hover:border-white/30 hover:text-white"
+          >
+            Accueil
+          </button>
+        </div>
       </div>
     </div>
   );
