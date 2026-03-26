@@ -46,6 +46,7 @@ const ChatPage = lazy(() => import('@/pages/ChatPage'));
 const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
+const HealthCheckPage = lazy(() => import('@/pages/HealthCheck'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 type AppProfile = {
@@ -387,6 +388,7 @@ export default function App() {
               </ProtectedRoute>
             )}
           />
+          <Route path="/health" element={<HealthCheckPage />} />
 
           <Route element={<ProtectedRoute requiredType="studio"><StudioLayout /></ProtectedRoute>}>
             <Route path="/studio/dashboard" element={<StudioDashboardPage />} />
