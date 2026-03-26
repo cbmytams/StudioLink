@@ -109,9 +109,14 @@ export function getCurrentStepErrors(step: number, draft: OnboardingDraft): Step
 }
 
 export function buildOnboardingProfilePayload(userId: string, draft: OnboardingDraft) {
+  if (draft.role !== 'studio' && draft.role !== 'pro') {
+    throw new Error('Type de compte invalide pendant l’onboarding.');
+  }
+
+  const role: UserType = draft.role;
   const now = new Date().toISOString();
   const skills = normalizeSkills(draft.skills);
-  const dailyRate = draft.role === 'pro' && draft.dailyRate.trim()
+  const dailyRate = role === 'pro' && draft.dailyRate.trim()
     ? Number.parseInt(draft.dailyRate, 10)
     : null;
 
@@ -121,12 +126,12 @@ export function buildOnboardingProfilePayload(userId: string, draft: OnboardingD
     full_name: draft.displayName.trim(),
     city: draft.city.trim() || null,
     avatar_url: draft.avatarUrl,
-    company_name: draft.role === 'studio' ? (draft.companyName.trim() || draft.displayName.trim()) : null,
+    company_name: role === 'studio' ? (draft.companyName.trim() || draft.displayName.trim()) : null,
     bio: draft.bio.trim() || null,
-    skills: draft.role === 'pro' ? skills : [],
-    daily_rate: draft.role === 'pro' && Number.isFinite(dailyRate) ? dailyRate : null,
-    type: draft.role,
-    user_type: draft.role,
+    skills: role === 'pro' ? skills : [],
+    daily_rate: role === 'pro' && Number.isFinite(dailyRate) ? dailyRate : null,
+    type: role,
+    user_type: role,
     onboarding_complete: true,
     onboarding_completed: true,
     onboarding_step: 4,
