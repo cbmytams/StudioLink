@@ -26,6 +26,7 @@ import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import type { UserType } from '@/types/backend';
+import type { Database } from '@/types/supabase';
 
 type EditableProfile = {
   user_type?: UserType | null;
@@ -44,10 +45,10 @@ type EditableProfile = {
 
 type PersistValue = string | number | boolean | string[] | null;
 
-async function tryProfileUpsert(payload: Record<string, PersistValue>) {
+async function tryProfileUpsert(payload: Database['public']['Tables']['profiles']['Insert']) {
   const { error } = await supabase
     .from('profiles')
-    .upsert(payload as never, { onConflict: 'id' });
+    .upsert(payload, { onConflict: 'id' });
   return error;
 }
 
@@ -191,7 +192,7 @@ export default function Onboarding() {
 
     try {
       const payload = buildOnboardingProfilePayload(user.id, draft);
-      const payloadVariants: Array<Record<string, PersistValue>> = [
+      const payloadVariants: Array<Database['public']['Tables']['profiles']['Insert']> = [
         {
           ...payload,
           email: user.email ?? null,
