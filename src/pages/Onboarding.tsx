@@ -195,11 +195,11 @@ export default function Onboarding() {
       const payloadVariants: Array<Database['public']['Tables']['profiles']['Insert']> = [
         {
           ...payload,
-          email: user.email ?? null,
+          email: user.email ?? '',
         },
         {
           id: payload.id,
-          email: user.email ?? null,
+          email: user.email ?? '',
           display_name: payload.display_name,
           full_name: payload.full_name,
           city: payload.city,
