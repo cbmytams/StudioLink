@@ -11,7 +11,7 @@ interface SEOProps {
 const SITE_NAME = 'StudioLink';
 const DEFAULT_DESC = 'La plateforme qui connecte les studios creatifs avec les professionnels independants.';
 const BASE_URL = 'https://studiolink-paris.vercel.app';
-const OG_IMAGE = `${BASE_URL}/icons/icon-512.png`;
+const OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 export function SEO({
   title,
