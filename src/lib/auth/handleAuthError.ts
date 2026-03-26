@@ -18,6 +18,7 @@ const AUTH_ERROR_PATTERNS = [
   'unauthorized',
   '401',
 ];
+const AUTH_REDIRECT_REASON_KEY = 'auth_redirect_reason';
 
 function readErrorFragment(error: unknown, key: 'message' | 'code' | 'status'): string {
   if (!error || typeof error !== 'object') return '';
@@ -41,6 +42,10 @@ export async function handleAuthError(error: unknown, navigate?: NavigateFn): Pr
     await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
   }
 
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.setItem(AUTH_REDIRECT_REASON_KEY, 'session_expired');
+  }
+
   if (navigate) {
     navigate('/login', {
       replace: true,
@@ -49,4 +54,12 @@ export async function handleAuthError(error: unknown, navigate?: NavigateFn): Pr
   }
 
   return true;
+}
+
+export function consumeAuthRedirectReason(): string | null {
+  if (typeof window === 'undefined') return null;
+  const reason = window.sessionStorage.getItem(AUTH_REDIRECT_REASON_KEY);
+  if (!reason) return null;
+  window.sessionStorage.removeItem(AUTH_REDIRECT_REASON_KEY);
+  return reason;
 }
