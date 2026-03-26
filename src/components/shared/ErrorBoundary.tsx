@@ -27,6 +27,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
     };
   }
 
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    void import('@sentry/react')
+      .then(({ captureException }) => {
+        captureException(error, {
+          extra: { componentStack: info.componentStack },
+        });
+      })
+      .catch(() => undefined);
+    console.error('ErrorBoundary caught:', error, info);
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;

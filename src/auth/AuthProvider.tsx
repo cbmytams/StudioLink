@@ -26,7 +26,11 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signInPassword: (email: string, password: string) => ReturnType<typeof signInPasswordService>;
+  signInPassword: (
+    email: string,
+    password: string,
+    captchaToken?: string,
+  ) => ReturnType<typeof signInPasswordService>;
   sendMagicLink: (email: string, redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -172,10 +176,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentStep(profile.onboarding_step || 1);
   }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);
 
-  const signInPassword = useCallback(async (email: string, password: string) => {
+  const signInPassword = useCallback(async (email: string, password: string, captchaToken?: string) => {
     setLoading(true);
     try {
-      const result = await signInPasswordService(email, password);
+      const result = await signInPasswordService(email, password, captchaToken);
       const nextSession = result.session ?? null;
 
       if (nextSession) {

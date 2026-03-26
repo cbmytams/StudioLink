@@ -9,9 +9,6 @@ import { useAuth } from '@/lib/supabase/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Toaster } from '@/components/ui/Toast';
-import { CookieBanner } from '@/components/shared/CookieBanner';
-import StudioLayout from '@/layouts/StudioLayout';
-import ProLayout from '@/layouts/ProLayout';
 import {
   getDashboardPath,
   isProfileIncomplete,
@@ -51,7 +48,11 @@ const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const HealthCheckPage = lazy(() => import('@/pages/HealthCheck'));
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
+const LegalMentionsPage = lazy(() => import('@/pages/legal/LegalMentionsPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const StudioLayout = lazy(() => import('@/layouts/StudioLayout'));
+const ProLayout = lazy(() => import('@/layouts/ProLayout'));
+const CookieBanner = lazy(() => import('@/components/shared/CookieBanner').then((module) => ({ default: module.CookieBanner })));
 
 type AppProfile = {
   user_type?: 'studio' | 'pro' | null;
@@ -176,6 +177,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/legal/privacy" element={<PrivacyPage />} />
           <Route path="/legal/terms" element={<TermsPage />} />
+          <Route path="/legal/mentions" element={<LegalMentionsPage />} />
 
           <Route
             path="/onboarding"
@@ -436,7 +438,9 @@ export default function App() {
         </Routes>
       </Suspense>
       <Toaster />
-      <CookieBanner />
+      <Suspense fallback={null}>
+        <CookieBanner />
+      </Suspense>
     </BrowserRouter>
   );
 }

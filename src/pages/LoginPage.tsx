@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
@@ -90,6 +91,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invitationState, setInvitationState] = useState<InvitationState>('idle');
@@ -200,6 +202,8 @@ export default function LoginPage() {
   }, [invitationContext, mode]);
 
   const isSignIn = mode === 'signin';
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  const captchaRequired = Boolean(turnstileSiteKey);
 
   if (step === 'confirm-email') {
     return (
@@ -253,6 +257,11 @@ export default function LoginPage() {
       return false;
     }
 
+    if (captchaRequired && !captchaToken) {
+      setError('Validation anti-bot requise.');
+      return false;
+    }
+
     return true;
   };
 
@@ -265,7 +274,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isSignIn) {
-        const signInData = await signInPassword(email.trim(), password);
+        const signInData = await signInPassword(email.trim(), password, captchaToken || undefined);
         const signedInUserId = signInData.user?.id ?? signInData.session?.user?.id;
 
         if (!signedInUserId) {
@@ -317,6 +326,7 @@ export default function LoginPage() {
         email: email.trim(),
         password,
         options: {
+          captchaToken: captchaToken || undefined,
           emailRedirectTo: buildSignupEmailRedirect(window.location.origin),
           data: {
             invitation_code: invitationContext.code,
@@ -326,6 +336,7 @@ export default function LoginPage() {
         },
       });
       if (signUpError) {
+        setCaptchaToken('');
         const message = toUserFacingErrorMessage(signUpError, 'Création impossible.');
         setError(message);
         showToast({
@@ -369,6 +380,7 @@ export default function LoginPage() {
       setConfirmPassword('');
     } catch (submitError) {
       const message = toUserFacingErrorMessage(submitError, 'Une erreur est survenue.');
+      setCaptchaToken('');
       setError(message);
       showToast({
         title: isSignIn ? 'Connexion impossible' : 'Création impossible',
@@ -416,6 +428,7 @@ export default function LoginPage() {
   const submitDisabled = loading
     || invitationState === 'checking'
     || signupBlocked
+    || (captchaRequired && !captchaToken)
     || Boolean(getEmailError(email))
     || Boolean(getPasswordError(password))
     || (mode === 'signup' && Boolean(getConfirmPasswordError(password, confirmPassword)));
@@ -567,6 +580,17 @@ export default function LoginPage() {
             </p>
           ) : null}
           {error ? <p className="text-red-400 text-sm text-center mt-2">{error}</p> : null}
+          {turnstileSiteKey ? (
+            <div className="flex justify-center pt-1">
+              <Turnstile
+                siteKey={turnstileSiteKey}
+                onSuccess={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken('')}
+                onError={() => setCaptchaToken('')}
+                options={{ theme: 'light', size: 'flexible' }}
+              />
+            </div>
+          ) : null}
           <Button
             type="submit"
             disabled={submitDisabled}
@@ -603,10 +627,18 @@ export default function LoginPage() {
             <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
               Politique de confidentialité
             </Link>
+            {' '}ainsi que nos{' '}
+            <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
+              Mentions legales
+            </Link>
             .
           </p>
         ) : (
           <p className="mt-3 text-center text-xs text-white/50">
+            <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
+              Mentions legales
+            </Link>
+            {' '}·{' '}
             <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
               Confidentialité
             </Link>{' '}

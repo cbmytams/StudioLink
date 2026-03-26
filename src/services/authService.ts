@@ -71,9 +71,15 @@ async function consumeInvitationCode(invitationCode: string, userId: string) {
   if (error) throw error;
 }
 
-export async function signInPassword(email: string, password: string) {
+export async function signInPassword(email: string, password: string, captchaToken?: string) {
   const client = assertSupabase();
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password,
+    options: {
+      captchaToken: captchaToken || undefined,
+    },
+  });
   if (error) throw error;
   return data;
 }
