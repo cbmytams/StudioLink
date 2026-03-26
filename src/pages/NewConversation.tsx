@@ -88,7 +88,7 @@ export default function NewConversation() {
           .insert({
             participant_1: userId,
             participant_2: targetId,
-          } as never)
+          })
           .select('id')
           .single();
 
