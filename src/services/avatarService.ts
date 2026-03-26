@@ -59,7 +59,7 @@ export const avatarService = {
       .update({
         avatar_url: url,
         updated_at: new Date().toISOString(),
-      } as never)
+      })
       .eq('id', userId);
 
     if (error) {
