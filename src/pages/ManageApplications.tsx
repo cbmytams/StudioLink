@@ -132,7 +132,7 @@ export default function ManageApplications() {
         };
         setMission(nextMission);
 
-        const rawApplications = (applicationData as unknown as ApplicationRow[] | null ?? []);
+        const rawApplications = (applicationData as ApplicationRow[] | null ?? []);
         const profilesById = await getPublicProfilesMap(rawApplications.map((application) => application.pro_id));
 
         const mappedApplications = rawApplications.map((application) => ({
@@ -278,13 +278,13 @@ export default function ManageApplications() {
     try {
       const update = await supabase
         .from('missions')
-        .update({ status: 'completed' as never })
+        .update({ status: 'completed' })
         .eq('id', targetMissionId);
 
       if (update.error) {
         const fallback = await supabase
           .from('missions')
-          .update({ status: 'rated' as never })
+          .update({ status: 'rated' })
           .eq('id', targetMissionId);
         if (fallback.error) throw fallback.error;
       }
