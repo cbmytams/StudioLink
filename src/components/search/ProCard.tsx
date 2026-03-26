@@ -1,5 +1,6 @@
 import { MapPin, Star } from 'lucide-react';
 import type { SearchProResult } from '@/lib/search/searchService';
+import { Avatar } from '@/components/ui/Avatar';
 
 type ProCardProps = {
   profile: SearchProResult;
@@ -23,17 +24,12 @@ export function ProCard({ profile, onOpen }: ProCardProps) {
       data-pro-id={profile.id}
     >
       <div className="flex items-start gap-3">
-        {profile.avatar_url ? (
-          <img
-            src={profile.avatar_url}
-            alt={displayName}
-            className="h-14 w-14 rounded-full object-cover ring-1 ring-white/10"
-          />
-        ) : (
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-400/15 text-lg font-bold text-orange-100 ring-1 ring-white/10">
-            {displayName.charAt(0).toUpperCase() || '?'}
-          </div>
-        )}
+        <Avatar
+          src={profile.avatar_url}
+          name={displayName}
+          size="lg"
+          className="ring-1 ring-white/10"
+        />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-semibold text-white">{displayName}</h3>
           <div className="mt-1 flex items-center gap-2 text-sm text-white/60">

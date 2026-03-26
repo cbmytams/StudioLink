@@ -81,7 +81,13 @@ export function AvatarUpload({
         className="group relative h-20 w-20 cursor-pointer overflow-hidden rounded-full border border-white/50"
       >
         {currentUrl ? (
-          <img src={currentUrl} alt="Avatar" className="h-full w-full object-cover" />
+          <img
+            src={currentUrl}
+            alt="Avatar"
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-orange-100">
             <span className="text-2xl font-bold text-orange-600">{letter}</span>

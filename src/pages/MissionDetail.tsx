@@ -8,6 +8,7 @@ import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { ApplyModal } from '@/components/ApplyModal';
+import { Avatar } from '@/components/ui/Avatar';
 import type { MissionFileRecord } from '@/types/backend';
 import type { Database } from '@/types/supabase';
 import { getMissionFiles, getSignedUrl } from '@/lib/files/fileService';
@@ -391,19 +392,12 @@ export default function MissionDetail() {
           </div>
 
           <div className="mt-4 flex items-center gap-3">
-            {mission.studio?.avatar_url ? (
-              <img
-                src={mission.studio.avatar_url}
-                alt={studioName}
-                className="h-10 w-10 rounded-full object-cover border border-white/20"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20">
-                  <span className="text-sm font-bold text-orange-200">
-                  {(studioName || 'S').charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <Avatar
+              src={mission.studio?.avatar_url}
+              name={studioName}
+              size="md"
+              className="border border-white/20 bg-orange-500/20 text-orange-200"
+            />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-white">{studioName}</p>
               {mission.studio ? (

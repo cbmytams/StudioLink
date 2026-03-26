@@ -1,0 +1,21 @@
+-- pg_cron setup notes for StudioLink reminders.
+-- Free Plan: activate manually in Dashboard > Extensions.
+-- Pro Plan: extension can be created with:
+-- create extension if not exists pg_cron with schema extensions;
+
+-- Planned job (reference only):
+-- SELECT cron.schedule(
+--   'rating-reminder',
+--   '0 * * * *',
+--   $$
+--     SELECT net.http_post(
+--       url := current_setting('app.supabase_url') || '/functions/v1/process-reminders',
+--       headers := jsonb_build_object(
+--         'Authorization', 'Bearer ' || current_setting('app.service_role_key'),
+--         'Content-Type', 'application/json'
+--       ),
+--       body := json_build_object('type', 'rating_reminder')::text
+--     );
+--   $$
+-- );
+

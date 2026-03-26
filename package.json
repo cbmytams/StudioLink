@@ -11,8 +11,9 @@
     "lint": "npx tsc --noEmit && eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs"
+    "test:coverage": "vitest run --coverage --coverage.include=src/lib/auth/handleAuthError.ts --coverage.include=src/lib/email/emailService.ts --coverage.include=src/lib/analytics/events.ts --coverage.include=src/lib/analytics/posthog.ts",
+    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs",
+    "uptimerobot:setup": "node scripts/setup-uptimerobot.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -41,6 +42,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.11.1",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.14",
