@@ -3,6 +3,9 @@ import type { Database } from '@/types/supabase';
 import type { CreateMissionInput, MissionRecord, MissionStatus } from '@/types/backend';
 import type { Mission as LegacyMission } from '@/types/mission';
 
+const MISSION_SELECT_COLUMNS =
+  'id, studio_id, is_urgent, service_type, artist_name, is_confidential, genres, beat_type, duration, price, location, candidates_count, expires_at, status, created_at, updated_at';
+
 function ensureClient() {
   if (!supabase) {
     throw new Error('Supabase non configuré.');
@@ -52,7 +55,7 @@ export const missionService = {
     const client = ensureClient();
     let query = client
       .from('missions')
-      .select('*')
+      .select(MISSION_SELECT_COLUMNS)
       .eq('studio_id', studioId)
       .order('created_at', { ascending: false });
 
@@ -67,7 +70,7 @@ export const missionService = {
     const client = ensureClient();
     let query = client
       .from('missions')
-      .select('*')
+      .select(MISSION_SELECT_COLUMNS)
       .eq('status', 'published')
       .order('created_at', { ascending: false });
 
@@ -81,7 +84,7 @@ export const missionService = {
 
   async getMissionById(id: string): Promise<MissionRecord> {
     const client = ensureClient();
-    const { data, error } = await client.from('missions').select('*').eq('id', id).single();
+    const { data, error } = await client.from('missions').select(MISSION_SELECT_COLUMNS).eq('id', id).single();
     if (error) throw error;
     return data as MissionRecord;
   },
@@ -103,7 +106,7 @@ export const missionService = {
       status: toDbMissionStatus(input.status, 'draft'),
     };
 
-    const { data, error } = await client.from('missions').insert(payload).select('*').single();
+    const { data, error } = await client.from('missions').insert(payload).select(MISSION_SELECT_COLUMNS).single();
     if (error) throw error;
     return data as MissionRecord;
   },
