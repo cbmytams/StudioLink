@@ -62,7 +62,7 @@ test('initPostHog does nothing when key is missing', async () => {
 
 test('initPostHog configures PostHog and opts out without consent', async () => {
   vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
-  vi.stubEnv('DEV', '');
+  vi.stubEnv('DEV', false);
 
   const { initPostHog } = await import('./posthog');
   initPostHog();
