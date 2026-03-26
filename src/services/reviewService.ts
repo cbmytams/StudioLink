@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase/client';
 import { getPublicProfilesMap } from '@/services/publicProfileService';
 import type { ReviewRecord } from '@/types/backend';
 
+const REVIEW_SELECT_COLUMNS = 'id, reviewer_id, reviewee_id, mission_id, rating, comment, created_at';
+
 export type ReviewWithReviewer = ReviewRecord & {
   reviewer_name: string;
 };
@@ -38,7 +40,7 @@ export const reviewService = {
       rating,
       comment: comment?.trim() ? comment.trim() : null,
     };
-    const { data, error } = await client.from('reviews').insert(payload).select('*').single();
+    const { data, error } = await client.from('reviews').insert(payload).select(REVIEW_SELECT_COLUMNS).single();
     if (error) throw error;
     return data as ReviewRecord;
   },
