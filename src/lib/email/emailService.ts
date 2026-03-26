@@ -19,14 +19,18 @@ async function sendEmail(
   to: string,
   data: EmailPayload,
 ): Promise<void> {
-  if (!supabase || !to) return;
+  if (!import.meta.env.VITE_SUPABASE_URL || !supabase || !to) return;
 
-  const { error } = await supabase.functions.invoke('send-email', {
-    body: { type, to, data },
-  });
+  try {
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: { type, to, data },
+    });
 
-  if (error) {
-    console.error(`Email ${type} failed:`, error);
+    if (error) {
+      console.debug(`[Email] Non envoye (${type}):`, error.message);
+    }
+  } catch (error) {
+    console.debug('[Email] Service indisponible:', error);
   }
 }
 

@@ -22,6 +22,7 @@ interface EmailTemplate {
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 const resendDomain = Deno.env.get('RESEND_DOMAIN') ?? 'studiolink-paris.fr';
 const FROM = `StudioLink <noreply@${resendDomain}>`;
+const isDev = Deno.env.get('ENVIRONMENT') === 'development' || !resendApiKey;
 
 function escapeHtml(value: unknown) {
   return String(value ?? '')
@@ -180,18 +181,6 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (!resendApiKey) {
-    return new Response(
-      JSON.stringify({ error: 'RESEND_API_KEY is not configured' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
-    );
-  }
-
-  const resend = new Resend(resendApiKey);
-
   try {
     const payload = await req.json() as EmailPayload;
     const template = templates[payload.type];
@@ -207,6 +196,29 @@ serve(async (req) => {
     }
 
     const { subject, html } = template(payload.data ?? {});
+
+    if (isDev) {
+      console.log('DEV EMAIL', JSON.stringify({
+        to: payload.to,
+        subject,
+        type: payload.type,
+        data: payload.data ?? {},
+      }, null, 2));
+
+      return new Response(
+        JSON.stringify({
+          id: `dev-mock-${Date.now()}`,
+          dev: true,
+          message: 'Email logged (dev mode - no Resend key)',
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
     const result = await resend.emails.send({
       from: FROM,
       to: payload.to,
