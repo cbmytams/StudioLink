@@ -99,7 +99,7 @@ export default function StudioDashboard() {
   if (loading && !dashboard) {
     return (
       <div className="app-shell">
-        <div className="app-container-wide flex min-h-screen items-center justify-center">
+        <div className="app-container-wide flex min-h-[100dvh] items-center justify-center">
           <div className="flex items-center gap-3 text-white/60">
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
             Chargement du dashboard studio…
@@ -230,7 +230,7 @@ export default function StudioDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/studio/missions')}
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
+                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
               >
                 Tout voir
               </button>
@@ -271,7 +271,7 @@ export default function StudioDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/applications`)}
-                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
                       >
                         Voir les candidatures
                       </button>
@@ -281,7 +281,7 @@ export default function StudioDashboard() {
                           type="button"
                           disabled={openingMissionId === mission.id}
                           onClick={() => void openChatForMission(mission.id, mission.session_id)}
-                          className="rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-60"
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-60"
                         >
                           Ouvrir le chat
                         </button>
@@ -289,7 +289,7 @@ export default function StudioDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/edit`)}
-                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
                       >
                         Modifier
                       </button>

@@ -130,6 +130,9 @@ export async function getSignedUrl(
   const client = ensureClient();
   const { data, error } = await client.storage.from(bucket).createSignedUrl(filePath, expiresIn);
   if (error) throw error;
+  if (!data?.signedUrl) {
+    throw new Error('Impossible de générer un lien de téléchargement.');
+  }
   return data.signedUrl;
 }
 

@@ -74,7 +74,7 @@ export default function NotificationsPage() {
       </Helmet>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
-        <header className="mb-4 flex items-center justify-between">
+        <header className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-white/10 bg-[#0A0B10]/92 py-3 backdrop-blur-xl">
           <h1 className="app-title">Notifications</h1>
           <button
             type="button"

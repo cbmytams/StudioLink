@@ -81,7 +81,7 @@ export default function HomePage() {
           content="Rejoins la plateforme sur invitation pour publier des missions ou candidater en tant que pro."
         />
       </Helmet>
-      <section className="min-h-[calc(100vh-84px)] flex flex-col items-center justify-center text-center px-4 py-24">
+      <section className="min-h-[calc(100dvh-84px)] flex flex-col items-center justify-center text-center px-4 py-24">
         <span className="inline-block rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-orange-700 mb-6">
           🔒 Plateforme sur invitation uniquement
         </span>
@@ -109,7 +109,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="text-sm font-medium text-white/60 transition hover:text-white"
+            className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-medium text-white/60 transition hover:text-white"
           >
             Déjà membre ? Se connecter
           </button>
@@ -197,7 +197,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="text-sm text-white/50 hover:text-white transition-colors"
+                className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm text-white/50 transition-colors hover:text-white"
               >
                 Déjà un compte ? Se connecter
               </button>

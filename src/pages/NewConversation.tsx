@@ -71,25 +71,13 @@ export default function NewConversation() {
         const existing = await supabase
           .from('conversations')
           .select('id')
-          .eq('studio_id', studioId)
-          .eq('pro_id', proId)
+          .or(
+            `and(participant_1.eq.${userId},participant_2.eq.${targetId}),and(participant_1.eq.${targetId},participant_2.eq.${userId})`,
+          )
           .maybeSingle();
 
-        if (existing.error) {
-          const legacyExisting = await supabase
-            .from('conversations')
-            .select('id')
-            .or(
-              `and(participant_1.eq.${userId},participant_2.eq.${targetId}),and(participant_1.eq.${targetId},participant_2.eq.${userId})`,
-            )
-            .maybeSingle();
-          if (legacyExisting.error) throw legacyExisting.error;
-          if (!active) return;
-          if (legacyExisting.data?.id) {
-            navigate(`/chat/${legacyExisting.data.id}`, { replace: true });
-            return;
-          }
-        } else if (existing.data?.id) {
+        if (existing.error) throw existing.error;
+        if (existing.data?.id) {
           if (!active) return;
           navigate(`/chat/${existing.data.id}`, { replace: true });
           return;
@@ -98,27 +86,13 @@ export default function NewConversation() {
         const create = await supabase
           .from('conversations')
           .insert({
-            studio_id: studioId,
-            pro_id: proId,
-            last_message_at: new Date().toISOString(),
+            participant_1: userId,
+            participant_2: targetId,
           } as never)
           .select('id')
           .single();
 
-        if (create.error) {
-          const legacyCreate = await supabase
-            .from('conversations')
-            .insert({
-              participant_1: userId,
-              participant_2: targetId,
-            } as never)
-            .select('id')
-            .single();
-          if (legacyCreate.error) throw legacyCreate.error;
-          if (!active) return;
-          navigate(`/chat/${(legacyCreate.data as ConversationLookup).id}`, { replace: true });
-          return;
-        }
+        if (create.error) throw create.error;
 
         if (!active) return;
         navigate(`/chat/${(create.data as ConversationLookup).id}`, { replace: true });
@@ -136,11 +110,11 @@ export default function NewConversation() {
   }, [currentUserType, navigate, payload?.proId, payload?.studioId, userId]);
 
   return (
-    <div className="app-shell min-h-screen">
+    <div className="app-shell min-h-[100dvh]">
       <Helmet>
         <title>Nouvelle conversation — StudioLink</title>
       </Helmet>
-      <div className="app-container-compact flex min-h-screen items-center justify-center">
+      <div className="app-container-compact flex min-h-[100dvh] items-center justify-center">
         {loading ? (
           <div className="flex flex-col items-center gap-3">
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />

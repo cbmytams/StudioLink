@@ -180,7 +180,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
             id="btn-upload-delivery"
             type="button"
             onClick={() => setShowUpload((previous) => !previous)}
-            className="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-medium text-orange-600 transition-colors hover:bg-orange-100"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-medium text-orange-600 transition-colors hover:bg-orange-100"
           >
             {showUpload ? 'Fermer' : 'Déposer un fichier'}
           </button>
@@ -239,7 +239,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
                     onClick={() => {
                       void handleDownload(file);
                     }}
-                    className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-orange-50 hover:text-orange-600"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-gray-200 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-orange-50 hover:text-orange-600"
                   >
                     Télécharger
                   </button>
@@ -258,7 +258,7 @@ export function DeliveryPanel({ sessionId, missionId, canUpload, refreshKey }: D
                       onClick={() => {
                         void handleDelete(file);
                       }}
-                      className="text-xs font-medium text-red-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-red-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {deletingFileId === file.id ? 'Suppression…' : 'Supprimer'}
                     </button>

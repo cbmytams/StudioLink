@@ -1,3 +1,5 @@
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
+
 export type CanonicalApplicationStatus = 'pending' | 'accepted' | 'rejected';
 
 type BuildApplicationWritePayloadInput = {
@@ -38,5 +40,5 @@ export function formatApplicationInsertError(error: ApplicationInsertErrorLike):
     return 'Vous avez déjà candidaté à cette mission.';
   }
 
-  return error.message?.trim() || 'Impossible d’envoyer la candidature.';
+  return toUserFacingErrorMessage(error.message, 'Impossible d’envoyer la candidature.');
 }

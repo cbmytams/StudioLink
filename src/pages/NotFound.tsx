@@ -25,7 +25,7 @@ export default function NotFound() {
   };
 
   return (
-    <div id="page-404" className="app-shell flex min-h-screen flex-col items-center justify-center px-4 text-center">
+    <div id="page-404" className="app-shell flex min-h-[100dvh] flex-col items-center justify-center px-4 text-center">
       <PageMeta
         title="Page introuvable"
         description="La page demandée n'existe pas ou n'est plus disponible."

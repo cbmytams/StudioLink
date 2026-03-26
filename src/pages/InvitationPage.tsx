@@ -117,7 +117,7 @@ export default function InvitationPage() {
   };
 
   return (
-    <div className="app-shell flex min-h-screen items-center justify-center p-4">
+    <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
       <Helmet>
         <title>Invitation — StudioLink</title>
         <meta name="description" content="Saisissez votre code d’invitation pour rejoindre StudioLink." />

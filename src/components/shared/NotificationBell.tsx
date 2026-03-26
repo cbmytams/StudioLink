@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import type { NotificationRecord } from '@/types/backend';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import {
   getNotifications,
   markAllAsRead,
@@ -50,6 +52,7 @@ export function NotificationBell(_props: NotificationBellProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id ?? null;
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -141,6 +144,91 @@ export function NotificationBell(_props: NotificationBellProps) {
     }
   };
 
+  const panelContent = (
+    <>
+      <div className="mb-2 flex items-center justify-between px-2 py-1">
+        <div>
+          <p className="text-sm font-semibold text-gray-900">Notifications</p>
+          <p className="text-xs text-gray-500">{unreadCount} non lue(s)</p>
+        </div>
+        <button
+          id="btn-mark-all-read"
+          type="button"
+          disabled={unreadCount === 0 || busy}
+          onClick={() => void handleMarkAllRead()}
+          className="min-h-[44px] px-2 text-xs font-medium text-orange-600 transition hover:text-orange-700 disabled:opacity-50"
+        >
+          Tout marquer lu
+        </button>
+      </div>
+
+      <div className={`${isMobile ? 'min-h-0 flex-1 space-y-2 overflow-y-auto pr-1' : 'max-h-[420px] space-y-2 overflow-y-auto pr-1'}`}>
+        {!loading && notifications.length === 0 ? (
+          <div id="notification-empty">
+            <EmptyState
+              icon="✓"
+              title="Vous êtes à jour"
+              description="Les nouvelles candidatures, messages et livraisons apparaîtront ici en temps réel."
+              tone="light"
+              className="rounded-2xl px-4 py-6"
+            />
+          </div>
+        ) : null}
+
+        {loading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-20 animate-pulse rounded-2xl border border-white/50 bg-white/80"
+            />
+          ))
+        ) : notifications.map((notification) => (
+          <button
+            key={notification.id}
+            type="button"
+            onClick={() => void handleNotificationClick(notification)}
+            className={`notification-item block min-h-[56px] w-full rounded-2xl border px-3 py-3 text-left transition ${
+              notification.read
+                ? 'border-white/60 bg-white/80 hover:bg-white'
+                : 'notification-item--unread border-orange-100 bg-orange-50/80 hover:bg-orange-50'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
+                {notification.body ? (
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-gray-600">
+                    {notification.body}
+                  </p>
+                ) : null}
+              </div>
+              {!notification.read ? (
+                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-orange-500" />
+              ) : null}
+            </div>
+            <p className="mt-2 text-[11px] uppercase tracking-wide text-gray-400">
+              {formatRelativeTime(notification.created_at)}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 border-t border-white/60 px-2 pt-3">
+        <button
+          type="button"
+          aria-label="Voir toutes les notifications"
+          onClick={() => {
+            setOpen(false);
+            navigate('/notifications');
+          }}
+          className="min-h-[48px] w-full rounded-2xl border border-white/60 bg-white/80 px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-white"
+        >
+          Voir toutes les notifications
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div ref={panelRef} className="relative">
       <button
@@ -161,91 +249,25 @@ export function NotificationBell(_props: NotificationBellProps) {
         ) : null}
       </button>
 
-      {open ? (
+      {open && isMobile ? (
+        <BottomSheet
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          title="Notifications"
+          fullHeight
+        >
+          <div id="notification-panel" className="flex h-full flex-col overflow-hidden">
+            {panelContent}
+          </div>
+        </BottomSheet>
+      ) : null}
+
+      {open && !isMobile ? (
         <div
           id="notification-panel"
           className="absolute right-0 top-14 z-50 w-[320px] overflow-hidden rounded-3xl border border-white/60 bg-[#fffaf6]/95 p-3 shadow-[0_18px_48px_rgba(26,26,26,0.12)] backdrop-blur-md"
         >
-          <div className="mb-2 flex items-center justify-between px-2 py-1">
-            <div>
-              <p className="text-sm font-semibold text-gray-900">Notifications</p>
-              <p className="text-xs text-gray-500">{unreadCount} non lue(s)</p>
-            </div>
-            <button
-              id="btn-mark-all-read"
-              type="button"
-              disabled={unreadCount === 0 || busy}
-              onClick={() => void handleMarkAllRead()}
-              className="text-xs font-medium text-orange-600 transition hover:text-orange-700 disabled:opacity-50"
-            >
-              Tout marquer lu
-            </button>
-          </div>
-
-          <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
-            {!loading && notifications.length === 0 ? (
-              <div id="notification-empty">
-                <EmptyState
-                  icon="✓"
-                  title="Vous êtes à jour"
-                  description="Les nouvelles candidatures, messages et livraisons apparaîtront ici en temps réel."
-                  tone="light"
-                  className="rounded-2xl px-4 py-6"
-                />
-              </div>
-            ) : null}
-
-            {loading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-20 animate-pulse rounded-2xl border border-white/50 bg-white/80"
-                />
-              ))
-            ) : notifications.map((notification) => (
-              <button
-                key={notification.id}
-                type="button"
-                onClick={() => void handleNotificationClick(notification)}
-                className={`notification-item block w-full rounded-2xl border px-3 py-3 text-left transition ${
-                  notification.read
-                    ? 'border-white/60 bg-white/80 hover:bg-white'
-                    : 'notification-item--unread border-orange-100 bg-orange-50/80 hover:bg-orange-50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-                    {notification.body ? (
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-gray-600">
-                        {notification.body}
-                      </p>
-                    ) : null}
-                  </div>
-                  {!notification.read ? (
-                    <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-orange-500" />
-                  ) : null}
-                </div>
-                <p className="mt-2 text-[11px] uppercase tracking-wide text-gray-400">
-                  {formatRelativeTime(notification.created_at)}
-                </p>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 border-t border-white/60 px-2 pt-3">
-            <button
-              type="button"
-              aria-label="Voir toutes les notifications"
-              onClick={() => {
-                setOpen(false);
-                navigate('/notifications');
-              }}
-              className="w-full rounded-2xl border border-white/60 bg-white/80 px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-white"
-            >
-              Voir toutes les notifications
-            </button>
-          </div>
+          {panelContent}
         </div>
       ) : null}
     </div>

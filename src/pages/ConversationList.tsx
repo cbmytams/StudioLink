@@ -13,6 +13,7 @@ type ConversationItem = {
   last_message_at: string
   contact: ConversationProfile | null
   mission_title?: string | null
+  last_message_preview?: string | null
   unreadCount: number
   status?: string | null
 };
@@ -36,6 +37,18 @@ function formatRelativeTime(dateIso: string): string {
   if (diffMs < hour) return `il y a ${Math.floor(diffMs / minute)} min`;
   if (diffMs < day) return `il y a ${Math.floor(diffMs / hour)} h`;
   return `il y a ${Math.floor(diffMs / day)} j`;
+}
+
+function buildPreview(message: {
+  content?: string | null
+  file_name?: string | null
+  file_type?: string | null
+} | null | undefined): string {
+  if (!message) return 'Aucun message pour le moment';
+  if (message.content?.trim()) return message.content.trim();
+  if (message.file_name) return `📎 ${message.file_name}`;
+  if (message.file_type === 'audio') return '🎧 Fichier audio';
+  return 'Nouveau message';
 }
 
 export default function ConversationList() {
@@ -75,17 +88,38 @@ export default function ConversationList() {
           if (!active) return;
           const sessionIds = sessionRows.map((row) => row.id);
           const unreadMap: Record<string, number> = {};
+          const previewMap: Record<string, string> = {};
           if (sessionIds.length > 0) {
-            const unreadRows = await supabase
-              .from('messages')
-              .select('session_id')
-              .in('session_id', sessionIds)
-              .neq('sender_id', userId)
-              .eq('is_read', false);
+            const [unreadRows, previewRows] = await Promise.all([
+              supabase
+                .from('messages')
+                .select('session_id')
+                .in('session_id', sessionIds)
+                .neq('sender_id', userId)
+                .eq('is_read', false),
+              supabase
+                .from('messages')
+                .select('session_id, content, file_name, file_type, created_at')
+                .in('session_id', sessionIds)
+                .order('created_at', { ascending: false }),
+            ]);
 
             if (!unreadRows.error) {
               ((unreadRows.data as Array<{ session_id: string }> | null) ?? []).forEach((row) => {
                 unreadMap[row.session_id] = (unreadMap[row.session_id] ?? 0) + 1;
+              });
+            }
+
+            if (!previewRows.error) {
+              ((previewRows.data as Array<{
+                session_id: string
+                content: string | null
+                file_name: string | null
+                file_type: string | null
+              }> | null) ?? []).forEach((row) => {
+                if (!previewMap[row.session_id]) {
+                  previewMap[row.session_id] = buildPreview(row);
+                }
               });
             }
           }
@@ -95,6 +129,7 @@ export default function ConversationList() {
             last_message_at: row.updated_at ?? row.created_at,
             contact: row.studio_id === userId ? row.pro : row.studio,
             mission_title: row.mission?.title ?? null,
+            last_message_preview: previewMap[row.id] ?? 'Aucun message pour le moment',
             unreadCount: unreadMap[row.id] ?? 0,
             status: row.status,
           })));
@@ -119,6 +154,28 @@ export default function ConversationList() {
           profilesMap = await getPublicProfilesMap(contactIds);
         }
 
+        const previewMap: Record<string, string> = {};
+        if (fallbackRows.length > 0) {
+          const previewRows = await supabase
+            .from('messages')
+            .select('conversation_id, content, file_name, file_type, created_at')
+            .in('conversation_id', fallbackRows.map((row) => row.id))
+            .order('created_at', { ascending: false });
+
+          if (!previewRows.error) {
+            ((previewRows.data as Array<{
+              conversation_id: string | null
+              content: string | null
+              file_name: string | null
+              file_type: string | null
+            }> | null) ?? []).forEach((row) => {
+              if (row.conversation_id && !previewMap[row.conversation_id]) {
+                previewMap[row.conversation_id] = buildPreview(row);
+              }
+            });
+          }
+        }
+
         if (!active) return;
         const mappedFallback = fallbackRows.map((row) => {
           const otherId = row.participant_1 === userId ? row.participant_2 : row.participant_1;
@@ -126,6 +183,7 @@ export default function ConversationList() {
             id: row.id,
             last_message_at: row.created_at ?? new Date().toISOString(),
             contact: otherId ? (profilesMap.get(otherId) ?? null) : null,
+            last_message_preview: previewMap[row.id] ?? 'Aucun message pour le moment',
             unreadCount: 0,
           };
         });
@@ -153,17 +211,18 @@ export default function ConversationList() {
         <title>Mes conversations — StudioLink</title>
         <meta name="description" content="Consultez vos conversations avec les pros." />
       </Helmet>
-      <div className="app-container">
+      <div className="app-container-wide">
         <button
           type="button"
           onClick={() => navigate(fallbackRoute)}
-          className="mb-4 text-sm app-muted hover:text-black transition-colors"
+          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Retour
         </button>
 
         <header className="mb-5">
           <h1 className="app-title">Mes conversations</h1>
+          <p className="app-subtitle">Retrouvez rapidement la bonne mission, l’interlocuteur et le dernier échange sans recharger l’écran.</p>
         </header>
 
         {loading ? (
@@ -193,57 +252,93 @@ export default function ConversationList() {
         ) : null}
 
         {!loading && !error && hasConversations ? (
-          <div className="app-list">
-            {conversations.map((conversation) => {
-              const contactName = getPublicProfileDisplayName(conversation.contact);
-              return (
-                <button
-                  key={conversation.id}
-                  type="button"
-                  onClick={() => navigate(`/chat/${conversation.id}`)}
-                  className="bg-white rounded-2xl border border-white/50 p-4 flex items-center gap-3 w-full text-left hover:bg-orange-50 transition-colors"
-                >
-                  {conversation.contact?.avatar_url ? (
-                    <img
-                      src={conversation.contact.avatar_url}
-                      alt={contactName}
-                      className="h-10 w-10 rounded-full object-cover border border-white/50"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                      <span className="text-xs font-bold text-orange-600">
-                        {contactName.charAt(0).toUpperCase() || '?'}
+          <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div className="app-list">
+              {conversations.map((conversation) => {
+                const contactName = getPublicProfileDisplayName(conversation.contact);
+                return (
+                  <button
+                    key={conversation.id}
+                    type="button"
+                    onClick={() => navigate(`/chat/${conversation.id}`)}
+                    className="w-full rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"
+                  >
+                    <div className="flex items-start gap-3">
+                      {conversation.contact?.avatar_url ? (
+                        <img
+                          src={conversation.contact.avatar_url}
+                          alt={contactName}
+                          className="h-12 w-12 rounded-full object-cover border border-white/10"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/15">
+                          <span className="text-sm font-bold text-orange-200">
+                            {contactName.charAt(0).toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold text-white">{contactName}</p>
+                          {conversation.status ? (
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              conversation.status === 'completed'
+                                ? 'bg-stone-100 text-stone-600'
+                                : 'bg-green-500/15 text-green-200'
+                            }`}>
+                              {conversation.status === 'completed' ? 'Terminée' : 'Active'}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 truncate text-sm text-white/45">
+                          {conversation.mission_title ?? 'Conversation directe'}
+                        </p>
+                        <p className="mt-2 line-clamp-1 sm:line-clamp-2 text-sm leading-5 text-white/70">
+                          {conversation.last_message_preview}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="text-xs text-white/35">{formatRelativeTime(conversation.last_message_at)}</span>
+                        {conversation.unreadCount > 0 ? (
+                          <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                            {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <aside className="hidden xl:block">
+              <div className="sticky top-8 space-y-4">
+                <section className="app-card p-6">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Boîte de réception</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-white">Toutes vos sessions en un coup d’œil</h2>
+                  <p className="mt-3 text-sm leading-6 text-white/60">
+                    Chaque ligne remonte la mission, le dernier échange et les messages non lus. Sur mobile, ouvrez une conversation plein écran.
+                  </p>
+                </section>
+                <section className="app-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Synthèse</p>
+                  <div className="mt-4 space-y-3 text-sm text-white/70">
+                    <div className="flex items-center justify-between">
+                      <span>Conversations</span>
+                      <span className="text-white">{conversations.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Messages non lus</span>
+                      <span className="text-white">
+                        {conversations.reduce((total, conversation) => total + conversation.unreadCount, 0)}
                       </span>
                     </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-semibold text-gray-900">{contactName}</p>
-                      {conversation.status ? (
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          conversation.status === 'completed'
-                            ? 'bg-stone-100 text-stone-600'
-                            : 'bg-green-100 text-green-700'
-                        }`}>
-                          {conversation.status === 'completed' ? 'Terminée' : 'Active'}
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      {conversation.mission_title ? `${conversation.mission_title} · ` : ''}
-                      {formatRelativeTime(conversation.last_message_at)}
-                    </p>
                   </div>
-                  {conversation.unreadCount > 0 ? (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                      {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
-                    </span>
-                  ) : null}
-                  <span className="text-gray-300">›</span>
-                </button>
-              );
-            })}
+                </section>
+              </div>
+            </aside>
           </div>
         ) : null}
       </div>

@@ -1,0 +1,77 @@
+{
+  "landing": {
+    "url": "http://127.0.0.1:4173/",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "login": {
+    "url": "http://127.0.0.1:4173/login",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "register": {
+    "url": "http://127.0.0.1:4173/register",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "forgot": {
+    "url": "http://127.0.0.1:4173/forgot-password",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "proDashboard": {
+    "url": "http://127.0.0.1:4173/dashboard",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "studioDashboard": {
+    "url": "http://127.0.0.1:4173/dashboard",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "missions": {
+    "url": "http://127.0.0.1:4173/missions",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "missionDetail": {
+    "url": "http://127.0.0.1:4173/missions/169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "studioMissions": {
+    "url": "http://127.0.0.1:4173/studio/missions",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "missionForm": {
+    "url": "http://127.0.0.1:4173/studio/missions/2ce4af16-1435-4b71-a296-9251074318f8/edit",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "applications": {
+    "url": "http://127.0.0.1:4173/pro/applications",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "chatList": {
+    "url": "http://127.0.0.1:4173/chat",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "chatSession": {
+    "url": "http://127.0.0.1:4173/chat/61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "notifications": {
+    "url": "http://127.0.0.1:4173/notifications",
+    "overflowX": false,
+    "bottomNav": false
+  },
+  "settings": {
+    "url": "http://127.0.0.1:4173/settings",
+    "overflowX": false,
+    "bottomNav": false
+  }
+}

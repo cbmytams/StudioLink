@@ -313,7 +313,7 @@ export default function ManageApplications() {
   if (loading) {
     return (
       <div className="app-shell">
-        <div className="app-container flex min-h-screen items-center justify-center">
+        <div className="app-container flex min-h-[100dvh] items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>

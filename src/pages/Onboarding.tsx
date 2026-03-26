@@ -24,6 +24,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
 import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { PageMeta } from '@/components/shared/PageMeta';
+import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import type { UserType } from '@/types/backend';
 
 type EditableProfile = {
@@ -48,13 +49,6 @@ async function tryProfileUpsert(payload: Record<string, PersistValue>) {
     .from('profiles')
     .upsert(payload as never, { onConflict: 'id' });
   return error;
-}
-
-async function tryProfileUpdate(userId: string, payload: Record<string, PersistValue>) {
-  await supabase
-    .from('profiles')
-    .update(payload as never)
-    .eq('id', userId);
 }
 
 function getStepFromDraft(draft: OnboardingDraft): number {
@@ -86,6 +80,7 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const mobileFooterStyle = useMobileFixedBottomStyle();
 
   const lockedRole = useMemo(
     () => resolveProfileType(profileData) ?? invitationContext?.type ?? null,
@@ -236,21 +231,6 @@ export default function Onboarding() {
         throw new Error(lastPersistError ?? 'Impossible de sauvegarder le profil.');
       }
 
-      await Promise.allSettled([
-        tryProfileUpdate(user.id, { display_name: payload.display_name }),
-        tryProfileUpdate(user.id, { full_name: payload.full_name }),
-        tryProfileUpdate(user.id, { city: payload.city }),
-        tryProfileUpdate(user.id, { avatar_url: payload.avatar_url }),
-        tryProfileUpdate(user.id, { company_name: payload.company_name }),
-        tryProfileUpdate(user.id, { bio: payload.bio }),
-        tryProfileUpdate(user.id, { skills: payload.skills }),
-        tryProfileUpdate(user.id, { daily_rate: payload.daily_rate }),
-        tryProfileUpdate(user.id, { user_type: payload.user_type }),
-        tryProfileUpdate(user.id, { type: payload.type }),
-        tryProfileUpdate(user.id, { onboarding_complete: true, onboarding_step: 4 }),
-        tryProfileUpdate(user.id, { onboarding_completed: true }),
-      ]);
-
       if (invitationContext?.code) {
         const { data: claimData, error: claimError } = await supabase.rpc('claim_invitation', {
           p_code: invitationContext.code,
@@ -287,7 +267,7 @@ export default function Onboarding() {
   ];
 
   return (
-    <div className="app-shell min-h-screen px-4 py-8 md:py-12">
+    <div className="app-shell min-h-[100dvh] px-4 pb-32 pt-6 md:py-12">
       <PageMeta
         title="Créer mon profil"
         description="Configurez votre profil StudioLink en quelques étapes."
@@ -451,7 +431,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Décris votre univers, vos spécialités et le type de projets que vous aimez accompagner."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
                   />
                 </div>
               </section>
@@ -476,7 +456,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Parle de ton parcours, tes spécialités, tes références et du type de missions qui te correspondent."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
                   />
                   {fieldErrors.bio ? <p className="mt-2 px-1 text-xs text-red-400">{fieldErrors.bio}</p> : null}
                 </div>
@@ -501,7 +481,7 @@ export default function Onboarding() {
                       <button
                         type="button"
                         onClick={addSkill}
-                        className="rounded-full bg-orange-500 px-3 py-1 text-xs font-medium text-white transition hover:bg-orange-400"
+                        className="min-h-[44px] rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-400"
                       >
                         Ajouter
                       </button>
@@ -514,7 +494,7 @@ export default function Onboarding() {
                           key={skill}
                           type="button"
                           onClick={() => removeSkill(skill)}
-                          className="rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-1 text-xs text-orange-100"
+                          className="min-h-[44px] rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm text-orange-100"
                         >
                           {skill} ×
                         </button>
@@ -529,7 +509,8 @@ export default function Onboarding() {
                   type="number"
                   label="Tarif journalier"
                   value={draft.dailyRate}
-                  placeholder="450"
+                  placeholder="450 €/jour"
+                  inputMode="numeric"
                   onChange={(event) => setDraftField('dailyRate', event.target.value)}
                   error={fieldErrors.dailyRate}
                 />
@@ -581,7 +562,7 @@ export default function Onboarding() {
             </div>
           ) : null}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8 hidden flex-col gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between">
             <Button
               id="btn-onboarding-prev"
               type="button"
@@ -618,6 +599,48 @@ export default function Onboarding() {
             )}
           </div>
         </GlassCard>
+      </div>
+
+      <div
+        className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#0A0B10]/92 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur-xl sm:hidden"
+        style={mobileFooterStyle}
+      >
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <Button
+            id="btn-onboarding-prev-mobile"
+            type="button"
+            variant="secondary"
+            onClick={goToPreviousStep}
+            disabled={step === 1 || saving}
+            className={`flex-1 ${step === 1 ? 'pointer-events-none opacity-40' : ''}`}
+          >
+            Précédent
+          </Button>
+
+          {step < 4 ? (
+            <Button
+              id="btn-onboarding-next-mobile"
+              type="button"
+              onClick={goToNextStep}
+              disabled={saving || nextButtonDisabled}
+              className="flex-[1.3]"
+            >
+              Suivant
+            </Button>
+          ) : (
+            <Button
+              id="btn-complete-onboarding-mobile"
+              type="button"
+              onClick={() => {
+                void handleCompleteOnboarding();
+              }}
+              disabled={saving}
+              className="flex-[1.3]"
+            >
+              {saving ? 'Validation…' : 'Accéder à mon dashboard'}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ export function Textarea({ className, error, label, id, ...props }: TextareaProp
       <textarea
         id={id}
         className={cn(
-          "w-full glass-input rounded-2xl py-4 px-6 text-sm min-h-[120px] resize-y",
+          "w-full glass-input rounded-2xl py-4 px-6 text-base md:text-sm min-h-[120px] resize-y",
           error && "border-red-400/50 focus:border-red-500/50 bg-red-50/20",
           className
         )}

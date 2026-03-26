@@ -4,17 +4,20 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 type GlobalSearchBarProps = {
   userType: 'studio' | 'pro';
+  variant?: 'floating' | 'sidebar';
 };
 
 function targetPath(userType: 'studio' | 'pro'): string {
   return userType === 'studio' ? '/pros' : '/missions';
 }
 
-export function GlobalSearchBar({ userType }: GlobalSearchBarProps) {
+export function GlobalSearchBar({ userType, variant = 'floating' }: GlobalSearchBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [query, setQuery] = useState('');
-  const hiddenOnCurrentRoute = location.pathname.startsWith('/chat/');
+  const hiddenOnCurrentRoute = location.pathname === '/chat'
+    || location.pathname.startsWith('/chat/')
+    || location.pathname.startsWith('/studio/chat/');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -36,9 +39,17 @@ export function GlobalSearchBar({ userType }: GlobalSearchBarProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="pointer-events-auto fixed left-4 right-20 top-4 z-40 md:left-8 md:right-auto md:top-6 md:w-[320px]"
+      className={
+        variant === 'sidebar'
+          ? 'w-full'
+          : 'pointer-events-auto fixed left-4 right-20 top-4 z-40 md:hidden'
+      }
     >
-      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+      <div className={`flex items-center gap-2 ${
+        variant === 'sidebar'
+          ? 'rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]'
+          : 'rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]'
+      }`}>
         <label htmlFor="global-search-input" className="sr-only">
           {userType === 'studio' ? 'Rechercher un pro' : 'Rechercher une mission'}
         </label>
@@ -48,7 +59,7 @@ export function GlobalSearchBar({ userType }: GlobalSearchBarProps) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={userType === 'studio' ? 'Rechercher un pro' : 'Rechercher une mission'}
-          className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/35 outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+          className="min-h-[44px] min-w-0 flex-1 bg-transparent text-base md:text-sm text-white placeholder:text-white/35 outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
         />
         <button
           id="btn-global-search"

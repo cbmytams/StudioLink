@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "recursive-decomposition": {
+      "source": "massimodeluisa/recursive-decomposition-skill",
+      "sourceType": "github",
+      "computedHash": "81f2f27fa5c03c83a46810592c05dd15c4b939ef693a0b3247df5f61a6f6f66b"
+    }
+  }
+}

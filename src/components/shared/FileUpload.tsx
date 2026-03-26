@@ -1,4 +1,4 @@
-import { type ChangeEvent, useRef, useState } from 'react';
+import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { FileAudio, FileArchive, FileText, Trash2, Upload } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth';
 import type { MissionFileRecord } from '@/types/backend';
@@ -42,8 +42,15 @@ export function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const resetTimerRef = useRef<number | null>(null);
 
   const currentUserId = session?.user?.id ?? null;
+
+  useEffect(() => () => {
+    if (resetTimerRef.current !== null) {
+      window.clearTimeout(resetTimerRef.current);
+    }
+  }, []);
 
   const handleFile = async (file?: File) => {
     if (!file || uploading || disabled) return;
@@ -77,9 +84,13 @@ export function FileUpload({
         variant: 'destructive',
       });
     } finally {
-      window.setTimeout(() => {
+      if (resetTimerRef.current !== null) {
+        window.clearTimeout(resetTimerRef.current);
+      }
+      resetTimerRef.current = window.setTimeout(() => {
         setUploading(false);
         setProgress(0);
+        resetTimerRef.current = null;
       }, 180);
     }
   };

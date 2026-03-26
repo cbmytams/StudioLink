@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
+import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { ApplyModal } from '@/components/ApplyModal';
@@ -96,6 +97,7 @@ export default function MissionDetail() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { showToast } = useToast();
+  const mobileFooterStyle = useMobileFixedBottomStyle(64);
   const userId = session?.user?.id ?? null;
 
   const [mission, setMission] = useState<Mission | null>(null);
@@ -312,7 +314,7 @@ export default function MissionDetail() {
 
   if (loading) {
     return (
-      <div className="app-shell min-h-screen pb-28">
+      <div className="app-shell min-h-[100dvh] pb-28">
         <div className="animate-pulse space-y-4 pt-6 px-4 max-w-2xl mx-auto">
           <div className="h-7 bg-white/10 rounded w-3/4" />
           <div className="flex items-center gap-3 mt-2">
@@ -329,7 +331,7 @@ export default function MissionDetail() {
 
   if (notFound || !mission) {
     return (
-      <div className="app-shell min-h-screen pb-28">
+      <div className="app-shell min-h-[100dvh] pb-28">
         <div className="app-container-compact">
           <div className="text-center py-16">
             <p className="text-4xl mb-3">📋</p>
@@ -353,7 +355,7 @@ export default function MissionDetail() {
   const studioName = getPublicProfileDisplayName(mission?.studio);
 
   return (
-    <div className="app-shell min-h-screen pb-28">
+    <div className="app-shell min-h-[100dvh] pb-28">
       <Helmet>
         <title>{`${mission.title} — StudioLink`}</title>
         <meta
@@ -367,13 +369,13 @@ export default function MissionDetail() {
         />
       </Helmet>
       <div className="app-container-compact">
-        <button
-          type="button"
-          onClick={() => navigate('/pro/missions')}
-          className="flex items-center gap-1 text-sm text-white/60 hover:text-white mb-6"
-        >
-          <span>←</span> Retour aux missions
-        </button>
+          <button
+            type="button"
+            onClick={() => navigate('/pro/missions')}
+            className="mb-6 inline-flex min-h-[44px] items-center gap-2 px-1 text-sm text-white/60 hover:text-white"
+          >
+            <span>←</span> Retour aux missions
+          </button>
 
         {error ? (
           <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 mb-4">
@@ -414,7 +416,7 @@ export default function MissionDetail() {
                 <button
                   type="button"
                   onClick={() => navigate(`/studio/public/${mission.studio?.id}`)}
-                  className="text-xs text-orange-300 hover:underline"
+                  className="inline-flex min-h-[44px] items-center text-xs text-orange-300 hover:underline"
                 >
                   Voir le profil du studio →
                 </button>
@@ -483,7 +485,7 @@ export default function MissionDetail() {
                       onClick={() => {
                         void handleDownloadReference(file);
                       }}
-                      className="shrink-0 text-xs font-medium text-orange-300 hover:underline"
+                      className="inline-flex min-h-[44px] shrink-0 items-center px-2 text-xs font-medium text-orange-300 hover:underline"
                     >
                       Télécharger
                     </button>
@@ -502,7 +504,10 @@ export default function MissionDetail() {
         </section>
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 z-40 border-t border-white/10 bg-[#0A0B10]/90 p-4 pb-safe backdrop-blur-md md:static md:mt-6 md:border-t-0 md:bg-transparent md:p-0">
+      <div
+        className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-white/10 bg-[#0A0B10]/90 p-4 pb-safe backdrop-blur-md md:static md:mt-6 md:border-t-0 md:bg-transparent md:p-0"
+        style={mobileFooterStyle}
+      >
         <div className="mx-auto max-w-2xl md:px-0">
           {showApplyButton ? (
             <>

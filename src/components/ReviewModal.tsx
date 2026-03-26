@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { StarRating } from '@/components/ui/StarRating';
 import { useCreateReview } from '@/hooks/useReviews';
 import { useAuth } from '@/lib/supabase/auth';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { reviewService } from '@/services/reviewService';
 import { useToast } from '@/components/ui/Toast';
 
@@ -51,7 +52,7 @@ export function ReviewModal({
       } catch (error) {
         if (!active) return;
         setAlreadyReviewed(false);
-        setCheckError(error instanceof Error ? error.message : 'Impossible de vérifier les avis existants.');
+        setCheckError(toUserFacingErrorMessage(error, 'Impossible de vérifier les avis existants.'));
       }
     };
 
@@ -100,7 +101,7 @@ export function ReviewModal({
                 onSubmitted?.();
                 onClose();
               } catch (error) {
-                const message = error instanceof Error ? error.message : 'Impossible d’envoyer cet avis.';
+                const message = toUserFacingErrorMessage(error, 'Impossible d’envoyer cet avis.');
                 showToast({
                   title: 'Envoi impossible',
                   description: message,

@@ -1,6 +1,7 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import type { Profile, UserType } from '@/types/backend';
+import type { Database, Json } from '@/types/supabase';
 
 interface SignUpWithPasswordParams {
   email: string;
@@ -21,6 +22,26 @@ function assertSupabase() {
     throw new Error('Supabase non configuré. Vérifie VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.');
   }
   return supabase;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeNotificationPreferences(value: Json | null): Profile['notification_preferences'] {
+  if (!isObject(value)) return null;
+  return {
+    new_application: Boolean(value.new_application),
+    messages: Boolean(value.messages),
+    status_updates: Boolean(value.status_updates),
+  };
+}
+
+function normalizeProfile(row: Database['public']['Tables']['profiles']['Row']): Profile {
+  return {
+    ...row,
+    notification_preferences: normalizeNotificationPreferences(row.notification_preferences),
+  };
 }
 
 async function upsertProfile(userId: string, email: string, userType: UserType, displayName?: string) {
@@ -144,7 +165,7 @@ export async function getCurrentProfile(session: Session | null): Promise<Profil
     .single();
 
   if (error) return null;
-  return data as Profile;
+  return normalizeProfile(data);
 }
 
 export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {

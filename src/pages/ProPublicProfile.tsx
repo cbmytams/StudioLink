@@ -59,7 +59,7 @@ export default function ProPublicProfile() {
     : null;
 
   return (
-    <div className="app-shell min-h-screen pb-24">
+    <div className="app-shell min-h-[100dvh] pb-24">
       <Helmet>
         <title>{profile ? `${displayName} — StudioLink` : 'Profil public — StudioLink'}</title>
         <meta name="description" content="Consultez le profil public d’un pro sur StudioLink." />
@@ -67,7 +67,7 @@ export default function ProPublicProfile() {
         <meta property="og:description" content="Consultez les compétences et le profil public d’un pro sur StudioLink." />
       </Helmet>
 
-      <div className="app-container-compact pb-28">
+      <div className="app-container-wide pb-28">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -111,8 +111,9 @@ export default function ProPublicProfile() {
         ) : null}
 
         {!loading && !error && profile ? (
-          <>
-            <header className="app-card p-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <header className="app-card p-6">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -140,38 +141,83 @@ export default function ProPublicProfile() {
                   {ratingText}
                 </div>
               ) : null}
-            </header>
+              </header>
 
-            <section className="mt-5 app-card p-5">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
-              {profile.bio ? (
-                <p className="text-sm leading-relaxed text-white/72">{profile.bio}</p>
-              ) : (
-                <p className="text-sm italic text-white/45">Aucune bio renseignée.</p>
-              )}
-            </section>
+              <section className="app-card p-5">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
+                {profile.bio ? (
+                  <p className="text-sm leading-relaxed text-white/72">{profile.bio}</p>
+                ) : (
+                  <p className="text-sm italic text-white/45">Aucune bio renseignée.</p>
+                )}
+              </section>
 
-            {hasSkills ? (
-              <section className="mt-5 app-card p-5">
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/40">Compétences</h2>
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills?.map((skill) => (
-                    <span
-                      key={skill}
-                      className="rounded-full border border-orange-400/30 bg-orange-500/12 px-2.5 py-1 text-xs text-orange-100"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+              {hasSkills ? (
+                <section className="app-card p-5">
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/40">Compétences</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills?.map((skill) => (
+                      <span
+                        key={skill}
+                        className="rounded-full border border-orange-400/30 bg-orange-500/12 px-2.5 py-1 text-xs text-orange-100"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+
+            <aside className="space-y-5">
+              <section className="app-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Résumé</p>
+                <div className="mt-4 space-y-3 text-sm text-white/70">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Tarif</span>
+                    <span className="font-medium text-white">{profile.daily_rate ? `${profile.daily_rate} €/jour` : 'À définir'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Localisation</span>
+                    <span className="font-medium text-white">{profile.location ?? 'Non renseignée'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Avis</span>
+                    <span className="font-medium text-white">{ratingText ?? 'Pas encore d’avis'}</span>
+                  </div>
                 </div>
               </section>
-            ) : null}
-          </>
+
+              {!user || viewerType === 'studio' ? (
+                <section className="app-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Action rapide</p>
+                  <p className="mt-3 text-sm text-white/60">
+                    Ouvrez une conversation immédiatement pour proposer une mission ou clarifier le brief.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/login');
+                        return;
+                      }
+                      navigate('/studio/new-conversation', {
+                        state: { proId: profile.id, proName: profile.display_name },
+                      });
+                    }}
+                    className="mt-4 w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                  >
+                    Contacter ce pro
+                  </button>
+                </section>
+              ) : null}
+            </aside>
+          </div>
         ) : null}
       </div>
 
       {!loading && !error && profile && (!user || viewerType === 'studio') ? (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl lg:hidden">
           <div className="mx-auto max-w-lg">
             <button
               type="button"

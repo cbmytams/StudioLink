@@ -106,31 +106,19 @@ export default function SettingsPage() {
         <title>Paramètres — StudioLink</title>
         <meta name="description" content="Gérez votre compte StudioLink." />
       </Helmet>
-      <div className="app-container-compact">
+      <div className="app-container-wide">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 text-sm app-muted transition-colors hover:text-black"
+          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Retour
         </button>
 
-        <header className="mb-5">
+        <header className="mb-6">
           <h1 className="app-title text-2xl">Paramètres</h1>
-          <p className="app-subtitle">Gérez votre compte et votre sécurité</p>
+          <p className="app-subtitle">Compte, sécurité et accès rapides. Tout reste dans le cadre de l’app, sans écran secondaire inutile.</p>
         </header>
-
-        <section className="app-card p-5 mb-4">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compte</h2>
-          <p className="text-sm text-gray-700">{user?.email ?? 'Email indisponible'}</p>
-          <button
-            type="button"
-            onClick={() => navigate(profileRoute)}
-            className="mt-4 inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:bg-stone-50"
-          >
-            Modifier mon profil
-          </button>
-        </section>
 
         {error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 mb-4">
@@ -138,42 +126,90 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        <section className="app-card p-5 mb-4 space-y-3">
-          <button
-            type="button"
-            disabled={loadingAction !== null}
-            onClick={() => void handleResetPassword()}
-            className="w-full rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700 transition hover:bg-orange-100 disabled:opacity-50"
-          >
-            {loadingAction === 'reset' ? 'Envoi…' : 'Changer mon mot de passe'}
-          </button>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6">
+            <section className="app-card p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Compte</h2>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/35">Email connecté</p>
+                <p className="mt-2 text-base font-medium text-white">{user?.email ?? 'Email indisponible'}</p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(profileRoute)}
+                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                >
+                  Modifier mon profil
+                </button>
+                <button
+                  type="button"
+                  disabled={loadingAction !== null}
+                  onClick={() => void handleResetPassword()}
+                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-orange-300/20 bg-orange-500/10 px-4 py-3 text-sm font-medium text-orange-100 transition hover:bg-orange-500/15 disabled:opacity-50"
+                >
+                  {loadingAction === 'reset' ? 'Envoi…' : 'Changer mon mot de passe'}
+                </button>
+              </div>
+            </section>
 
-          <button
-            id="logout-btn"
-            type="button"
-            aria-label="Déconnexion"
-            disabled={loadingAction !== null}
-            onClick={() => void handleLogout()}
-            className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
-          >
-            {loadingAction === 'logout' ? 'Déconnexion…' : 'Déconnexion'}
-          </button>
-        </section>
+            <section className="app-card p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Sécurité</h2>
+              <div className="mt-4 space-y-3">
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                  <p className="text-sm font-medium text-white">Session</p>
+                  <p className="mt-1 text-sm text-white/55">
+                    Déconnectez-vous de cet appareil à tout moment. Vous recevrez ensuite un nouvel email pour réinitialiser le mot de passe si besoin.
+                  </p>
+                </div>
+                <button
+                  id="logout-btn"
+                  type="button"
+                  aria-label="Déconnexion"
+                  disabled={loadingAction !== null}
+                  onClick={() => void handleLogout()}
+                  className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-medium text-stone-800 transition hover:bg-stone-50 disabled:opacity-50"
+                >
+                  {loadingAction === 'logout' ? 'Déconnexion…' : 'Déconnexion'}
+                </button>
+              </div>
+            </section>
+          </div>
 
-        <section className="app-card p-5">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Zone sensible</h2>
-          <button
-            type="button"
-            disabled={loadingAction !== null}
-            onClick={() => void handleDeleteAccount()}
-            className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50"
-          >
-            {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
-          </button>
-          <p className="mt-2 text-xs text-gray-400">
-            Si la suppression automatique n’est pas disponible, un message support s’affichera.
-          </p>
-        </section>
+          <aside className="space-y-6">
+            <section className="app-card p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Profil</h2>
+              <p className="mt-3 text-sm text-white/60">
+                Mettez à jour votre avatar, votre bio et vos informations publiques depuis votre fiche profil.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate(profileRoute)}
+                className="mt-4 w-full rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+              >
+                Ouvrir mon profil
+              </button>
+            </section>
+
+            <section className="app-card border-red-400/20 bg-red-500/10 p-5">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-red-100/70">Zone sensible</h2>
+              <p className="mt-3 text-sm text-red-100/80">
+                La suppression de compte est irréversible. Vos conversations, fichiers et données liées seront définitivement retirés.
+              </p>
+              <button
+                type="button"
+                disabled={loadingAction !== null}
+                onClick={() => void handleDeleteAccount()}
+                className="mt-4 w-full rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm font-medium text-red-100 transition hover:bg-red-500/25 disabled:opacity-50"
+              >
+                {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
+              </button>
+              <p className="mt-2 text-xs text-red-100/55">
+                Si la suppression automatique n’est pas disponible, un message support s’affichera.
+              </p>
+            </section>
+          </aside>
+        </div>
       </div>
     </div>
   );

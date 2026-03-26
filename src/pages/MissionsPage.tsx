@@ -178,7 +178,7 @@ export default function MissionsPage() {
               id="btn-reset-filters"
               type="button"
               onClick={resetFilters}
-              className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/10"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/10"
             >
               Réinitialiser les filtres
             </button>
@@ -232,7 +232,7 @@ export default function MissionsPage() {
                 type="button"
                 onClick={prevPage}
                 disabled={currentPage <= 1}
-                className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Précédent
               </button>
@@ -242,7 +242,7 @@ export default function MissionsPage() {
                 type="button"
                 onClick={nextPage}
                 disabled={!hasMore}
-                className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Suivant
               </button>

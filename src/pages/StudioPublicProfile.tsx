@@ -94,7 +94,7 @@ export default function StudioPublicProfile() {
   const canContact = viewerType === 'pro';
 
   return (
-    <div className="app-shell min-h-screen pb-28">
+    <div className="app-shell min-h-[100dvh] pb-28">
       <Helmet>
         <title>{studio ? `${displayName} — StudioLink` : 'Studio public — StudioLink'}</title>
         <meta name="description" content="Consultez le profil public d’un studio sur StudioLink." />
@@ -102,7 +102,7 @@ export default function StudioPublicProfile() {
         <meta property="og:description" content="Consultez les missions ouvertes et le profil public d’un studio sur StudioLink." />
       </Helmet>
 
-      <div className="app-container-compact pb-28">
+      <div className="app-container-wide pb-28">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -146,8 +146,9 @@ export default function StudioPublicProfile() {
         ) : null}
 
         {!loading && !error && studio ? (
-          <>
-            <header className="app-card p-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <header className="app-card p-6">
               {studio.avatar_url ? (
                 <img
                   src={studio.avatar_url}
@@ -169,46 +170,91 @@ export default function StudioPublicProfile() {
                   {ratingText}
                 </div>
               ) : null}
-            </header>
+              </header>
 
-            <section className="mt-6 app-card p-4">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
-              <p className="text-sm leading-relaxed text-white/72">
-                {studio.bio?.trim() ? studio.bio : 'Aucune présentation renseignée pour le moment.'}
-              </p>
-            </section>
+              <section className="app-card p-4">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
+                <p className="text-sm leading-relaxed text-white/72">
+                  {studio.bio?.trim() ? studio.bio : 'Aucune présentation renseignée pour le moment.'}
+                </p>
+              </section>
 
-            <section className="mt-4 app-card p-4">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">Missions ouvertes</h2>
-              {missions.length === 0 ? (
-                <p className="text-sm text-white/45">Aucune mission ouverte pour le moment.</p>
-              ) : (
-                <div className="space-y-2">
-                  {missions.map((mission) => (
-                    <button
-                      key={mission.id}
-                      type="button"
-                      onClick={() => navigate(`/pro/offer/${mission.id}`)}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10"
-                    >
-                      <p className="text-sm font-medium text-white">{mission.title ?? 'Mission'}</p>
-                      <p className="mt-1 text-xs text-white/55">
-                        {(mission.city ?? mission.location ?? 'Localisation à définir')}
-                        {(mission.daily_rate ?? mission.budget_min) !== null
-                          ? ` · ${(mission.daily_rate ?? mission.budget_min)} €/j`
-                          : ''}
-                      </p>
-                    </button>
-                  ))}
+              <section className="app-card p-4">
+                <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">Missions ouvertes</h2>
+                {missions.length === 0 ? (
+                  <p className="text-sm text-white/45">Aucune mission ouverte pour le moment.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {missions.map((mission) => (
+                      <button
+                        key={mission.id}
+                        type="button"
+                        onClick={() => navigate(`/pro/offer/${mission.id}`)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10"
+                      >
+                        <p className="text-sm font-medium text-white">{mission.title ?? 'Mission'}</p>
+                        <p className="mt-1 text-xs text-white/55">
+                          {(mission.city ?? mission.location ?? 'Localisation à définir')}
+                          {(mission.daily_rate ?? mission.budget_min) !== null
+                            ? ` · ${(mission.daily_rate ?? mission.budget_min)} €/j`
+                            : ''}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            <aside className="space-y-5">
+              <section className="app-card p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Vue rapide</p>
+                <div className="mt-4 space-y-3 text-sm text-white/70">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Localisation</span>
+                    <span className="font-medium text-white">{studio.location ?? 'Non renseignée'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Note</span>
+                    <span className="font-medium text-white">{ratingText ?? 'Pas encore d’avis'}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Missions actives</span>
+                    <span className="font-medium text-white">{missions.length}</span>
+                  </div>
                 </div>
-              )}
-            </section>
-          </>
+              </section>
+
+              {canContact ? (
+                <section className="app-card p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Action rapide</p>
+                  <p className="mt-3 text-sm text-white/60">
+                    Ouvrez une conversation immédiatement pour échanger sur une mission active ou un besoin à venir.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!user) {
+                        navigate('/login');
+                        return;
+                      }
+                      navigate('/studio/new-conversation', {
+                        state: { studioId: studio.id, studioName: displayName },
+                      });
+                    }}
+                    className="mt-4 w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                  >
+                    Contacter ce studio
+                  </button>
+                </section>
+              ) : null}
+            </aside>
+          </div>
         ) : null}
       </div>
 
       {!loading && !error && studio && canContact ? (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl lg:hidden">
           <div className="mx-auto max-w-lg">
             <button
               type="button"

@@ -14,13 +14,12 @@ import { PageMeta } from '@/components/shared/PageMeta';
 import { RatingModal } from '@/components/shared/RatingModal';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
+import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 
 type CounterpartyProfile = PublicProfileRecord;
 
 type LegacyConversationData = {
   id: string;
-  studio_id: string | null;
-  pro_id: string | null;
   participant_1: string | null;
   participant_2: string | null;
 };
@@ -112,6 +111,7 @@ export default function ChatPage() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const mobileComposerStyle = useMobileFixedBottomStyle(64);
 
   const counterpartName = useMemo(
     () => getPublicProfileDisplayName(counterparty),
@@ -176,40 +176,27 @@ export default function ChatPage() {
         throw new Error('Conversation introuvable.');
       }
 
-      let conversationData: LegacyConversationData | null = null;
-
-      const primaryConversation = await supabase
+      const fallbackConversation = await supabase
         .from('conversations')
-        .select('id, studio_id, pro_id, participant_1, participant_2')
+        .select('id, participant_1, participant_2')
         .eq('id', chatId)
         .maybeSingle();
+      if (fallbackConversation.error) throw fallbackConversation.error;
 
-      if (primaryConversation.error) {
-        const fallbackConversation = await supabase
-          .from('conversations')
-          .select('id, participant_1, participant_2')
-          .eq('id', chatId)
-          .maybeSingle();
-        if (fallbackConversation.error) throw fallbackConversation.error;
-        conversationData = fallbackConversation.data
-          ? {
-              id: fallbackConversation.data.id,
-              studio_id: null,
-              pro_id: null,
-              participant_1: (fallbackConversation.data as { participant_1?: string | null }).participant_1 ?? null,
-              participant_2: (fallbackConversation.data as { participant_2?: string | null }).participant_2 ?? null,
-            }
-          : null;
-      } else {
-        conversationData = primaryConversation.data as LegacyConversationData | null;
-      }
+      const conversationData = fallbackConversation.data
+        ? {
+            id: fallbackConversation.data.id,
+            participant_1: (fallbackConversation.data as { participant_1?: string | null }).participant_1 ?? null,
+            participant_2: (fallbackConversation.data as { participant_2?: string | null }).participant_2 ?? null,
+          }
+        : null;
 
       if (!conversationData) {
         throw new Error('Conversation introuvable.');
       }
 
-      const participantA = conversationData.studio_id ?? conversationData.participant_1;
-      const participantB = conversationData.pro_id ?? conversationData.participant_2;
+      const participantA = conversationData.participant_1;
+      const participantB = conversationData.participant_2;
 
       if (participantA !== userId && participantB !== userId) {
         throw new Error('Accès non autorisé à cette conversation.');
@@ -522,7 +509,7 @@ export default function ChatPage() {
   if (loading) {
     return (
       <div className="app-shell">
-        <div className="app-container-compact flex min-h-screen items-center justify-center">
+        <div className="app-container-wide flex min-h-[100dvh] items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -534,19 +521,19 @@ export default function ChatPage() {
       id="chat-container"
       data-chat-mode={mode ?? 'pending'}
       data-chat-ready={!loading && (sessionData || conversation) ? 'true' : 'false'}
-      className="app-shell min-h-screen"
+      className="app-shell min-h-[100dvh]"
     >
       <PageMeta
         title="Conversation"
         description="Échangez en temps réel et partagez vos livrables dans la même discussion."
       />
 
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md md:top-24">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
           <button
             type="button"
             onClick={handleBack}
-            className="text-sm transition-colors hover:text-black app-muted"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-sm transition-colors hover:text-black app-muted"
           >
             ←
           </button>
@@ -582,172 +569,215 @@ export default function ChatPage() {
               onClick={() => void handleCompleteSession()}
               className="ml-auto rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
             >
-              {completingSession ? '...' : 'Terminer la session'}
+              {completingSession ? '...' : 'Terminer et noter'}
             </button>
           ) : null}
         </div>
       </header>
 
-      <div className="mx-auto max-w-lg px-4 pb-44 pt-4">
-        {error ? (
-          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        ) : null}
+      <div className="mx-auto max-w-6xl px-4 pb-44 pt-4">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            {error ? (
+              <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            ) : null}
 
-        {!error && !conversation && !sessionData ? (
-          <p className="app-empty-state">Conversation introuvable.</p>
-        ) : null}
+            {!error && !conversation && !sessionData ? (
+              <p className="app-empty-state">Conversation introuvable.</p>
+            ) : null}
 
-        <div id="messages-list" className="space-y-2">
-          {!error && (conversation || sessionData) && messages.length === 0 ? (
-            <EmptyState
-              icon="💬"
-              title="Démarrez la conversation"
-              description="Le premier message envoyé apparaîtra ici, avec les fichiers et livraisons liés à la mission."
-              className="px-4 py-8"
-            />
-          ) : null}
-          {messages.map((message) => {
-            const mine = message.sender_id === userId;
-            const resolvedFileUrl = message.file_url
-              ? (signedAttachmentUrls[message.id] ?? message.file_url)
-              : null;
-            return (
-              <div
-                key={message.id}
-                className={`message-bubble ${mine ? 'message-bubble--own flex justify-end' : 'flex justify-start'}`}
-              >
-                <div
-                  className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                    mine
-                      ? 'rounded-tr-sm bg-orange-500 text-white'
-                      : 'rounded-tl-sm bg-white text-gray-800'
-                  }`}
-                >
-                  {message.content ? (
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                  ) : null}
-
-                  {message.file_url ? (
-                    <div className={message.content ? 'mt-2' : ''}>
-                      {message.file_type === 'audio' ? (
-                        resolvedFileUrl ? (
-                          <audio controls src={resolvedFileUrl} className="w-full min-w-[220px] max-w-full" />
-                        ) : (
-                          <span className={`text-xs ${mine ? 'text-white/80' : 'text-gray-500'}`}>Préparation du fichier…</span>
-                        )
-                      ) : message.file_type === 'image' ? (
-                        <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
-                          <img
-                            src={resolvedFileUrl ?? message.file_url}
-                            alt={message.file_name ?? 'Image envoyée'}
-                            className="max-h-52 w-full rounded-xl object-cover"
-                          />
-                        </a>
-                      ) : (
-                        <a
-                          href={resolvedFileUrl ?? message.file_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`inline-flex items-center gap-2 text-xs underline-offset-2 hover:underline ${
-                            mine ? 'text-white/90' : 'text-orange-600'
-                          }`}
-                        >
-                          <span>📎</span>
-                          <span>{message.file_name ?? 'Télécharger le document'}</span>
-                        </a>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {isSessionMessage(message) ? (
-                    <span
-                      className={`mt-1 block text-right text-xs ${
-                        mine ? 'text-orange-100' : 'text-gray-400'
+            <div id="messages-list" className="space-y-2">
+              {!error && (conversation || sessionData) && messages.length === 0 ? (
+                <EmptyState
+                  icon="💬"
+                  title="Démarrez la conversation"
+                  description="Le premier message envoyé apparaîtra ici, avec les fichiers et livraisons liés à la mission."
+                  className="px-4 py-8"
+                />
+              ) : null}
+              {messages.map((message) => {
+                const mine = message.sender_id === userId;
+                const resolvedFileUrl = message.file_url
+                  ? (signedAttachmentUrls[message.id] ?? message.file_url)
+                  : null;
+                return (
+                  <div
+                    key={message.id}
+                    className={`message-bubble ${mine ? 'message-bubble--own flex justify-end' : 'flex justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                        mine
+                          ? 'rounded-tr-sm bg-orange-500 text-white'
+                          : 'rounded-tl-sm bg-white text-gray-800'
                       }`}
                     >
-                      {formatTime(message.created_at)}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div ref={bottomRef} />
+                      {message.content ? (
+                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                      ) : null}
 
-        {mode === 'session' && sessionData?.mission_id ? (
-          <DeliveryPanel
-            sessionId={chatId ?? ''}
-            missionId={sessionData.mission_id}
-            canUpload={profileType === 'pro'}
-            refreshKey={`${messages.at(-1)?.id ?? messages.length}-${deliveryRefreshKey}`}
-          />
-        ) : null}
+                      {message.file_url ? (
+                        <div className={message.content ? 'mt-2' : ''}>
+                          {message.file_type === 'audio' ? (
+                            resolvedFileUrl ? (
+                              <audio controls src={resolvedFileUrl} className="w-full min-w-[220px] max-w-full" />
+                            ) : (
+                              <span className={`text-xs ${mine ? 'text-white/80' : 'text-gray-500'}`}>Préparation du fichier…</span>
+                            )
+                          ) : message.file_type === 'image' ? (
+                            <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
+                              <img
+                                src={resolvedFileUrl ?? message.file_url}
+                                alt={message.file_name ?? 'Image envoyée'}
+                                className="max-h-52 w-full rounded-xl object-cover"
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              href={resolvedFileUrl ?? message.file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`inline-flex items-center gap-2 text-xs underline-offset-2 hover:underline ${
+                                mine ? 'text-white/90' : 'text-orange-600'
+                              }`}
+                            >
+                              <span>📎</span>
+                              <span>{message.file_name ?? 'Télécharger le document'}</span>
+                            </a>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {isSessionMessage(message) ? (
+                        <span
+                          className={`mt-1 block text-right text-xs ${
+                            mine ? 'text-orange-100' : 'text-gray-400'
+                          }`}
+                        >
+                          {formatTime(message.created_at)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div ref={bottomRef} />
+
+            {mode === 'session' && sessionData?.mission_id ? (
+              <div className="lg:hidden">
+                <DeliveryPanel
+                  sessionId={chatId ?? ''}
+                  missionId={sessionData.mission_id}
+                  canUpload={resolvedUserType === 'pro'}
+                  refreshKey={`${messages.at(-1)?.id ?? messages.length}-${deliveryRefreshKey}`}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 space-y-4">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Contexte</p>
+                <h2 className="mt-3 text-xl font-semibold text-white">{missionTitle ?? 'Conversation'}</h2>
+                <p className="mt-2 text-sm text-white/60">{counterpartName}</p>
+                {sessionData?.status ? (
+                  <span className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    sessionData.status === 'completed'
+                      ? 'bg-stone-100 text-stone-700'
+                      : 'bg-green-500/15 text-green-200'
+                  }`}>
+                    {sessionData.status === 'completed' ? 'Session terminée' : 'Session active'}
+                  </span>
+                ) : null}
+              </section>
+
+              {mode === 'session' && sessionData?.mission_id ? (
+                <DeliveryPanel
+                  sessionId={chatId ?? ''}
+                  missionId={sessionData.mission_id}
+                  canUpload={resolvedUserType === 'pro'}
+                  refreshKey={`${messages.at(-1)?.id ?? messages.length}-${deliveryRefreshKey}`}
+                />
+              ) : (
+                <section className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/60">
+                  Les fichiers et livraisons apparaîtront ici dès qu’une session liée à une mission est active.
+                </section>
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
 
-      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 border-t border-black/5 bg-[#f4ece4]/95 px-4 py-3 backdrop-blur-md">
-        <div className="mx-auto max-w-lg">
-          {attachment ? (
-            <div className="mb-2 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-stone-700">
-              <span className="truncate pr-3">📎 {attachment.fileName}</span>
+      {conversation || sessionData ? (
+        <div
+          className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-black/5 bg-[#f4ece4]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-md"
+          style={mobileComposerStyle}
+        >
+          <div className="mx-auto max-w-6xl lg:pr-[344px]">
+            {attachment ? (
+              <div className="mb-2 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-stone-700">
+                <span className="truncate pr-3">📎 {attachment.fileName}</span>
+                <button
+                  type="button"
+                  aria-label="Retirer la pièce jointe"
+                  onClick={() => setAttachment(null)}
+                  className="text-xs text-orange-600 hover:underline"
+                >
+                  Retirer
+                </button>
+              </div>
+            ) : null}
+
+            <div className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="audio/*,application/pdf,.zip,application/zip,application/x-zip-compressed,image/*"
+                className="hidden"
+                onChange={handleSelectAttachment}
+              />
+              {canAttachFiles ? (
+                <button
+                  id="btn-attach"
+                  type="button"
+                  aria-label="Ajouter une pièce jointe"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAttachment || sending}
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-60"
+                >
+                  {uploadingAttachment ? '…' : '+'}
+                </button>
+              ) : null}
+              <textarea
+                id="chat-input"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
+                onKeyDown={handleInputKeyDown}
+                placeholder="Écrire un message..."
+                rows={1}
+                className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+              />
               <button
+                id="btn-send"
                 type="button"
-                aria-label="Retirer la pièce jointe"
-                onClick={() => setAttachment(null)}
-                className="text-xs text-orange-600 hover:underline"
+                aria-label="Envoyer le message"
+                onClick={() => void sendMessage()}
+                disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
+                className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white disabled:opacity-50"
               >
-                Retirer
+                {sending ? '…' : '→'}
               </button>
             </div>
-          ) : null}
-
-          <div className="flex items-end gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="audio/*,application/pdf,.zip,application/zip,application/x-zip-compressed,image/*"
-              className="hidden"
-              onChange={handleSelectAttachment}
-            />
-            {canAttachFiles ? (
-              <button
-                id="btn-attach"
-                type="button"
-                aria-label="Ajouter une pièce jointe"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAttachment || sending}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-60"
-              >
-                {uploadingAttachment ? '…' : '+'}
-              </button>
-            ) : null}
-            <textarea
-              id="chat-input"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
-              onKeyDown={handleInputKeyDown}
-              placeholder="Écrire un message..."
-              rows={1}
-              className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
-            />
-            <button
-              id="btn-send"
-              type="button"
-              aria-label="Envoyer le message"
-              onClick={() => void sendMessage()}
-              disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
-              className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white disabled:opacity-50"
-            >
-              {sending ? '…' : '→'}
-            </button>
+            <p className="mx-auto mt-1 max-w-lg text-right text-[11px] text-stone-400">
+              {draft.length}/2000
+            </p>
           </div>
-          <p className="mx-auto mt-1 max-w-lg text-right text-[11px] text-stone-400">
-            {draft.length}/2000
-          </p>
         </div>
-      </div>
+      ) : null}
 
       {mode === 'session' && chatId && otherParticipant ? (
         <RatingModal

@@ -100,7 +100,7 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-stone-50 p-4">
       <Helmet>
         <title>Erreur de connexion — StudioLink</title>
         <meta name="description" content="Une erreur est survenue pendant l’authentification StudioLink." />

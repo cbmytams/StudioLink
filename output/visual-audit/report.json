@@ -1,0 +1,331 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "ids": {
+    "accepted_mission_id": "2ce4af16-1435-4b71-a296-9251074318f8",
+    "open_mission_id": "169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+    "pro_profile_id": "a7329e97-aec6-48f2-b8fc-2a9ec7ad24fe",
+    "session_id": "61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+    "studio_profile_id": "b5c04e01-fda0-4d47-a568-4a98d3a5a6d0"
+  },
+  "pages": [
+    {
+      "key": "landing",
+      "route": "/",
+      "url": "http://127.0.0.1:4173/",
+      "title": "StudioLink — Plateforme Studios & Créatifs",
+      "h1": "La plateforme qui connectestudios & créatifs",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/landing.png"
+    },
+    {
+      "key": "login",
+      "route": "/login",
+      "url": "http://127.0.0.1:4173/login",
+      "title": "Connexion — StudioLink",
+      "h1": "Connexion",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/login.png"
+    },
+    {
+      "key": "register",
+      "route": "/register",
+      "url": "http://127.0.0.1:4173/register",
+      "title": "Inscription — StudioLink",
+      "h1": "Créer un compte",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/register.png"
+    },
+    {
+      "key": "forgot-password",
+      "route": "/forgot-password",
+      "url": "http://127.0.0.1:4173/forgot-password",
+      "title": "Mot de passe oublié | StudioLink",
+      "h1": "Mot de passe oublié",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/forgot-password.png"
+    },
+    {
+      "key": "studio-dashboard",
+      "route": "/dashboard",
+      "url": "http://127.0.0.1:4173/dashboard",
+      "title": "Mon Dashboard | StudioLink",
+      "h1": "Bonjour, Studio Phase 0 👋",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/studio-dashboard.png"
+    },
+    {
+      "key": "pro-dashboard",
+      "route": "/dashboard",
+      "url": "http://127.0.0.1:4173/dashboard",
+      "title": "Mon Dashboard | StudioLink",
+      "h1": "Bonjour, Phase 8 Pro 👋",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/pro-dashboard.png"
+    },
+    {
+      "key": "missions-feed",
+      "route": "/missions",
+      "url": "http://127.0.0.1:4173/missions",
+      "title": "Missions disponibles | StudioLink",
+      "h1": "Explorer les missions",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/missions-feed.png"
+    },
+    {
+      "key": "mission-detail",
+      "route": "/missions/169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+      "url": "http://127.0.0.1:4173/missions/169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+      "title": "Mission phase5 mn66tivo — StudioLink",
+      "h1": "Mission phase5 mn66tivo",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/mission-detail.png"
+    },
+    {
+      "key": "mission-create",
+      "route": "/missions/new",
+      "url": "http://127.0.0.1:4173/studio/missions/new",
+      "title": "Nouvelle mission — StudioLink",
+      "h1": null,
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/mission-create.png"
+    },
+    {
+      "key": "mission-manage",
+      "route": "/missions/2ce4af16-1435-4b71-a296-9251074318f8/manage",
+      "url": "http://127.0.0.1:4173/missions/2ce4af16-1435-4b71-a296-9251074318f8/manage",
+      "title": "Candidatures — StudioLink",
+      "h1": "Mission phase5 mn6w3qck",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/mission-manage.png"
+    },
+    {
+      "key": "pro-public-profile",
+      "route": "/pros/a7329e97-aec6-48f2-b8fc-2a9ec7ad24fe",
+      "url": "http://127.0.0.1:4173/pros/a7329e97-aec6-48f2-b8fc-2a9ec7ad24fe",
+      "title": "Phase 8 Pro — StudioLink",
+      "h1": "Phase 8 Pro",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/pro-public-profile.png"
+    },
+    {
+      "key": "studio-public-profile",
+      "route": "/studios/b5c04e01-fda0-4d47-a568-4a98d3a5a6d0",
+      "url": "http://127.0.0.1:4173/studios/b5c04e01-fda0-4d47-a568-4a98d3a5a6d0",
+      "title": "Studio Phase 0 — StudioLink",
+      "h1": "Studio Phase 0",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/studio-public-profile.png"
+    },
+    {
+      "key": "settings",
+      "route": "/settings",
+      "url": "http://127.0.0.1:4173/settings",
+      "title": "Paramètres — StudioLink",
+      "h1": "Paramètres",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/settings.png"
+    },
+    {
+      "key": "applications",
+      "route": "/applications",
+      "url": "http://127.0.0.1:4173/pro/applications",
+      "title": "Mes candidatures — StudioLink",
+      "h1": null,
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/applications.png"
+    },
+    {
+      "key": "chat-list",
+      "route": "/chat",
+      "url": "http://127.0.0.1:4173/chat",
+      "title": "Mes conversations — StudioLink",
+      "h1": "Mes conversations",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/chat-list.png"
+    },
+    {
+      "key": "chat-session",
+      "route": "/chat/61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+      "url": "http://127.0.0.1:4173/chat/61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+      "title": "Conversation | StudioLink",
+      "h1": null,
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/chat-session.png"
+    },
+    {
+      "key": "notifications-page",
+      "route": "/notifications",
+      "url": "http://127.0.0.1:4173/notifications",
+      "title": "StudioLink",
+      "h1": "Notifications",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/notifications-page.png"
+    },
+    {
+      "key": "notification-bell",
+      "route": "/dashboard",
+      "url": "http://127.0.0.1:4173/dashboard",
+      "title": "StudioLink",
+      "h1": "Bonjour, Phase 8 Pro 👋",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/notification-bell.png"
+    },
+    {
+      "key": "404",
+      "route": "/n-importe-quelle-route-inexistante",
+      "url": "http://127.0.0.1:4173/n-importe-quelle-route-inexistante",
+      "title": "Page introuvable | StudioLink",
+      "h1": "Page introuvable",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/desktop/404.png"
+    },
+    {
+      "key": "landing-mobile",
+      "route": "/",
+      "url": "http://127.0.0.1:4173/",
+      "title": "StudioLink — Plateforme Studios & Créatifs",
+      "h1": "La plateforme qui connectestudios & créatifs",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/landing-mobile.png"
+    },
+    {
+      "key": "login-mobile",
+      "route": "/login",
+      "url": "http://127.0.0.1:4173/login",
+      "title": "Connexion — StudioLink",
+      "h1": "Connexion",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/login-mobile.png"
+    },
+    {
+      "key": "register-mobile",
+      "route": "/register",
+      "url": "http://127.0.0.1:4173/register",
+      "title": "Inscription — StudioLink",
+      "h1": "Créer un compte",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/register-mobile.png"
+    },
+    {
+      "key": "studio-dashboard-mobile",
+      "route": "/dashboard",
+      "url": "http://127.0.0.1:4173/dashboard",
+      "title": "Mon Dashboard | StudioLink",
+      "h1": "Bonjour, Studio Phase 0 👋",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/studio-dashboard-mobile.png"
+    },
+    {
+      "key": "missions-feed-mobile",
+      "route": "/missions",
+      "url": "http://127.0.0.1:4173/missions",
+      "title": "Missions disponibles | StudioLink",
+      "h1": "Explorer les missions",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/missions-feed-mobile.png"
+    },
+    {
+      "key": "mission-detail-mobile",
+      "route": "/missions/169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+      "url": "http://127.0.0.1:4173/missions/169a24f9-40f9-4a11-b3fb-f8d78070e26a",
+      "title": "Mission phase5 mn66tivo — StudioLink",
+      "h1": "Mission phase5 mn66tivo",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/mission-detail-mobile.png"
+    },
+    {
+      "key": "mission-create-mobile",
+      "route": "/missions/new",
+      "url": "http://127.0.0.1:4173/studio/missions/new",
+      "title": "Nouvelle mission — StudioLink",
+      "h1": null,
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/mission-create-mobile.png"
+    },
+    {
+      "key": "chat-session-mobile",
+      "route": "/chat/61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+      "url": "http://127.0.0.1:4173/chat/61f5280c-dcf6-43e7-b533-cad9a68e46a2",
+      "title": "Conversation | StudioLink",
+      "h1": null,
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/chat-session-mobile.png"
+    },
+    {
+      "key": "notifications-page-mobile",
+      "route": "/notifications",
+      "url": "http://127.0.0.1:4173/notifications",
+      "title": "Notifications — StudioLink",
+      "h1": "Notifications",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/notifications-page-mobile.png"
+    },
+    {
+      "key": "settings-mobile",
+      "route": "/settings",
+      "url": "http://127.0.0.1:4173/settings",
+      "title": "Paramètres — StudioLink",
+      "h1": "Paramètres",
+      "overflowX": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshotPath": "/Users/sasha/Downloads/studiolink-paris/output/visual-audit/mobile/settings-mobile.png"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth';
 import { useUnreadCount as useUnreadNotifications } from '@/hooks/useNotifications';
 import { useUnreadCount as useUnreadMessages } from '@/hooks/useUnreadCount';
+import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 
 interface BottomNavProps {
   userType: 'studio' | 'pro';
@@ -15,6 +16,7 @@ export function BottomNav({ userType }: BottomNavProps) {
   const { session } = useAuth();
   const { unreadCount } = useUnreadNotifications(session?.user?.id);
   const unreadMessages = useUnreadMessages();
+  const mobileBottomStyle = useMobileFixedBottomStyle();
 
   const studioTabs = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -35,7 +37,10 @@ export function BottomNav({ userType }: BottomNavProps) {
     location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/5 bg-[#f4ece4]/80 pb-safe backdrop-blur-md md:hidden">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/5 bg-[#f4ece4]/80 pb-safe backdrop-blur-md md:hidden"
+      style={mobileBottomStyle}
+    >
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
         {tabs.map((tab) => {
           const isActive = isTabActive(tab.path);

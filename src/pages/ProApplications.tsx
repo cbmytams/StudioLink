@@ -283,7 +283,7 @@ export default function ProApplications() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 text-sm app-muted transition-colors hover:text-black"
+          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-black"
         >
           ← Mes candidatures
         </button>
@@ -294,7 +294,7 @@ export default function ProApplications() {
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-              className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                  className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                 activeFilter === filter.value
                   ? 'bg-orange-500 text-white'
                   : 'border border-gray-200 bg-white text-gray-500 hover:bg-orange-50'
@@ -343,7 +343,7 @@ export default function ProApplications() {
             <button
               type="button"
               onClick={() => navigate('/pro/feed')}
-              className="mt-3 text-orange-500 text-sm hover:underline block mx-auto"
+              className="mt-3 inline-flex min-h-[44px] items-center justify-center px-2 text-orange-500 text-sm hover:underline"
             >
               Voir les offres disponibles
             </button>
@@ -421,7 +421,7 @@ export default function ProApplications() {
                         void handleWithdraw(application.id);
                       }}
                       disabled={withdrawingId === application.id}
-                      className={`mt-3 inline-flex text-xs font-medium ${
+                      className={`mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium ${
                         withdrawingId === application.id
                           ? 'text-stone-400'
                           : 'text-orange-500 hover:underline'
@@ -438,7 +438,7 @@ export default function ProApplications() {
                         event.stopPropagation();
                         void handleOpenChat(application.mission_id, sessionId);
                       }}
-                      className="mt-3 inline-flex text-xs font-medium text-orange-500 hover:underline"
+                      className="mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-orange-500 hover:underline"
                     >
                       Ouvrir le chat
                     </button>

@@ -192,7 +192,7 @@ export default function LoginPage() {
 
   if (step === 'confirm-email') {
     return (
-      <div className="app-shell flex min-h-screen items-center justify-center p-4">
+      <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
         <Helmet>
           <title>Confirmation email — StudioLink</title>
           <meta name="description" content="Confirme ton adresse email pour activer ton compte StudioLink." />
@@ -388,7 +388,7 @@ export default function LoginPage() {
     || (mode === 'signup' && Boolean(getConfirmPasswordError(password, confirmPassword)));
 
   return (
-    <div className="app-shell flex min-h-screen items-center justify-center p-4">
+    <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
       <Helmet>
         <title>{isSignIn ? 'Connexion — StudioLink' : 'Inscription — StudioLink'}</title>
         <meta
@@ -424,13 +424,13 @@ export default function LoginPage() {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate('/invitation')}
-              className="mt-2 block text-xs font-medium text-orange-200 underline underline-offset-2"
-            >
-              Entrer mon code d&apos;invitation
-            </button>
+              <button
+                type="button"
+                onClick={() => navigate('/invitation')}
+                className="mt-2 inline-flex min-h-[44px] items-center text-xs font-medium text-orange-200 underline underline-offset-2"
+              >
+                Entrer mon code d&apos;invitation
+              </button>
           </div>
         ) : null}
 
@@ -483,7 +483,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => navigate('/forgot-password')}
-                className="text-xs text-white/55 transition hover:text-white"
+                className="min-h-[44px] px-2 text-xs text-white/55 transition hover:text-white"
               >
                 Mot de passe oublié ?
               </button>
@@ -522,7 +522,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => navigate('/invitation')}
-                className="ml-1 text-red-600 underline"
+                className="ml-1 inline-flex min-h-[44px] items-center text-red-600 underline"
               >
                 Revenir à la page invitation
               </button>
@@ -551,7 +551,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-6 w-full text-center text-sm font-light text-white/50 transition-colors hover:text-white"
+          className="mt-6 flex min-h-[44px] w-full items-center justify-center text-center text-sm font-light text-white/50 transition-colors hover:text-white"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>

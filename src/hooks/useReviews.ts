@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { reviewService } from '@/services/reviewService';
 import { useToast } from '@/components/ui/Toast';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 export function useReviews(reviewedId?: string) {
   return useQuery({
@@ -33,7 +34,7 @@ export function useCreateReview(reviewerId?: string) {
       void queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Impossible d’envoyer votre avis.';
+      const message = toUserFacingErrorMessage(error, 'Impossible d’envoyer votre avis.');
       showToast({
         title: 'Envoi impossible',
         description: message,

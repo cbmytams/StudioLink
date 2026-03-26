@@ -50,12 +50,28 @@ function normalizeAvailabilitySlots(value: Json | null): AvailabilitySlot[] {
   });
 }
 
+function normalizeNotificationPreferences(value: Json | null): NotificationPreferences | null {
+  if (!isObject(value)) return null;
+  return {
+    new_application: Boolean(value.new_application),
+    messages: Boolean(value.messages),
+    status_updates: Boolean(value.status_updates),
+  };
+}
+
+function normalizeProfile(row: Database['public']['Tables']['profiles']['Row']): Profile {
+  return {
+    ...row,
+    notification_preferences: normalizeNotificationPreferences(row.notification_preferences),
+  };
+}
+
 function toProfileUpdate(data: Partial<Profile>): Database['public']['Tables']['profiles']['Update'] {
   return {
     ...data,
-    notification_preferences: data.notification_preferences
-      ? (data.notification_preferences as unknown as Json)
-      : data.notification_preferences,
+    notification_preferences: data.notification_preferences === undefined
+      ? undefined
+      : (data.notification_preferences as unknown as Json | null),
   };
 }
 
@@ -78,7 +94,7 @@ export const profileService = {
     const client = ensureClient();
     const { data, error } = await client.from('profiles').select('*').eq('id', userId).single();
     if (error) throw error;
-    return data as Profile;
+    return normalizeProfile(data);
   },
 
   async getProProfile(userId: string): Promise<ProProfileRecord> {

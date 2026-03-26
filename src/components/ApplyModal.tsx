@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/supabase/auth';
+import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { applicationService } from '@/services/applicationService';
 import type { ApplicationRecord } from '@/types/backend';
 
@@ -41,7 +42,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
       setCoverLetter('');
       onClose();
     } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : 'Impossible d’envoyer la candidature.';
+      const message = toUserFacingErrorMessage(submitError, 'Impossible d’envoyer la candidature.');
       setError(message);
       showToast({ title: 'Envoi impossible', description: message, variant: 'destructive' });
     } finally {

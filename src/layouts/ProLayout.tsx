@@ -10,16 +10,17 @@ export default function ProLayout({ children }: { children?: React.ReactNode }) 
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   return (
-    <div className="min-h-screen relative pb-24">
-      <GlobalSearchBar userType="pro" />
+    <div className="relative min-h-[100dvh] pb-24 md:pb-0">
+      {isMobile ? <GlobalSearchBar userType="pro" /> : null}
       <DesktopNav userType="pro" />
 
-      {/* Floating Notification Bell */}
-      <div className="fixed top-4 right-4 z-50 md:top-6 md:right-8">
+      <div className="fixed right-4 top-4 z-50 md:right-6 md:top-6">
         <NotificationBell userType="pro" />
       </div>
 
-      {children || <Outlet />}
+      <div className="md:pl-[304px] md:pr-6 lg:pr-8">
+        {children || <Outlet />}
+      </div>
       
       {isMobile ? <BottomNav userType="pro" /> : null}
     </div>
