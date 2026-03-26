@@ -18,7 +18,7 @@ interface CompleteMagicSignupParams {
 }
 
 const PROFILE_SELECT_COLUMNS =
-  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, created_at, updated_at';
+  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, search_vector, created_at, updated_at';
 
 function assertSupabase() {
   if (!supabase) {
