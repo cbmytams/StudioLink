@@ -9,6 +9,13 @@ import type {
   UserType,
 } from '@/types/backend';
 
+const PROFILE_SELECT_COLUMNS =
+  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, created_at, updated_at';
+const PRO_PROFILE_SELECT_COLUMNS =
+  'profile_id, name, bio, phone, services, genres, instruments, min_rate, show_rate, links, is_available, availability_slots, updated_at';
+const STUDIO_PROFILE_SELECT_COLUMNS =
+  'profile_id, name, address, district, phone, description, equipment, website, instagram, updated_at';
+
 function ensureClient() {
   if (!supabase) {
     throw new Error('Supabase non configuré.');
@@ -92,16 +99,16 @@ function toProProfileUpsert(
 export const profileService = {
   async getProfile(userId: string): Promise<Profile> {
     const client = ensureClient();
-    const { data, error } = await client.from('profiles').select('*').eq('id', userId).single();
+    const { data, error } = await client.from('profiles').select(PROFILE_SELECT_COLUMNS).eq('id', userId).single();
     if (error) throw error;
-    return normalizeProfile(data);
+    return normalizeProfile(data as Database['public']['Tables']['profiles']['Row']);
   },
 
   async getProProfile(userId: string): Promise<ProProfileRecord> {
     const client = ensureClient();
     const { data, error } = await client
       .from('pro_profiles')
-      .select('*')
+      .select(PRO_PROFILE_SELECT_COLUMNS)
       .eq('profile_id', userId)
       .single();
     if (error) throw error;
@@ -116,7 +123,7 @@ export const profileService = {
     const client = ensureClient();
     const { data, error } = await client
       .from('studio_profiles')
-      .select('*')
+      .select(STUDIO_PROFILE_SELECT_COLUMNS)
       .eq('profile_id', userId)
       .single();
     if (error) throw error;
