@@ -8,6 +8,7 @@ import {
   isProfileIncomplete,
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
+import { consumeAuthRedirectReason } from '@/lib/auth/handleAuthError';
 
 interface Props {
   children: React.ReactNode;
@@ -31,9 +32,18 @@ export default function ProtectedRoute({ children, requiredType, allowedTypes }:
   const guardProfile = profile as GuardProfile;
   const profileType = resolveProfileType(guardProfile);
   const profileLoading = loading;
+  const redirectReason = !session ? consumeAuthRedirectReason() : null;
 
   if (profileLoading) return <LoadingScreen />;
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={redirectReason ? { reason: redirectReason } : undefined}
+      />
+    );
+  }
 
   if (!guardProfile && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
