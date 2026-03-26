@@ -59,7 +59,7 @@ export function getPublicProfileDisplayName(profile: Pick<PublicProfileRecord, '
 export async function getPublicProfile(id: string): Promise<PublicProfileRecord | null> {
   const client = ensureClient();
   const { data, error } = await client
-    .from('public_profiles' as never)
+    .from('public_profiles')
     .select(PUBLIC_PROFILE_SELECT)
     .eq('id', id)
     .maybeSingle();
@@ -74,9 +74,9 @@ export async function getPublicProfiles(ids: string[]): Promise<PublicProfileRec
 
   const client = ensureClient();
   const { data, error } = await client
-    .from('public_profiles' as never)
+    .from('public_profiles')
     .select(PUBLIC_PROFILE_SELECT)
-    .in('id', uniqueIds as never);
+    .in('id', uniqueIds);
 
   if (error) throw error;
   return ((data as PublicProfileRow[] | null) ?? []).map(mapPublicProfile);
