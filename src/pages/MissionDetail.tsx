@@ -9,28 +9,28 @@ import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { ApplyModal } from '@/components/ApplyModal';
 import type { MissionFileRecord } from '@/types/backend';
+import type { Database } from '@/types/supabase';
 import { getMissionFiles, getSignedUrl } from '@/lib/files/fileService';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 
-type MissionRecord = {
-  id: string
-  studio_id: string
-  title: string
-  description: string | null
-  category?: string | null
-  service_type?: string | null
-  location?: string | null
-  city?: string | null
-  date?: string | null
-  end_date?: string | null
-  daily_rate?: number | null
-  price?: string | null
-  skills_required?: string[] | null
-  skills?: string[] | null
-  required_skills?: string[] | null
-  genres?: string[] | null
-  status?: string | null
-};
+type MissionRecord = Pick<
+Database['public']['Tables']['missions']['Row'],
+| 'id'
+| 'studio_id'
+| 'title'
+| 'description'
+| 'category'
+| 'service_type'
+| 'location'
+| 'city'
+| 'date'
+| 'end_date'
+| 'daily_rate'
+| 'price'
+| 'skills_required'
+| 'genres'
+| 'status'
+>;
 
 type Mission = {
   id: string
@@ -60,7 +60,7 @@ type ApplicationRow = {
 };
 
 const MISSION_DETAIL_SELECT_COLUMNS =
-  'id, studio_id, title, description, category, service_type, location, city, date, end_date, daily_rate, price, skills_required, skills, required_skills, genres, status';
+  'id, studio_id, title, description, category, service_type, location, city, date, end_date, daily_rate, price, skills_required, genres, status';
 
 function parseRate(value: number | string | null | undefined): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -140,13 +140,13 @@ export default function MissionDetail() {
           return;
         }
 
-        const rawMission = missionRow as MissionRecord;
+        const rawMission: MissionRecord = missionRow;
 
         const studioProfile = await getPublicProfile(rawMission.studio_id);
 
         const normalizedMission: Mission = {
           id: rawMission.id,
-          title: rawMission.title,
+          title: rawMission.title ?? 'Mission',
           description: rawMission.description,
           category: rawMission.category ?? rawMission.service_type ?? null,
           location: rawMission.location ?? rawMission.city ?? null,
@@ -155,8 +155,6 @@ export default function MissionDetail() {
           end_date: rawMission.end_date ?? null,
           daily_rate: parseRate(rawMission.daily_rate ?? rawMission.price),
           skills_required: rawMission.skills_required
-            ?? rawMission.skills
-            ?? rawMission.required_skills
             ?? rawMission.genres
             ?? [],
           status: normalizeMissionStatus(rawMission.status ?? null),
