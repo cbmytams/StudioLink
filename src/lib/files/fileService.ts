@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import type { MissionFileRecord, MissionFileType } from '@/types/backend';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { buildScopedStoragePath, getBucketFromMissionFileType } from './fileUtils';
 
 type MissionFileRow = MissionFileRecord;
@@ -50,36 +51,44 @@ async function uploadScopedFile(
   const bucket = getBucketFromMissionFileType(fileType);
   const path = buildScopedStoragePath(scopeId, file.name, crypto.randomUUID());
 
-  const { error: uploadError } = await client.storage.from(bucket).upload(path, file, {
-    cacheControl: '3600',
-    upsert: false,
-  });
+  try {
+    const { error: uploadError } = await client.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
 
-  if (uploadError) throw uploadError;
+    if (uploadError) throw uploadError;
 
-  const insertPayload = {
-    mission_id: values.missionId,
-    session_id: values.sessionId ?? null,
-    uploaded_by: userId,
-    file_type: fileType,
-    file_url: path,
-    file_name: file.name,
-    file_size: file.size,
-    mime_type: file.type || null,
-  };
+    const insertPayload = {
+      mission_id: values.missionId,
+      session_id: values.sessionId ?? null,
+      uploaded_by: userId,
+      file_type: fileType,
+      file_url: path,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type || null,
+    };
 
-  const { data, error: insertError } = await client
-    .from('mission_files')
-    .insert(insertPayload)
-    .select(MISSION_FILE_SELECT_COLUMNS)
-    .single();
+    const { data, error: insertError } = await client
+      .from('mission_files')
+      .insert(insertPayload)
+      .select(MISSION_FILE_SELECT_COLUMNS)
+      .single();
 
-  if (insertError) {
-    await client.storage.from(bucket).remove([path]);
-    throw insertError;
+    if (insertError) {
+      await client.storage.from(bucket).remove([path]);
+      throw insertError;
+    }
+
+    return mapMissionFile(data as MissionFileRow);
+  } catch (error) {
+    const isAuthError = await handleAuthError(error);
+    if (isAuthError) {
+      throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+    }
+    throw error;
   }
-
-  return mapMissionFile(data as MissionFileRow);
 }
 
 export async function uploadMissionFile(missionId: string, file: File): Promise<MissionFileRecord> {
