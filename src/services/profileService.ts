@@ -78,7 +78,7 @@ function toProfileUpdate(data: Partial<Profile>): Database['public']['Tables']['
     ...data,
     notification_preferences: data.notification_preferences === undefined
       ? undefined
-      : (data.notification_preferences as unknown as Json | null),
+      : (data.notification_preferences as Json | null),
   };
 }
 
@@ -89,9 +89,9 @@ function toProProfileUpsert(
   return {
     ...data,
     profile_id: userId,
-    links: data.links ? (data.links as unknown as Json) : undefined,
+    links: data.links ? (data.links as Json) : undefined,
     availability_slots: data.availability_slots
-      ? (data.availability_slots as unknown as Json)
+      ? (data.availability_slots as Json)
       : undefined,
   };
 }
