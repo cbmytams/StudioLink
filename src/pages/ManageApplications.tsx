@@ -10,6 +10,7 @@ import { applicationService } from '@/services/applicationService';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
+import { Avatar } from '@/components/ui/Avatar';
 
 type ProProfile = PublicProfileRecord;
 
@@ -386,19 +387,12 @@ export default function ManageApplications() {
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    {application.pro?.avatar_url ? (
-                      <img
-                        src={application.pro.avatar_url}
-                        alt={displayName}
-                        className="h-10 w-10 rounded-full object-cover border border-white/50"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-                        <span className="text-sm font-bold text-orange-600">
-                          {displayName.charAt(0).toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
+                    <Avatar
+                      src={application.pro?.avatar_url}
+                      name={displayName}
+                      size="md"
+                      className="border border-white/50"
+                    />
                     <div>
                       <p className="font-semibold">{displayName}</p>
                       <button

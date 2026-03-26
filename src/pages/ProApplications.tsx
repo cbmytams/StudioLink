@@ -10,6 +10,7 @@ import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import type { Database } from '@/types/supabase';
+import { Avatar } from '@/components/ui/Avatar';
 
 type FilterValue = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -377,19 +378,12 @@ export default function ProApplications() {
                     className="w-full text-left"
                   >
                     <div className="mb-2 flex items-center gap-2">
-                      {studioAvatar ? (
-                        <img
-                          src={studioAvatar}
-                          alt={studioName}
-                          className="h-8 w-8 rounded-full object-cover border border-white/50"
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
-                          <span className="text-xs font-bold text-orange-600">
-                            {studioName.charAt(0).toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      )}
+                      <Avatar
+                        src={studioAvatar}
+                        name={studioName}
+                        size="sm"
+                        className="border border-white/50"
+                      />
                       <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{studioName}</p>
                       <span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
                         {status.label}

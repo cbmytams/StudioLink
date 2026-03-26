@@ -60,6 +60,14 @@ Configuration dashboard (manuel) :
 3. Host `smtp.gmail.com`, Port `587`, User/Pass Gmail App Password
 4. Mettre a jour templates FR : Confirm signup, Reset password, Magic link
 
+## pg_cron (non disponible sur Free Plan)
+
+- Workaround actif : workflow GitHub cron [`.github/workflows/cron.yml`]
+  appelle l'edge function `process-reminders` chaque heure.
+- Secret GitHub requis : `SUPABASE_SERVICE_ROLE_KEY`.
+- Endpoint appele : `/functions/v1/process-reminders` avec payload
+  `{"type":"rating_reminder"}`.
+
 ## Securite Supabase (dashboard manuel)
 
 1. SSL enforcement

@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/supabase/auth';
-import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { applicationService } from '@/services/applicationService';
 import type { ApplicationRecord } from '@/types/backend';
+import { useRateLimit } from '@/hooks/useRateLimit';
+import { useAsyncAction } from '@/hooks/useAsyncAction';
 
 interface ApplyModalProps {
   isOpen: boolean;
@@ -18,36 +19,41 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
   const { session } = useAuth();
   const { showToast } = useToast();
   const [coverLetter, setCoverLetter] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const throttle = useRateLimit(1500);
+  const {
+    execute: executeSubmit,
+    loading: submitting,
+    error,
+  } = useAsyncAction<ApplicationRecord, []>(async () => {
+    const proId = session?.user?.id;
+    if (!proId) {
+      throw new Error('Session expirée. Reconnecte-toi pour postuler.');
+    }
+
+    return applicationService.createApplication(
+      {
+        mission_id: missionId,
+        cover_letter: coverLetter,
+      },
+      proId,
+    );
+  }, { errorMessage: 'Impossible d’envoyer la candidature.' });
+
+  useEffect(() => {
+    if (!error) return;
+    showToast({ title: 'Envoi impossible', description: error, variant: 'destructive' });
+  }, [error, showToast]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    const proId = session?.user?.id;
-    if (!proId) return;
+    const created = await throttle(async () => executeSubmit());
+    if (!created) return;
 
-    setSubmitting(true);
-    setError(null);
-    try {
-      const created = await applicationService.createApplication(
-        {
-          mission_id: missionId,
-          cover_letter: coverLetter,
-        },
-        proId,
-      );
-      showToast({ title: 'Candidature envoyée ✓', variant: 'default' });
-      onSubmitted(created);
-      setCoverLetter('');
-      onClose();
-    } catch (submitError) {
-      const message = toUserFacingErrorMessage(submitError, 'Impossible d’envoyer la candidature.');
-      setError(message);
-      showToast({ title: 'Envoi impossible', description: message, variant: 'destructive' });
-    } finally {
-      setSubmitting(false);
-    }
+    showToast({ title: 'Candidature envoyée ✓', variant: 'default' });
+    onSubmitted(created);
+    setCoverLetter('');
+    onClose();
   };
 
   return (

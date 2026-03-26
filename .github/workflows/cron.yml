@@ -1,0 +1,19 @@
+name: Hourly Cron Jobs
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  rating-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger rating reminders
+        run: |
+          curl -X POST \
+            "${{ secrets.VITE_SUPABASE_URL }}/functions/v1/process-reminders" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"type":"rating_reminder"}' \
+            --silent --show-error --max-time 30

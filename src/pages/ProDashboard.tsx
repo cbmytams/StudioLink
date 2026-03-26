@@ -7,6 +7,7 @@ import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
 import { formatCurrency, formatLongDate, ratingStars, type ProDashboard as ProDashboardData } from '@/lib/analytics/analyticsUtils';
+import { Avatar } from '@/components/ui/Avatar';
 
 type DashboardProfile = {
   avatar_url?: string | null;
@@ -95,17 +96,12 @@ export default function ProDashboard() {
       <div className="app-container">
         <header className="mb-5">
           <div className="flex items-center gap-3">
-            {dashboardProfile?.avatar_url ? (
-              <img
-                src={dashboardProfile.avatar_url}
-                alt="Avatar pro"
-                className="h-12 w-12 rounded-full border border-white/50 object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
-                {greetingName.charAt(0).toUpperCase() || '?'}
-              </div>
-            )}
+            <Avatar
+              src={dashboardProfile?.avatar_url}
+              name={greetingName}
+              size="md"
+              className="h-12 w-12 border border-white/50 bg-orange-500 text-white"
+            />
             <div>
               <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
               <p className="app-subtitle">

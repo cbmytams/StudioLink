@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import { formatCurrency, formatLongDate, ratingStars, type StudioDashboard as StudioDashboardData } from '@/lib/analytics/analyticsUtils';
 import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { chatService } from '@/lib/chat/chatService';
+import { Avatar } from '@/components/ui/Avatar';
 
 type DashboardProfile = {
   avatar_url?: string | null;
@@ -121,17 +122,12 @@ export default function StudioDashboard() {
       <div className="app-container-wide">
         <header className="app-header">
           <div className="flex items-center gap-3">
-            {dashboardProfile?.avatar_url ? (
-              <img
-                src={dashboardProfile.avatar_url}
-                alt="Avatar studio"
-                className="h-14 w-14 rounded-full border border-white/20 object-cover shadow-[0_4px_20px_rgba(249,115,22,0.35)]"
-              />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-orange-500 to-orange-400 text-xl font-bold text-white shadow-[0_4px_20px_rgba(249,115,22,0.35)]">
-                {companyName.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <Avatar
+              src={dashboardProfile?.avatar_url}
+              name={companyName}
+              size="lg"
+              className="border border-white/20 bg-gradient-to-br from-orange-500 to-orange-400 text-white shadow-[0_4px_20px_rgba(249,115,22,0.35)]"
+            />
             <div>
               <h1 className="app-title">Bonjour, {companyName} 👋</h1>
               <p className="app-subtitle">

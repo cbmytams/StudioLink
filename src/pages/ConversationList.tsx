@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
+import { Avatar } from '@/components/ui/Avatar';
 
 type ConversationProfile = PublicProfileRecord;
 
@@ -264,19 +265,12 @@ export default function ConversationList() {
                     className="w-full rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"
                   >
                     <div className="flex items-start gap-3">
-                      {conversation.contact?.avatar_url ? (
-                        <img
-                          src={conversation.contact.avatar_url}
-                          alt={contactName}
-                          className="h-12 w-12 rounded-full object-cover border border-white/10"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/15">
-                          <span className="text-sm font-bold text-orange-200">
-                            {contactName.charAt(0).toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      )}
+                      <Avatar
+                        src={conversation.contact?.avatar_url}
+                        name={contactName}
+                        size="lg"
+                        className="h-12 w-12 border border-white/10"
+                      />
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">

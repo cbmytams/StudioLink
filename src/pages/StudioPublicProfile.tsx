@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
+import { Avatar } from '@/components/ui/Avatar';
 
 type PublicStudioProfile = PublicProfileRecord;
 
@@ -149,19 +150,12 @@ export default function StudioPublicProfile() {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
               <header className="app-card p-6">
-              {studio.avatar_url ? (
-                <img
-                  src={studio.avatar_url}
-                  alt={displayName}
-                  className="w-20 h-20 rounded-full object-cover border border-white/50"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-white">
-                    {displayName.charAt(0).toUpperCase() || '?'}
-                  </span>
-                </div>
-              )}
+              <Avatar
+                src={studio.avatar_url}
+                name={displayName}
+                size="xl"
+                className="border border-white/50 bg-orange-500 text-white"
+              />
 
               <h1 className="mt-4 text-3xl font-bold text-white">{displayName}</h1>
               {studio.location ? <p className="mt-2 text-sm text-white/65">{studio.location}</p> : null}

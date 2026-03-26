@@ -7,8 +7,10 @@ import {
 } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { AdminRoute } from '@/components/AdminRoute';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Toaster } from '@/components/ui/Toast';
+import { NetworkBanner } from '@/components/shared/NetworkBanner';
 import {
   getDashboardPath,
   isProfileIncomplete,
@@ -138,6 +140,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <NetworkBanner />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -399,9 +402,9 @@ export default function App() {
           <Route
             path="/admin"
             element={(
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminPage />
-              </ProtectedRoute>
+              </AdminRoute>
             )}
           />
           <Route path="/health" element={<HealthCheckPage />} />

@@ -12,10 +12,13 @@ import { DeliveryPanel } from '@/components/shared/DeliveryPanel';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { RatingModal } from '@/components/shared/RatingModal';
+import { Avatar } from '@/components/ui/Avatar';
+import { LazyImage } from '@/components/ui/LazyImage';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 type CounterpartyProfile = PublicProfileRecord;
 
@@ -109,6 +112,7 @@ export default function ChatPage() {
   const [deliveryRefreshKey, setDeliveryRefreshKey] = useState(0);
   const [completingSession, setCompletingSession] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const { isOnline } = useNetworkStatus();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -277,7 +281,7 @@ export default function ChatPage() {
   }, [chatId, conversationListRoute, navigate, userId]);
 
   useEffect(() => {
-    if (!chatId || !userId || !mode) return;
+    if (!chatId || !userId || !mode || !isOnline) return;
 
     if (mode === 'session') {
       const channel = chatService.subscribeToMessages(chatId, (incoming) => {
@@ -323,7 +327,7 @@ export default function ChatPage() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId, mode, userId]);
+  }, [chatId, isOnline, mode, userId]);
 
   const sendMessage = async () => {
     if (!userId || !chatId || sending) return;
@@ -539,19 +543,12 @@ export default function ChatPage() {
             ←
           </button>
 
-          {counterparty?.avatar_url ? (
-            <img
-              src={counterparty.avatar_url}
-              alt={counterpartName}
-              className="h-10 w-10 rounded-full border border-white/50 object-cover"
-            />
-          ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-              <span className="text-sm font-bold text-orange-600">
-                {counterpartName.charAt(0).toUpperCase() || '?'}
-              </span>
-            </div>
-          )}
+          <Avatar
+            src={counterparty?.avatar_url}
+            name={counterpartName}
+            size="md"
+            className="border border-white/50"
+          />
 
           <div className="min-w-0">
             <p className="truncate font-semibold text-gray-900">
@@ -629,7 +626,7 @@ export default function ChatPage() {
                             )
                           ) : message.file_type === 'image' ? (
                             <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
-                              <img
+                              <LazyImage
                                 src={resolvedFileUrl ?? message.file_url}
                                 alt={message.file_name ?? 'Image envoyée'}
                                 className="max-h-52 w-full rounded-xl object-cover"
