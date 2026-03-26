@@ -106,7 +106,7 @@ export const chatService = {
       .single();
 
     if (error) throw error;
-    const row = data as unknown as SessionRow;
+    const row = data as SessionRow;
     const profilesById = await fetchSessionProfiles([row]);
     return mapSessionRow(row, profilesById);
   },
@@ -135,7 +135,7 @@ export const chatService = {
 
     if (error) throw error;
     if (!data) return null;
-    const row = data as unknown as SessionRow;
+    const row = data as SessionRow;
     const profilesById = await fetchSessionProfiles([row]);
     return mapSessionRow(row, profilesById);
   },
@@ -198,7 +198,7 @@ export const chatService = {
 
       const { error: sessionError } = await client
         .from('sessions')
-        .update({ updated_at: new Date().toISOString() } as never)
+        .update({ updated_at: new Date().toISOString() })
         .eq('id', sessionId);
 
       if (sessionError) {
