@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/239</span>
+                <span class='fraction'>0/241</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/239</span>
+                <span class='fraction'>0/241</span>
             </div>
         
             
@@ -350,7 +350,10 @@
 <a name='L285'></a><a href='#L285'>285</a>
 <a name='L286'></a><a href='#L286'>286</a>
 <a name='L287'></a><a href='#L287'>287</a>
-<a name='L288'></a><a href='#L288'>288</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L288'></a><a href='#L288'>288</a>
+<a name='L289'></a><a href='#L289'>289</a>
+<a name='L290'></a><a href='#L290'>290</a>
+<a name='L291'></a><a href='#L291'>291</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -367,7 +370,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -443,7 +445,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -454,6 +455,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -639,14 +645,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { Activity, BadgeEuro, Percent, Send } from 'lucide-react';</span></span></span>
 import { useNavigate } from 'react-router-dom';
-import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MiniLineChart } from '@/components/shared/MiniLineChart';
+import { PageMeta } from '@/components/shared/PageMeta';
 import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
 import { formatCurrency, formatLongDate, ratingStars, type ProDashboard as ProDashboardData } from '@/lib/analytics/analyticsUtils';
-import { Avatar } from '@/components/ui/Avatar';
 &nbsp;
 type DashboardProfile = {
   avatar_url?: string | null;
@@ -725,22 +730,26 @@ type DashboardProfile = {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div id="dashboard-pro" className="app-shell"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;SEO</span>
-<span class="cstat-no" title="statement not covered" >        title="Mon dashboard"</span>
-<span class="cstat-no" title="statement not covered" >        description="Vos statistiques et votre activite recente cote pro."</span>
-<span class="cstat-no" title="statement not covered" >        noIndex</span>
-<span class="cstat-no" title="statement not covered" >        url="/dashboard"</span>
+<span class="cstat-no" title="statement not covered" >      &lt;PageMeta</span>
+<span class="cstat-no" title="statement not covered" >        title="Mon Dashboard"</span>
+<span class="cstat-no" title="statement not covered" >        description="Vos statistiques et votre activité récente côté pro."</span>
+<span class="cstat-no" title="statement not covered" >        canonicalPath="/dashboard"</span>
 <span class="cstat-no" title="statement not covered" >      /&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      &lt;div className="app-container"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;header className="mb-5"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;div className="flex items-center gap-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >              src={dashboardProfile?.avatar_url}</span>
-<span class="cstat-no" title="statement not covered" >              name={greetingName}</span>
-<span class="cstat-no" title="statement not covered" >              size="md"</span>
-<span class="cstat-no" title="statement not covered" >              className="h-12 w-12 border border-white/50 bg-orange-500 text-white"</span>
-<span class="cstat-no" title="statement not covered" >            /&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {dashboardProfile?.avatar_url ? (</span>
+<span class="cstat-no" title="statement not covered" >              &lt;img</span>
+<span class="cstat-no" title="statement not covered" >                src={dashboardProfile.avatar_url}</span>
+<span class="cstat-no" title="statement not covered" >                alt="Avatar pro"</span>
+<span class="cstat-no" title="statement not covered" >                className="h-12 w-12 rounded-full border border-white/50 object-cover"</span>
+<span class="cstat-no" title="statement not covered" >              /&gt;</span>
+            ) : (
+<span class="cstat-no" title="statement not covered" >              &lt;div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                {greetingName.charAt(0).toUpperCase() || '?'}</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/div&gt;</span>
+            )}
 <span class="cstat-no" title="statement not covered" >            &lt;div&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;h1 className="app-title"&gt;Bonjour, {greetingName} 👋&lt;/h1&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;p className="app-subtitle"&gt;</span>
@@ -931,7 +940,7 @@ type DashboardProfile = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

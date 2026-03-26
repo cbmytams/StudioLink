@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/346</span>
+                <span class='fraction'>0/351</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/346</span>
+                <span class='fraction'>0/351</span>
             </div>
         
             
@@ -504,7 +504,13 @@
 <a name='L439'></a><a href='#L439'>439</a>
 <a name='L440'></a><a href='#L440'>440</a>
 <a name='L441'></a><a href='#L441'>441</a>
-<a name='L442'></a><a href='#L442'>442</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L442'></a><a href='#L442'>442</a>
+<a name='L443'></a><a href='#L443'>443</a>
+<a name='L444'></a><a href='#L444'>444</a>
+<a name='L445'></a><a href='#L445'>445</a>
+<a name='L446'></a><a href='#L446'>446</a>
+<a name='L447'></a><a href='#L447'>447</a>
+<a name='L448'></a><a href='#L448'>448</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -549,7 +555,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -883,13 +888,20 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -957,7 +969,6 @@ import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import type { Database } from '@/types/supabase';
-import { Avatar } from '@/components/ui/Avatar';
 &nbsp;
 type FilterValue = 'all' | 'pending' | 'accepted' | 'rejected';
 &nbsp;
@@ -1325,12 +1336,19 @@ Database['public']['Tables']['applications']['Row'],
 <span class="cstat-no" title="statement not covered" >                    className="w-full text-left"</span>
                   &gt;
 <span class="cstat-no" title="statement not covered" >                    &lt;div className="mb-2 flex items-center gap-2"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                      &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >                        src={studioAvatar}</span>
-<span class="cstat-no" title="statement not covered" >                        name={studioName}</span>
-<span class="cstat-no" title="statement not covered" >                        size="sm"</span>
-<span class="cstat-no" title="statement not covered" >                        className="border border-white/50"</span>
-<span class="cstat-no" title="statement not covered" >                      /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                      {studioAvatar ? (</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;img</span>
+<span class="cstat-no" title="statement not covered" >                          src={studioAvatar}</span>
+<span class="cstat-no" title="statement not covered" >                          alt={studioName}</span>
+<span class="cstat-no" title="statement not covered" >                          className="h-8 w-8 rounded-full object-cover border border-white/50"</span>
+<span class="cstat-no" title="statement not covered" >                        /&gt;</span>
+                      ) : (
+<span class="cstat-no" title="statement not covered" >                        &lt;div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                          &lt;span className="text-xs font-bold text-orange-600"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                            {studioName.charAt(0).toUpperCase() || '?'}</span>
+<span class="cstat-no" title="statement not covered" >                          &lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;/div&gt;</span>
+                      )}
 <span class="cstat-no" title="statement not covered" >                      &lt;p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900"&gt;{studioName}&lt;/p&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                        {status.label}</span>
@@ -1393,7 +1411,7 @@ Database['public']['Tables']['applications']['Row'],
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/64</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/64</span>
             </div>
         
             
@@ -146,8 +146,11 @@
 <a name='L81'></a><a href='#L81'>81</a>
 <a name='L82'></a><a href='#L82'>82</a>
 <a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -159,13 +162,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -177,7 +173,19 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -231,7 +239,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { MapPin, Star } from 'lucide-react';</span></span></span>
 import type { SearchProResult } from '@/lib/search/searchService';
-import { Avatar } from '@/components/ui/Avatar';
 &nbsp;
 type ProCardProps = {
   profile: SearchProResult;
@@ -255,12 +262,17 @@ type ProCardProps = {
 <span class="cstat-no" title="statement not covered" >      data-pro-id={profile.id}</span>
     &gt;
 <span class="cstat-no" title="statement not covered" >      &lt;div className="flex items-start gap-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >          src={profile.avatar_url}</span>
-<span class="cstat-no" title="statement not covered" >          name={displayName}</span>
-<span class="cstat-no" title="statement not covered" >          size="lg"</span>
-<span class="cstat-no" title="statement not covered" >          className="ring-1 ring-white/10"</span>
-<span class="cstat-no" title="statement not covered" >        /&gt;</span>
+<span class="cstat-no" title="statement not covered" >        {profile.avatar_url ? (</span>
+<span class="cstat-no" title="statement not covered" >          &lt;img</span>
+<span class="cstat-no" title="statement not covered" >            src={profile.avatar_url}</span>
+<span class="cstat-no" title="statement not covered" >            alt={displayName}</span>
+<span class="cstat-no" title="statement not covered" >            className="h-14 w-14 rounded-full object-cover ring-1 ring-white/10"</span>
+<span class="cstat-no" title="statement not covered" >          /&gt;</span>
+        ) : (
+<span class="cstat-no" title="statement not covered" >          &lt;div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-400/15 text-lg font-bold text-orange-100 ring-1 ring-white/10"&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {displayName.charAt(0).toUpperCase() || '?'}</span>
+<span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
+        )}
 <span class="cstat-no" title="statement not covered" >        &lt;div className="min-w-0 flex-1"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;h3 className="truncate text-lg font-semibold text-white"&gt;{displayName}&lt;/h3&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;div className="mt-1 flex items-center gap-2 text-sm text-white/60"&gt;</span>
@@ -319,7 +331,7 @@ type ProCardProps = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

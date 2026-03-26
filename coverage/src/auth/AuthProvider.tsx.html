@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/167</span>
+                <span class='fraction'>0/165</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/167</span>
+                <span class='fraction'>0/165</span>
             </div>
         
             
@@ -292,15 +292,7 @@
 <a name='L227'></a><a href='#L227'>227</a>
 <a name='L228'></a><a href='#L228'>228</a>
 <a name='L229'></a><a href='#L229'>229</a>
-<a name='L230'></a><a href='#L230'>230</a>
-<a name='L231'></a><a href='#L231'>231</a>
-<a name='L232'></a><a href='#L232'>232</a>
-<a name='L233'></a><a href='#L233'>233</a>
-<a name='L234'></a><a href='#L234'>234</a>
-<a name='L235'></a><a href='#L235'>235</a>
-<a name='L236'></a><a href='#L236'>236</a>
-<a name='L237'></a><a href='#L237'>237</a>
-<a name='L238'></a><a href='#L238'>238</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L230'></a><a href='#L230'>230</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -332,12 +324,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -503,8 +489,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -537,7 +521,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import {</span></span></span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import {<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
   createContext,
   type ReactNode,
   useCallback,
@@ -555,8 +539,6 @@ import {
   signInPassword as signInPasswordService,
   signOut as signOutService,
 } from '@/services/authService';
-import { trackUserLoggedOut } from '@/lib/analytics/events';
-import { resetUser } from '@/lib/analytics/posthog';
 import { hasSupabaseConfig } from '@/lib/supabase/client';
 import { useAppStore } from '@/store/useAppStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
@@ -565,11 +547,7 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signInPassword: (
-    email: string,
-    password: string,
-    captchaToken?: string,
-  ) =&gt; ReturnType&lt;typeof signInPasswordService&gt;;
+  signInPassword: (email: string, password: string) =&gt; ReturnType&lt;typeof signInPasswordService&gt;;
   sendMagicLink: (email: string, redirectTo?: string) =&gt; Promise&lt;void&gt;;
   signOut: () =&gt; Promise&lt;void&gt;;
   refreshProfile: () =&gt; Promise&lt;void&gt;;
@@ -715,10 +693,10 @@ interface AuthContextValue {
 <span class="cstat-no" title="statement not covered" >    setCurrentStep(profile.onboarding_step || 1);</span>
 <span class="cstat-no" title="statement not covered" >  }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const signInPassword = useCallback(async (email: string, password: string, captchaToken?: string) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  const signInPassword = useCallback(async (email: string, password: string) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setLoading(true);</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const result = await signInPasswordService(email, password, captchaToken);</span>
+<span class="cstat-no" title="statement not covered" >      const result = await signInPasswordService(email, password);</span>
 <span class="cstat-no" title="statement not covered" >      const nextSession = result.session ?? null;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (nextSession) {</span>
@@ -743,8 +721,6 @@ interface AuthContextValue {
 <span class="cstat-no" title="statement not covered" >  const signOut = useCallback(async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await signOutService();</span>
-<span class="cstat-no" title="statement not covered" >      resetUser();</span>
-<span class="cstat-no" title="statement not covered" >      trackUserLoggedOut();</span>
 <span class="cstat-no" title="statement not covered" >    } finally {</span>
 <span class="cstat-no" title="statement not covered" >      setProfile(null);</span>
 <span class="cstat-no" title="statement not covered" >      setSession(null);</span>
@@ -781,7 +757,7 @@ interface AuthContextValue {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

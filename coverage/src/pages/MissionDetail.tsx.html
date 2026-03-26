@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/420</span>
+                <span class='fraction'>0/432</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/420</span>
+                <span class='fraction'>0/432</span>
             </div>
         
             
@@ -616,7 +616,20 @@
 <a name='L551'></a><a href='#L551'>551</a>
 <a name='L552'></a><a href='#L552'>552</a>
 <a name='L553'></a><a href='#L553'>553</a>
-<a name='L554'></a><a href='#L554'>554</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L554'></a><a href='#L554'>554</a>
+<a name='L555'></a><a href='#L555'>555</a>
+<a name='L556'></a><a href='#L556'>556</a>
+<a name='L557'></a><a href='#L557'>557</a>
+<a name='L558'></a><a href='#L558'>558</a>
+<a name='L559'></a><a href='#L559'>559</a>
+<a name='L560'></a><a href='#L560'>560</a>
+<a name='L561'></a><a href='#L561'>561</a>
+<a name='L562'></a><a href='#L562'>562</a>
+<a name='L563'></a><a href='#L563'>563</a>
+<a name='L564'></a><a href='#L564'>564</a>
+<a name='L565'></a><a href='#L565'>565</a>
+<a name='L566'></a><a href='#L566'>566</a>
+<a name='L567'></a><a href='#L567'>567</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -677,7 +690,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -974,6 +986,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -986,6 +1004,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1009,13 +1028,20 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1170,8 +1196,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { useEffect, useMemo, useState } from 'react';</span></span></span>
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SEO } from '@/components/SEO';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
@@ -1179,7 +1205,6 @@ import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { ApplyModal } from '@/components/ApplyModal';
-import { Avatar } from '@/components/ui/Avatar';
 import type { MissionFileRecord } from '@/types/backend';
 import type { Database } from '@/types/supabase';
 import { getMissionFiles, getSignedUrl } from '@/lib/files/fileService';
@@ -1529,11 +1554,18 @@ type ApplicationRow = {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;div className="app-shell min-h-[100dvh] pb-28"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;SEO</span>
-<span class="cstat-no" title="statement not covered" >        title={mission.title}</span>
-<span class="cstat-no" title="statement not covered" >        description={mission.description ? mission.description.slice(0, 160) : 'Detail mission StudioLink'}</span>
-<span class="cstat-no" title="statement not covered" >        url={`/missions/${mission.id}`}</span>
-<span class="cstat-no" title="statement not covered" >      /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;Helmet&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;title&gt;{`${mission.title} — StudioLink`}&lt;/title&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;meta</span>
+<span class="cstat-no" title="statement not covered" >          name="description"</span>
+<span class="cstat-no" title="statement not covered" >          content={mission.description ? mission.description.slice(0, 160) : 'Détail mission StudioLink'}</span>
+<span class="cstat-no" title="statement not covered" >        /&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;meta property="og:title" content={`${mission.title} — StudioLink`} /&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;meta</span>
+<span class="cstat-no" title="statement not covered" >          property="og:description"</span>
+<span class="cstat-no" title="statement not covered" >          content={mission.description ? mission.description.slice(0, 160) : 'Découvrez cette mission sur StudioLink.'}</span>
+<span class="cstat-no" title="statement not covered" >        /&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Helmet&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;div className="app-container-compact"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;button</span>
 <span class="cstat-no" title="statement not covered" >            type="button"</span>
@@ -1563,12 +1595,19 @@ type ApplicationRow = {
 <span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          &lt;div className="mt-4 flex items-center gap-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >              src={mission.studio?.avatar_url}</span>
-<span class="cstat-no" title="statement not covered" >              name={studioName}</span>
-<span class="cstat-no" title="statement not covered" >              size="md"</span>
-<span class="cstat-no" title="statement not covered" >              className="border border-white/20 bg-orange-500/20 text-orange-200"</span>
-<span class="cstat-no" title="statement not covered" >            /&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {mission.studio?.avatar_url ? (</span>
+<span class="cstat-no" title="statement not covered" >              &lt;img</span>
+<span class="cstat-no" title="statement not covered" >                src={mission.studio.avatar_url}</span>
+<span class="cstat-no" title="statement not covered" >                alt={studioName}</span>
+<span class="cstat-no" title="statement not covered" >                className="h-10 w-10 rounded-full object-cover border border-white/20"</span>
+<span class="cstat-no" title="statement not covered" >              /&gt;</span>
+            ) : (
+<span class="cstat-no" title="statement not covered" >              &lt;div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/20"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                  &lt;span className="text-sm font-bold text-orange-200"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                  {(studioName || 'S').charAt(0).toUpperCase()}</span>
+<span class="cstat-no" title="statement not covered" >                &lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;/div&gt;</span>
+            )}
 <span class="cstat-no" title="statement not covered" >            &lt;div className="min-w-0 flex-1"&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;p className="text-sm font-medium text-white"&gt;{studioName}&lt;/p&gt;</span>
 <span class="cstat-no" title="statement not covered" >              {mission.studio ? (</span>
@@ -1729,7 +1768,7 @@ type ApplicationRow = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

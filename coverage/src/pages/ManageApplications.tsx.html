@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/418</span>
+                <span class='fraction'>0/423</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/418</span>
+                <span class='fraction'>0/423</span>
             </div>
         
             
@@ -603,7 +603,13 @@
 <a name='L538'></a><a href='#L538'>538</a>
 <a name='L539'></a><a href='#L539'>539</a>
 <a name='L540'></a><a href='#L540'>540</a>
-<a name='L541'></a><a href='#L541'>541</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L541'></a><a href='#L541'>541</a>
+<a name='L542'></a><a href='#L542'>542</a>
+<a name='L543'></a><a href='#L543'>543</a>
+<a name='L544'></a><a href='#L544'>544</a>
+<a name='L545'></a><a href='#L545'>545</a>
+<a name='L546'></a><a href='#L546'>546</a>
+<a name='L547'></a><a href='#L547'>547</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -651,7 +657,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -990,14 +995,21 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1155,7 +1167,6 @@ import { applicationService } from '@/services/applicationService';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
-import { Avatar } from '@/components/ui/Avatar';
 &nbsp;
 type ProProfile = PublicProfileRecord;
 &nbsp;
@@ -1532,12 +1543,19 @@ type ApplicationRow = {
               &gt;
 <span class="cstat-no" title="statement not covered" >                &lt;div className="mb-3 flex items-start justify-between gap-3"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                  &lt;div className="flex items-start gap-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                    &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >                      src={application.pro?.avatar_url}</span>
-<span class="cstat-no" title="statement not covered" >                      name={displayName}</span>
-<span class="cstat-no" title="statement not covered" >                      size="md"</span>
-<span class="cstat-no" title="statement not covered" >                      className="border border-white/50"</span>
-<span class="cstat-no" title="statement not covered" >                    /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                    {application.pro?.avatar_url ? (</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;img</span>
+<span class="cstat-no" title="statement not covered" >                        src={application.pro.avatar_url}</span>
+<span class="cstat-no" title="statement not covered" >                        alt={displayName}</span>
+<span class="cstat-no" title="statement not covered" >                        className="h-10 w-10 rounded-full object-cover border border-white/50"</span>
+<span class="cstat-no" title="statement not covered" >                      /&gt;</span>
+                    ) : (
+<span class="cstat-no" title="statement not covered" >                      &lt;div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;span className="text-sm font-bold text-orange-600"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                          {displayName.charAt(0).toUpperCase() || '?'}</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                      &lt;/div&gt;</span>
+                    )}
 <span class="cstat-no" title="statement not covered" >                    &lt;div&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;p className="font-semibold"&gt;{displayName}&lt;/p&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      &lt;button</span>
@@ -1690,7 +1708,7 @@ type ApplicationRow = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

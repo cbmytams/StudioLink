@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/269</span>
+                <span class='fraction'>0/274</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/269</span>
+                <span class='fraction'>0/274</span>
             </div>
         
             
@@ -404,7 +404,13 @@
 <a name='L339'></a><a href='#L339'>339</a>
 <a name='L340'></a><a href='#L340'>340</a>
 <a name='L341'></a><a href='#L341'>341</a>
-<a name='L342'></a><a href='#L342'>342</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L342'></a><a href='#L342'>342</a>
+<a name='L343'></a><a href='#L343'>343</a>
+<a name='L344'></a><a href='#L344'>344</a>
+<a name='L345'></a><a href='#L345'>345</a>
+<a name='L346'></a><a href='#L346'>346</a>
+<a name='L347'></a><a href='#L347'>347</a>
+<a name='L348'></a><a href='#L348'>348</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -431,7 +437,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -670,13 +675,20 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -752,7 +764,6 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
-import { Avatar } from '@/components/ui/Avatar';
 &nbsp;
 type ConversationProfile = PublicProfileRecord;
 &nbsp;
@@ -1012,12 +1023,19 @@ type ConversationRow = {
 <span class="cstat-no" title="statement not covered" >                    className="w-full rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"</span>
                   &gt;
 <span class="cstat-no" title="statement not covered" >                    &lt;div className="flex items-start gap-3"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                      &lt;Avatar</span>
-<span class="cstat-no" title="statement not covered" >                        src={conversation.contact?.avatar_url}</span>
-<span class="cstat-no" title="statement not covered" >                        name={contactName}</span>
-<span class="cstat-no" title="statement not covered" >                        size="lg"</span>
-<span class="cstat-no" title="statement not covered" >                        className="h-12 w-12 border border-white/10"</span>
-<span class="cstat-no" title="statement not covered" >                      /&gt;</span>
+<span class="cstat-no" title="statement not covered" >                      {conversation.contact?.avatar_url ? (</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;img</span>
+<span class="cstat-no" title="statement not covered" >                          src={conversation.contact.avatar_url}</span>
+<span class="cstat-no" title="statement not covered" >                          alt={contactName}</span>
+<span class="cstat-no" title="statement not covered" >                          className="h-12 w-12 rounded-full object-cover border border-white/10"</span>
+<span class="cstat-no" title="statement not covered" >                        /&gt;</span>
+                      ) : (
+<span class="cstat-no" title="statement not covered" >                        &lt;div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/15"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                          &lt;span className="text-sm font-bold text-orange-200"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                            {contactName.charAt(0).toUpperCase() || '?'}</span>
+<span class="cstat-no" title="statement not covered" >                          &lt;/span&gt;</span>
+<span class="cstat-no" title="statement not covered" >                        &lt;/div&gt;</span>
+                      )}
 &nbsp;
 <span class="cstat-no" title="statement not covered" >                      &lt;div className="min-w-0 flex-1"&gt;</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;div className="flex flex-wrap items-center gap-2"&gt;</span>
@@ -1093,7 +1111,7 @@ type ConversationRow = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T20:22:50.429Z
+                at 2026-03-26T11:28:57.787Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
