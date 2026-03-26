@@ -14,7 +14,7 @@ export const portfolioService = {
   async getPortfolioItems(proId: string): Promise<PortfolioItem[]> {
     const client = ensureClient();
     const { data, error } = await client
-      .from('portfolio_items' as never)
+      .from('portfolio_items')
       .select(PORTFOLIO_ITEM_SELECT_COLUMNS)
       .eq('pro_id', proId)
       .order('created_at', { ascending: false });
@@ -38,8 +38,8 @@ export const portfolioService = {
     };
 
     const { data, error } = await client
-      .from('portfolio_items' as never)
-      .insert(payload as never)
+      .from('portfolio_items')
+      .insert(payload)
       .select(PORTFOLIO_ITEM_SELECT_COLUMNS)
       .single();
 
@@ -50,7 +50,7 @@ export const portfolioService = {
   async deletePortfolioItem(id: string): Promise<void> {
     const client = ensureClient();
     const { error } = await client
-      .from('portfolio_items' as never)
+      .from('portfolio_items')
       .delete()
       .eq('id', id);
 
