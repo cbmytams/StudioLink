@@ -281,13 +281,7 @@ export default function ManageApplications() {
         .update({ status: 'completed' })
         .eq('id', targetMissionId);
 
-      if (update.error) {
-        const fallback = await supabase
-          .from('missions')
-          .update({ status: 'rated' })
-          .eq('id', targetMissionId);
-        if (fallback.error) throw fallback.error;
-      }
+      if (update.error) throw update.error;
 
       setMission((previous) => (previous ? { ...previous, status: 'completed' } : previous));
       showToast({ title: 'Mission terminée', variant: 'default' });
