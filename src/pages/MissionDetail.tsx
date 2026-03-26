@@ -59,6 +59,9 @@ type ApplicationRow = {
   created_at: string
 };
 
+const MISSION_DETAIL_SELECT_COLUMNS =
+  'id, studio_id, title, description, category, service_type, location, city, date, end_date, daily_rate, price, skills_required, skills, required_skills, genres, status';
+
 function parseRate(value: number | string | null | undefined): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -126,7 +129,7 @@ export default function MissionDetail() {
       try {
         const { data: missionRow, error: missionError } = await supabase
           .from('missions')
-          .select('*')
+          .select(MISSION_DETAIL_SELECT_COLUMNS)
           .eq('id', targetMissionId)
           .maybeSingle();
 

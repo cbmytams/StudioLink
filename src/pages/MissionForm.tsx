@@ -45,6 +45,9 @@ type MissionRecord = {
   status?: string | null
 };
 
+const MISSION_FORM_SELECT_COLUMNS =
+  'id, studio_id, title, description, category, service_type, location, city, date, end_date, daily_rate, price, skills_required, skills, required_skills, genres, status';
+
 type FieldErrors = Partial<Record<
   'title' | 'description' | 'category' | 'location' | 'date' | 'daily_rate' | 'end_date',
   string
@@ -122,7 +125,7 @@ export default function MissionForm() {
       try {
         const { data, error: fetchError } = await supabase
           .from('missions')
-          .select('*')
+          .select(MISSION_FORM_SELECT_COLUMNS)
           .eq('id', id)
           .eq('studio_id', userId)
           .maybeSingle();

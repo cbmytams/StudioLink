@@ -3,6 +3,8 @@ import type { MissionFileRecord, MissionFileType } from '@/types/backend';
 import { buildScopedStoragePath, getBucketFromMissionFileType } from './fileUtils';
 
 type MissionFileRow = MissionFileRecord;
+const MISSION_FILE_SELECT_COLUMNS =
+  'id, mission_id, session_id, uploaded_by, file_type, file_url, file_name, file_size, mime_type, created_at';
 
 function ensureClient() {
   if (!supabase) {
@@ -69,7 +71,7 @@ async function uploadScopedFile(
   const { data, error: insertError } = await client
     .from('mission_files')
     .insert(insertPayload)
-    .select('*')
+    .select(MISSION_FILE_SELECT_COLUMNS)
     .single();
 
   if (insertError) {
@@ -96,7 +98,7 @@ export async function getMissionFiles(missionId: string): Promise<MissionFileRec
   const client = ensureClient();
   const { data, error } = await client
     .from('mission_files')
-    .select('*')
+    .select(MISSION_FILE_SELECT_COLUMNS)
     .eq('mission_id', missionId)
     .eq('file_type', 'reference')
     .order('created_at', { ascending: false });
@@ -109,7 +111,7 @@ export async function getDeliveryFiles(sessionId: string): Promise<MissionFileRe
   const client = ensureClient();
   const { data, error } = await client
     .from('mission_files')
-    .select('*')
+    .select(MISSION_FILE_SELECT_COLUMNS)
     .eq('session_id', sessionId)
     .eq('file_type', 'delivery')
     .order('created_at', { ascending: false });
