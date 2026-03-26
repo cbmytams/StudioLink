@@ -17,6 +17,9 @@ interface CompleteMagicSignupParams {
   displayName?: string;
 }
 
+const PROFILE_SELECT_COLUMNS =
+  'id, email, user_type, type, display_name, full_name, company_name, avatar_url, bio, city, skills, daily_rate, rating_avg, rating_count, onboarding_complete, onboarding_completed, onboarding_step, notification_preferences, is_public, contact_email, username, website, created_at, updated_at';
+
 function assertSupabase() {
   if (!supabase) {
     throw new Error('Supabase non configuré. Vérifie VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.');
@@ -160,7 +163,7 @@ export async function getCurrentProfile(session: Session | null): Promise<Profil
   if (!session?.user) return null;
   const { data, error } = await client
     .from('profiles')
-    .select('*')
+    .select(PROFILE_SELECT_COLUMNS)
     .eq('id', session.user.id)
     .single();
 
