@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { RatingModal } from '@/components/shared/RatingModal';
 import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 
@@ -383,6 +384,7 @@ export default function ChatPage() {
 
         const updateResult = await supabase
           .from('conversations')
+          // TODO: typer proprement `last_message_at` quand le schéma Supabase local inclura cette colonne.
           .update({ last_message_at: new Date().toISOString() } as never)
           .eq('id', chatId);
 
@@ -394,6 +396,7 @@ export default function ChatPage() {
       setMessages((previous) => previous.filter((message) => message.id !== optimisticId));
       setDraft(content);
       setAttachment(pendingAttachment ?? null);
+      if (await handleAuthError(sendError, navigate)) return;
       const message = sendError instanceof Error ? sendError.message : "Impossible d'envoyer ce message.";
       setError(message);
       showToast({
@@ -445,6 +448,7 @@ export default function ChatPage() {
         variant: 'default',
       });
     } catch (uploadError) {
+      if (await handleAuthError(uploadError, navigate)) return;
       const message = toUserFacingErrorMessage(uploadError, 'Impossible de joindre ce fichier.');
       setError(message);
       showToast({
@@ -494,6 +498,7 @@ export default function ChatPage() {
         variant: 'default',
       });
     } catch (completeError) {
+      if (await handleAuthError(completeError, navigate)) return;
       const message = toUserFacingErrorMessage(completeError, 'Impossible de terminer la session.');
       setError(message);
       showToast({
