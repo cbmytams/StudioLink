@@ -106,7 +106,7 @@ export async function markConversationAsRead(
 
   const primary = await client
     .from('messages')
-    .update({ read_at: new Date().toISOString() } as never)
+    .update({ read_at: new Date().toISOString() })
     .eq('conversation_id', conversationId)
     .neq('sender_id', userId)
     .is('read_at', null);
@@ -115,7 +115,7 @@ export async function markConversationAsRead(
 
   const fallback = await client
     .from('messages')
-    .update({ read: true } as never)
+    .update({ read: true })
     .eq('conversation_id', conversationId)
     .neq('sender_id', userId)
     .eq('read', false);
