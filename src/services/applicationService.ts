@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import type { ApplicationRecord, ApplicationStatus, CreateApplicationInput } from '@/types/backend';
 import {
   buildApplicationWritePayload,
@@ -121,17 +122,25 @@ export const applicationService = {
       coverLetter: input.cover_letter,
     });
 
-    const { data, error } = await client
-      .from('applications')
-      .insert(payload)
-      .select('id, mission_id, pro_id, status, cover_letter, created_at, updated_at, message, applied_at')
-      .single();
+    try {
+      const { data, error } = await client
+        .from('applications')
+        .insert(payload)
+        .select('id, mission_id, pro_id, status, cover_letter, created_at, updated_at, message, applied_at')
+        .single();
 
-    if (error) {
-      throw new Error(formatApplicationInsertError(error));
+      if (error) {
+        throw new Error(formatApplicationInsertError(error));
+      }
+
+      return mapApplicationRow(data as ApplicationRow);
+    } catch (error) {
+      const isAuthError = await handleAuthError(error);
+      if (isAuthError) {
+        throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+      }
+      throw error;
     }
-
-    return mapApplicationRow(data as ApplicationRow);
   },
 
   async acceptApplication(applicationId: string) {
@@ -156,12 +165,20 @@ export const applicationService = {
 
   async withdrawApplication(applicationId: string): Promise<void> {
     const client = ensureClient();
-    const { error } = await client
-      .from('applications')
-      .delete()
-      .eq('id', applicationId)
-      .eq('status', 'pending');
-    if (error) throw error;
+    try {
+      const { error } = await client
+        .from('applications')
+        .delete()
+        .eq('id', applicationId)
+        .eq('status', 'pending');
+      if (error) throw error;
+    } catch (error) {
+      const isAuthError = await handleAuthError(error);
+      if (isAuthError) {
+        throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+      }
+      throw error;
+    }
   },
 
   async hasApplied(missionId: string, proId: string): Promise<boolean> {
