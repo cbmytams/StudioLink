@@ -152,7 +152,7 @@ export default function ProProfile() {
           skills,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
-        } as never)
+        })
         .eq('id', user.id);
 
       if (updateError) {
