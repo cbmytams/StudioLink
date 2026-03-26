@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase/client';
 import type { NotificationRecord } from '@/types/backend';
 
+const NOTIFICATION_SELECT_COLUMNS = 'id, user_id, type, title, body, data, link, read, created_at';
+
 function ensureClient() {
   if (!supabase) {
     throw new Error('Supabase non configuré.');
@@ -13,7 +15,7 @@ export const notificationService = {
     const client = ensureClient();
     const { data, error } = await client
       .from('notifications')
-      .select('*')
+      .select(NOTIFICATION_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;
