@@ -535,7 +535,7 @@ export default function ChatPage() {
         description="Échangez en temps réel et partagez vos livrables dans la même discussion."
       />
 
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md md:top-24">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <button
             type="button"
