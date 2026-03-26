@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase/client';
 import type { SavedItemRecord, SavedItemType } from '@/types/backend';
 
+const SAVED_ITEM_SELECT_COLUMNS = 'id, user_id, item_id, item_type, created_at';
+
 function ensureClient() {
   if (!supabase) {
     throw new Error('Supabase non configuré.');
@@ -13,7 +15,7 @@ export const savedService = {
     const client = ensureClient();
     const { data, error } = await client
       .from('saved_items')
-      .select('*')
+      .select(SAVED_ITEM_SELECT_COLUMNS)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;
