@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
@@ -6,76 +6,57 @@ import { useAuth } from '@/lib/supabase/auth';
 import { ReviewModal } from '@/components/ReviewModal';
 import { useToast } from '@/components/ui/Toast';
 import { reviewService } from '@/services/reviewService';
+import { applicationService } from '@/services/applicationService';
+import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
+import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 
-type ProProfile = {
-  full_name: string | null
-  username: string | null
-  skills: string[] | null
-  city: string | null
-  daily_rate: number | null
-  avatar_url: string | null
-}
+type ProProfile = PublicProfileRecord;
 
 type Application = {
-  id: string
-  status: 'pending' | 'accepted' | 'rejected'
-  cover_letter: string | null
-  proposed_rate: number | null
-  created_at: string
-  pro_id: string
-  profiles: ProProfile | null
-}
+  id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  cover_letter: string | null;
+  proposed_rate: number | null;
+  created_at: string;
+  pro_id: string;
+  pro: ProProfile | null;
+};
 
 type Mission = {
-  id: string
-  title: string
-  status: 'open' | 'in_progress' | 'completed' | 'closed'
-  deadline: string | null
-  budget_min: number | null
-  budget_max: number | null
-}
+  id: string;
+  title: string;
+  status: 'open' | 'in_progress' | 'completed' | 'closed';
+  selected_pro_id: string | null;
+};
 
 type MissionRow = {
-  id: string
-  title: string
-  status: string | null
-  deadline: string | null
-  budget_min: number | null
-  budget_max: number | null
-}
+  id: string;
+  title: string;
+  status: string | null;
+  selected_pro_id: string | null;
+};
 
 type ApplicationRow = {
-  id: string
-  status: string | null
-  cover_letter: string | null
-  proposed_rate: number | null
-  created_at: string
-  pro_id: string
-  profiles: ProProfile | null
-}
+  id: string;
+  status: string | null;
+  cover_letter: string | null;
+  proposed_rate: number | null;
+  created_at: string;
+  pro_id: string;
+};
 
-function normalizeMissionStatus(status: string | null): string {
+function normalizeMissionStatus(status: string | null): Mission['status'] {
   if (status === 'open' || status === 'published' || status === 'selecting') return 'open';
   if (status === 'in_progress' || status === 'filled') return 'in_progress';
   if (status === 'completed' || status === 'rated') return 'completed';
-  if (status === 'closed' || status === 'filled' || status === 'cancelled' || status === 'expired') {
-    return 'closed';
-  }
-  return status ?? 'open';
+  return 'closed';
 }
 
-function normalizeApplicationStatus(status: string | null): Application['status'] {
-  if (status === 'accepted' || status === 'selected') return 'accepted';
-  if (status === 'rejected') return 'rejected';
-  return 'pending';
-}
-
-function missionStatusClass(status: string): string {
+function missionStatusClass(status: Mission['status']): string {
   if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
   if (status === 'in_progress') return 'bg-blue-100 text-blue-700 border border-blue-200';
-  return status === 'closed'
-    ? 'bg-red-100 text-red-700 border border-red-200'
-    : 'bg-green-100 text-green-700 border border-green-200';
+  if (status === 'closed') return 'bg-red-100 text-red-700 border border-red-200';
+  return 'bg-green-100 text-green-700 border border-green-200';
 }
 
 function applicationStatusClass(status: Application['status']): string {
@@ -99,6 +80,7 @@ export default function ManageApplications() {
   const [reviewedByProId, setReviewedByProId] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
+
   const PAGE_SIZE = 10;
 
   useEffect(() => {
@@ -116,72 +98,61 @@ export default function ManageApplications() {
       setError(null);
 
       try {
-        const missionColumns: string = 'id, title, status, deadline, budget_min, budget_max';
         const { data: missionData, error: missionError } = await supabase
           .from('missions')
-          .select(missionColumns)
+          .select('id, title, status, selected_pro_id')
           .eq('id', targetMissionId)
           .single();
 
         if (missionError) throw missionError;
 
-        const applicationsQuery: string = `
-          id,
-          status,
-          cover_letter,
-          proposed_rate,
-          created_at,
-          pro_id,
-          profiles:pro_id (
-            full_name,
-            username,
-            skills,
-            city,
-            daily_rate,
-            avatar_url
-          )
-        `;
         const { data: applicationData, error: applicationsError } = await supabase
           .from('applications')
-          .select(applicationsQuery)
+          .select(`
+            id,
+            status,
+            cover_letter,
+            proposed_rate,
+            created_at,
+            pro_id
+          `)
           .eq('mission_id', targetMissionId)
           .order('created_at', { ascending: false });
 
         if (applicationsError) throw applicationsError;
-
         if (!active) return;
 
-        const mappedMissionRow = missionData as unknown as MissionRow;
-        const mappedMissionStatus = normalizeMissionStatus(mappedMissionRow.status);
-        setMission({
+        const mappedMissionRow = missionData as MissionRow;
+        const nextMission: Mission = {
           id: mappedMissionRow.id,
           title: mappedMissionRow.title,
-          status: mappedMissionStatus,
-          deadline: mappedMissionRow.deadline,
-          budget_min: mappedMissionRow.budget_min,
-          budget_max: mappedMissionRow.budget_max,
-        });
+          status: normalizeMissionStatus(mappedMissionRow.status),
+          selected_pro_id: mappedMissionRow.selected_pro_id,
+        };
+        setMission(nextMission);
 
-        const mappedApplications = (applicationData as unknown as ApplicationRow[] | null ?? []).map((application) => ({
+        const rawApplications = (applicationData as unknown as ApplicationRow[] | null ?? []);
+        const profilesById = await getPublicProfilesMap(rawApplications.map((application) => application.pro_id));
+
+        const mappedApplications = rawApplications.map((application) => ({
           id: application.id,
           status: normalizeApplicationStatus(application.status),
           cover_letter: application.cover_letter,
           proposed_rate: application.proposed_rate,
           created_at: application.created_at,
           pro_id: application.pro_id,
-          profiles: application.profiles,
+          pro: profilesById.get(application.pro_id) ?? null,
         }));
         setApplications(mappedApplications);
 
         const acceptedProIds = mappedApplications
-          .filter((application) => application.status === 'accepted' && application.pro_id)
+          .filter((application) => application.status === 'accepted')
           .map((application) => application.pro_id);
 
         if (
           session?.user?.id
-          && mappedMissionStatus === 'completed'
+          && nextMission.status === 'completed'
           && acceptedProIds.length > 0
-          && targetMissionId
         ) {
           const hasReviewed = await reviewService.hasReviewed(targetMissionId, session.user.id);
           const nextReviewedByProId: Record<string, boolean> = {};
@@ -204,117 +175,88 @@ export default function ManageApplications() {
 
     void fetchData();
 
+    if (!targetMissionId) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const channel = supabase
+      .channel(`manage-applications:${targetMissionId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'applications',
+        filter: `mission_id=eq.${targetMissionId}`,
+      }, () => {
+        void fetchData();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'missions',
+        filter: `id=eq.${targetMissionId}`,
+      }, () => {
+        void fetchData();
+      })
+      .subscribe();
+
     return () => {
       active = false;
+      void supabase.removeChannel(channel);
     };
   }, [session?.user?.id, targetMissionId]);
 
   const handleAccept = async (application: Application) => {
-    if (!targetMissionId || !session?.user?.id) return;
-
     setActionLoading(application.id);
     setError(null);
 
     try {
-      const { error: selectError } = await supabase
-        .from('applications')
-        .update({ status: 'selected' })
-        .eq('id', application.id);
-      if (selectError) throw selectError;
+      const result = await applicationService.acceptApplication(application.id);
 
-      const { error: rejectError } = await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('mission_id', targetMissionId)
-        .eq('status', 'pending')
-        .neq('id', application.id);
-      if (rejectError) throw rejectError;
+      setApplications((previous) => previous.map((item) => {
+        if (item.id === application.id) return { ...item, status: 'accepted' };
+        if (item.status === 'pending') return { ...item, status: 'rejected' };
+        return item;
+      }));
+      setMission((previous) => (
+        previous
+          ? { ...previous, status: 'in_progress', selected_pro_id: application.pro_id }
+          : previous
+      ));
 
-      const bookingResult = await supabase
-        .from('booking_sessions' as never)
-        .insert({
-          mission_id: targetMissionId,
-          studio_id: session.user.id,
-          pro_id: application.pro_id,
-          status: 'confirmed',
-          created_at: new Date().toISOString(),
-        } as never);
-      if (bookingResult.error) {
-        const fallbackSession = await supabase
-          .from('sessions' as never)
-          .insert({
-            mission_id: targetMissionId,
-            studio_id: session.user.id,
-            pro_id: application.pro_id,
-            application_id: application.id,
-            date: new Date().toISOString().slice(0, 10),
-            time_start: '10:00',
-            duration_hours: 2,
-            status: 'confirmed',
-            created_at: new Date().toISOString(),
-          } as never);
-        if (fallbackSession.error) {
-          throw bookingResult.error;
-        }
-      }
-
-      setApplications((prev) =>
-        prev.map((item) =>
-          item.id === application.id
-            ? { ...item, status: 'accepted' }
-            : item.status === 'pending'
-              ? { ...item, status: 'rejected' }
-              : item,
-        ),
-      );
       showToast({
         title: 'Candidature acceptée',
-        description: 'Vous pouvez maintenant passer la mission en cours.',
+        description: 'Le pro a été sélectionné pour cette mission.',
         variant: 'default',
       });
+
+      if (result.sessionId) {
+        navigate(`/chat/${result.sessionId}`);
+      }
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature");
-      showToast({
-        title: 'Action impossible',
-        description: actionError instanceof Error ? actionError.message : undefined,
-        variant: 'destructive',
-      });
+      const message = actionError instanceof Error ? actionError.message : "Impossible d'accepter la candidature";
+      setError(message);
+      showToast({ title: 'Action impossible', description: message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleSetInProgress = async () => {
-    if (!targetMissionId) return;
-    setActionLoading(`mission:in-progress:${targetMissionId}`);
+  const handleReject = async (applicationId: string) => {
+    setActionLoading(applicationId);
     setError(null);
+
     try {
-      const update = await supabase
-        .from('missions')
-        .update({ status: 'in_progress' as never })
-        .eq('id', targetMissionId);
-
-      if (update.error) {
-        const fallback = await supabase
-          .from('missions')
-          .update({ status: 'filled' as never })
-          .eq('id', targetMissionId);
-        if (fallback.error) throw fallback.error;
-      }
-
-      setMission((prev) => (prev ? { ...prev, status: 'in_progress' } : prev));
-      showToast({ title: 'Mission passée en cours', variant: 'default' });
-    } catch (inProgressError) {
-      setError(
-        inProgressError instanceof Error
-          ? inProgressError.message
-          : 'Impossible de mettre la mission en cours.',
+      await applicationService.rejectApplication(applicationId);
+      setApplications((previous) =>
+        previous.map((item) => (item.id === applicationId ? { ...item, status: 'rejected' } : item)),
       );
-      showToast({
-        title: 'Mise à jour impossible',
-        description: inProgressError instanceof Error ? inProgressError.message : undefined,
-        variant: 'destructive',
-      });
+      showToast({ title: 'Candidature refusée', variant: 'default' });
+    } catch (actionError) {
+      const message = actionError instanceof Error ? actionError.message : 'Impossible de rejeter la candidature';
+      setError(message);
+      showToast({ title: 'Action impossible', description: message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
     }
@@ -322,6 +264,7 @@ export default function ManageApplications() {
 
   const handleMarkCompleted = async () => {
     if (!targetMissionId) return;
+
     setActionLoading(`mission:${targetMissionId}`);
     setError(null);
     try {
@@ -338,17 +281,12 @@ export default function ManageApplications() {
         if (fallback.error) throw fallback.error;
       }
 
-      setMission((prev) => (prev ? { ...prev, status: 'completed' } : prev));
+      setMission((previous) => (previous ? { ...previous, status: 'completed' } : previous));
       showToast({ title: 'Mission terminée', variant: 'default' });
     } catch (completeError) {
-      setError(
-        completeError instanceof Error ? completeError.message : 'Impossible de terminer la mission.',
-      );
-      showToast({
-        title: 'Mise à jour impossible',
-        description: completeError instanceof Error ? completeError.message : undefined,
-        variant: 'destructive',
-      });
+      const message = completeError instanceof Error ? completeError.message : 'Impossible de terminer la mission.';
+      setError(message);
+      showToast({ title: 'Mise à jour impossible', description: message, variant: 'destructive' });
     } finally {
       setActionLoading(null);
     }
@@ -357,33 +295,12 @@ export default function ManageApplications() {
   const totalPages = Math.max(1, Math.ceil(applications.length / PAGE_SIZE));
   const start = (currentPage - 1) * PAGE_SIZE;
   const paginatedApplications = applications.slice(start, start + PAGE_SIZE);
-
-  const handleReject = async (applicationId: string) => {
-    setActionLoading(applicationId);
-    setError(null);
-
-    try {
-      const { error: rejectError } = await supabase
-        .from('applications')
-        .update({ status: 'rejected' })
-        .eq('id', applicationId);
-      if (rejectError) throw rejectError;
-
-      setApplications((prev) =>
-        prev.map((item) => (item.id === applicationId ? { ...item, status: 'rejected' } : item)),
-      );
-      showToast({ title: 'Candidature refusée', variant: 'default' });
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Impossible de rejeter la candidature');
-      showToast({
-        title: 'Action impossible',
-        description: actionError instanceof Error ? actionError.message : undefined,
-        variant: 'destructive',
-      });
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const selectedPro = useMemo(
+    () => applications.find((application) => application.pro_id === mission?.selected_pro_id)
+      ?? applications.find((application) => application.status === 'accepted')
+      ?? null,
+    [applications, mission?.selected_pro_id],
+  );
 
   if (loading) {
     return (
@@ -426,15 +343,13 @@ export default function ManageApplications() {
           <p className="app-subtitle mt-0">
             {applications.length} candidature(s) · {applications.filter((item) => item.status === 'pending').length} en attente
           </p>
-          {mission?.status === 'open' && applications.some((item) => item.status === 'accepted') ? (
-            <button
-              type="button"
-              onClick={() => void handleSetInProgress()}
-              disabled={actionLoading === `mission:in-progress:${targetMissionId}`}
-              className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-60"
+          {mission?.status === 'in_progress' && selectedPro ? (
+            <span
+              id="selected-pro-badge"
+              className="mt-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
             >
-              Passer en cours
-            </button>
+              Pro sélectionné : {getPublicProfileDisplayName(selectedPro.pro)}
+            </span>
           ) : null}
           {mission?.status === 'in_progress' ? (
             <button
@@ -454,23 +369,24 @@ export default function ManageApplications() {
           <p className="app-empty-state">Aucune candidature reçue pour l&apos;instant.</p>
         ) : null}
 
-        <div className="app-list">
+        <div id="applications-panel" className="app-list">
           {paginatedApplications.map((application) => {
-            const displayName =
-              application.profiles?.full_name ??
-              application.profiles?.username ??
-              'Anonyme';
+            const displayName = getPublicProfileDisplayName(application.pro);
             const canAct = application.status === 'pending';
             const isCurrentAction = actionLoading === application.id;
             const alreadyReviewed = reviewedByProId[application.pro_id] ?? false;
 
             return (
-              <div key={application.id} className="app-card-soft p-4">
+              <div
+                key={application.id}
+                className="application-item app-card-soft p-4"
+                data-application-id={application.id}
+              >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    {application.profiles?.avatar_url ? (
+                    {application.pro?.avatar_url ? (
                       <img
-                        src={application.profiles.avatar_url}
+                        src={application.pro.avatar_url}
                         alt={displayName}
                         className="h-10 w-10 rounded-full object-cover border border-white/50"
                       />
@@ -483,18 +399,16 @@ export default function ManageApplications() {
                     )}
                     <div>
                       <p className="font-semibold">{displayName}</p>
-                    {application.pro_id ? (
                       <button
                         type="button"
                         onClick={() => navigate(`/pro/public/${application.pro_id}`)}
-                        className="text-orange-600 text-xs hover:underline mt-0.5 block"
+                        className="mt-0.5 block text-xs text-orange-600 hover:underline"
                       >
                         Voir le profil complet →
                       </button>
-                    ) : null}
-                    {application.profiles?.city ? (
-                      <p className="text-sm app-muted">{application.profiles.city}</p>
-                    ) : null}
+                      {application.pro?.location ? (
+                        <p className="text-sm app-muted">{application.pro.location}</p>
+                      ) : null}
                     </div>
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${applicationStatusClass(application.status)}`}>
@@ -506,13 +420,10 @@ export default function ManageApplications() {
                   </span>
                 </div>
 
-                {application.profiles?.skills?.length ? (
+                {application.pro?.skills?.length ? (
                   <div className="mb-2 flex flex-wrap gap-2">
-                    {application.profiles.skills.slice(0, 4).map((skill) => (
-                      <span
-                        key={skill}
-                        className="app-chip"
-                      >
+                    {application.pro.skills.slice(0, 4).map((skill) => (
+                      <span key={skill} className="app-chip">
                         {skill}
                       </span>
                     ))}
@@ -520,7 +431,7 @@ export default function ManageApplications() {
                 ) : null}
 
                 {application.cover_letter ? (
-                  <p className="text-sm text-stone-600 mt-2">{application.cover_letter}</p>
+                  <p className="mt-2 text-sm text-stone-600">{application.cover_letter}</p>
                 ) : null}
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -532,40 +443,45 @@ export default function ManageApplications() {
                   </p>
                 </div>
 
-                <div className="mt-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleAccept(application)}
-                    disabled={!canAct || Boolean(actionLoading)}
-                    className={`inline-flex min-h-[44px] items-center justify-center rounded-lg px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                      canAct
-                        ? 'bg-green-600 text-white hover:bg-green-500'
-                        : 'border border-stone-300 bg-stone-100 text-stone-500'
-                    }`}
-                  >
-                    {isCurrentAction ? (
-                      <>
-                        <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                        Traitement...
-                      </>
-                    ) : (
-                      'Accepter ✓'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleReject(application.id)}
-                    disabled={!canAct || Boolean(actionLoading)}
-                    className={`inline-flex min-h-[44px] items-center justify-center rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                      canAct
-                        ? 'border-red-300 bg-white text-red-700 hover:bg-red-50'
-                        : 'border-stone-300 bg-stone-100 text-stone-500'
-                    }`}
-                  >
-                    Refuser ✗
-                  </button>
-                </div>
-                {mission?.status === 'completed' && application.status === 'accepted' && application.pro_id ? (
+                {canAct ? (
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      id={`btn-accept-${application.id}`}
+                      type="button"
+                      onClick={() => void handleAccept(application)}
+                      disabled={Boolean(actionLoading)}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isCurrentAction ? (
+                        <>
+                          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                          Traitement...
+                        </>
+                      ) : (
+                        'Accepter ✓'
+                      )}
+                    </button>
+                    <button
+                      id={`btn-reject-${application.id}`}
+                      type="button"
+                      onClick={() => void handleReject(application.id)}
+                      disabled={Boolean(actionLoading)}
+                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-300 bg-white px-4 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Refuser ✗
+                    </button>
+                  </div>
+                ) : application.status === 'accepted' ? (
+                  <p className="mt-4 text-xs font-medium text-green-600">
+                    Ce candidat a déjà été sélectionné pour la mission.
+                  </p>
+                ) : (
+                  <p className="mt-4 text-xs font-medium text-stone-500">
+                    Cette candidature a déjà été traitée.
+                  </p>
+                )}
+
+                {mission?.status === 'completed' && application.status === 'accepted' ? (
                   <button
                     type="button"
                     onClick={() => setReviewTarget({
@@ -575,7 +491,7 @@ export default function ManageApplications() {
                     })}
                     disabled={alreadyReviewed}
                     className={alreadyReviewed
-                      ? 'mt-3 text-xs text-gray-400 cursor-not-allowed'
+                      ? 'mt-3 cursor-not-allowed text-xs text-gray-400'
                       : 'mt-3 text-xs text-orange-500 hover:underline'}
                   >
                     {alreadyReviewed ? '✓ Avis déposé' : 'Laisser un avis →'}
@@ -585,12 +501,13 @@ export default function ManageApplications() {
             );
           })}
         </div>
+
         {applications.length > PAGE_SIZE ? (
           <div className="mt-4 flex items-center justify-between">
             <button
               type="button"
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
               className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
             >
               ← Précédent
@@ -601,7 +518,7 @@ export default function ManageApplications() {
             <button
               type="button"
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() => setCurrentPage((previous) => Math.min(totalPages, previous + 1))}
               className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
             >
               Suivant →
@@ -609,6 +526,7 @@ export default function ManageApplications() {
           </div>
         ) : null}
       </div>
+
       {reviewTarget ? (
         <ReviewModal
           isOpen={Boolean(reviewTarget)}
@@ -616,7 +534,7 @@ export default function ManageApplications() {
           reviewedId={reviewTarget.reviewedId}
           reviewedName={reviewTarget.reviewedName}
           onSubmitted={() => {
-            setReviewedByProId((prev) => ({ ...prev, [reviewTarget.reviewedId]: true }));
+            setReviewedByProId((previous) => ({ ...previous, [reviewTarget.reviewedId]: true }));
           }}
           onClose={() => setReviewTarget(null)}
         />

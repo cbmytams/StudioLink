@@ -25,10 +25,16 @@ const SERVICE_COLORS: Record<string, string> = {
 
 const STATUS_CONFIG: Record<MissionStatus, { label: string; className: string }> = {
   draft: { label: 'Brouillon', className: 'bg-stone-100 text-stone-600' },
+  open: { label: 'Ouverte', className: 'bg-emerald-100 text-emerald-700' },
   published: { label: 'Publiée', className: 'bg-emerald-100 text-emerald-700' },
+  selecting: { label: 'Sélection', className: 'bg-amber-100 text-amber-700' },
   in_progress: { label: 'En cours', className: 'bg-orange-100 text-orange-700' },
+  filled: { label: 'Pourvue', className: 'bg-orange-100 text-orange-700' },
   completed: { label: 'Terminée', className: 'bg-blue-100 text-blue-700' },
+  rated: { label: 'Notée', className: 'bg-blue-100 text-blue-700' },
+  expired: { label: 'Expirée', className: 'bg-stone-100 text-stone-600' },
   cancelled: { label: 'Annulée', className: 'bg-red-100 text-red-600' },
+  closed: { label: 'Clôturée', className: 'bg-red-100 text-red-600' },
 };
 
 export function MissionCard({ mission }: MissionCardProps) {

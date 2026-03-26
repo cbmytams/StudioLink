@@ -1,57 +1,77 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
-import { TextInput } from '@/components/ui/TextInput';
-import { useCreateApplication } from '@/hooks/useApplications';
+import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/lib/supabase/auth';
+import { applicationService } from '@/services/applicationService';
+import type { ApplicationRecord } from '@/types/backend';
 
 interface ApplyModalProps {
   isOpen: boolean;
   missionId: string;
   onClose: () => void;
+  onSubmitted: (application: ApplicationRecord) => void;
 }
 
-export function ApplyModal({ isOpen, missionId, onClose }: ApplyModalProps) {
+export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyModalProps) {
   const { session } = useAuth();
-  const [message, setMessage] = useState('');
-  const [budget, setBudget] = useState('');
-  const createApplication = useCreateApplication(session?.user?.id);
+  const { showToast } = useToast();
+  const [coverLetter, setCoverLetter] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  const handleSubmit = async () => {
+    const proId = session?.user?.id;
+    if (!proId) return;
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const created = await applicationService.createApplication(
+        {
+          mission_id: missionId,
+          cover_letter: coverLetter,
+        },
+        proId,
+      );
+      showToast({ title: 'Candidature envoyée ✓', variant: 'default' });
+      onSubmitted(created);
+      setCoverLetter('');
+      onClose();
+    } catch (submitError) {
+      const message = submitError instanceof Error ? submitError.message : 'Impossible d’envoyer la candidature.';
+      setError(message);
+      showToast({ title: 'Envoi impossible', description: message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
+    <div id="apply-modal" className="fixed inset-0 z-[120] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
       <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-5 shadow-[0_12px_32px_rgba(26,26,26,0.08)]">
         <h3 className="text-lg font-semibold">Postuler à la mission</h3>
         <Textarea
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
+          id="cover-letter-input"
+          value={coverLetter}
+          onChange={(event) => setCoverLetter(event.target.value)}
           rows={4}
-          placeholder="Présente ton approche..."
+          placeholder="Présente ton approche (optionnel)..."
         />
-        <TextInput
-          value={budget}
-          onChange={(event) => setBudget(event.target.value)}
-          type="number"
-          placeholder="Budget proposé (optionnel)"
-        />
+        {error ? <p className="text-xs text-red-500">{error}</p> : null}
         <div className="flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onClose}>
             Annuler
           </Button>
           <Button
+            id="btn-submit-apply"
             className="flex-1"
-            disabled={!message.trim() || createApplication.isPending}
-            onClick={async () => {
-              await createApplication.mutateAsync({
-                mission_id: missionId,
-                message: message.trim(),
-                proposed_budget: budget ? Number(budget) : undefined,
-              });
-              onClose();
-            }}
+            disabled={submitting}
+            onClick={() => void handleSubmit()}
           >
-            Envoyer
+            {submitting ? 'Envoi...' : 'Envoyer ma candidature'}
           </Button>
         </div>
       </div>

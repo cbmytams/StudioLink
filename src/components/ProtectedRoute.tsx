@@ -1,8 +1,13 @@
 import type React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import LoadingScreen from '@/components/LoadingScreen';
 import type { UserType } from '@/types/backend';
+import {
+  getDashboardPath,
+  isProfileIncomplete,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 interface Props {
   children: React.ReactNode;
@@ -15,32 +20,31 @@ type GuardProfile = {
   type?: UserType | null;
   full_name?: string | null;
   display_name?: string | null;
+  bio?: string | null;
   onboarding_complete?: boolean | null;
 } | null;
 
 export default function ProtectedRoute({ children, requiredType, allowedTypes }: Props) {
   const { session, profile, loading } = useAuth();
+  const location = useLocation();
   const requiredTypes = requiredType ? [requiredType] : allowedTypes;
   const guardProfile = profile as GuardProfile;
-  const profileType = guardProfile?.user_type ?? guardProfile?.type ?? null;
-  const fullName = guardProfile?.full_name?.trim() ?? guardProfile?.display_name?.trim() ?? '';
+  const profileType = resolveProfileType(guardProfile);
+  const profileLoading = loading;
 
-  if (loading) return <LoadingScreen />;
+  if (profileLoading) return <LoadingScreen />;
   if (!session) return <Navigate to="/login" replace />;
 
-  if (!guardProfile) {
+  if (!guardProfile && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
-  if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+  if (isProfileIncomplete(guardProfile) && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
   if (requiredTypes && !requiredTypes.includes(profileType as UserType)) {
-    const defaultRoute = profileType === 'studio'
-      ? '/studio/dashboard'
-      : '/pro/dashboard';
-    return <Navigate to={defaultRoute} replace />;
+    return <Navigate to={getDashboardPath(profileType)} replace />;
   }
 
   return <>{children}</>;

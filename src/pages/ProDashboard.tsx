@@ -1,303 +1,102 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Activity, BadgeEuro, Percent, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase/client';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { MiniLineChart } from '@/components/shared/MiniLineChart';
+import { PageMeta } from '@/components/shared/PageMeta';
+import { StatCard } from '@/components/shared/StatCard';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
-import { ReviewModal } from '@/components/ReviewModal';
-import { Helmet } from 'react-helmet-async';
-import { reviewService } from '@/services/reviewService';
+import { formatCurrency, formatLongDate, ratingStars, type ProDashboard as ProDashboardData } from '@/lib/analytics/analyticsUtils';
 
-type MissionRef = {
-  id: string
-  title: string
-  status: string
-  studio_id: string
-  category: string
-  mission_type: string
-  budget_min: number | null
-  budget_max: number | null
-  profiles: { company_name: string | null } | null
+type DashboardProfile = {
+  avatar_url?: string | null;
+  full_name?: string | null;
+  display_name?: string | null;
+  username?: string | null;
+} | null;
+
+function applicationStatusLabel(status: string): string {
+  if (status === 'accepted') return 'Acceptée';
+  if (status === 'rejected') return 'Refusée';
+  return 'En attente';
 }
 
-type Application = {
-  id: string
-  status: 'pending' | 'accepted' | 'rejected'
-  cover_letter: string | null
-  proposed_rate: number | null
-  created_at: string
-  mission_id: string
-  missions: MissionRef | null
+function applicationStatusClass(status: string): string {
+  if (status === 'accepted') return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
+  if (status === 'rejected') return 'border-red-400/20 bg-red-400/10 text-red-200';
+  return 'border-amber-400/20 bg-amber-400/10 text-amber-200';
 }
 
-type BookingMissionRef = {
-  title: string
-  profiles: { company_name: string | null } | null
-}
-
-type Booking = {
-  id: string
-  status: string
-  created_at: string
-  mission_id: string
-  missions: BookingMissionRef | null
-}
-
-type ApplicationRow = {
-  id: string
-  status: string | null
-  cover_letter: string | null
-  proposed_rate: number | null
-  created_at: string
-  mission_id: string
-  missions: MissionRef | MissionRef[] | null
-}
-
-type BookingRow = {
-  id: string
-  status: string | null
-  created_at: string
-  mission_id: string
-  missions: BookingMissionRef | BookingMissionRef[] | null
-}
-
-function normalizeApplicationStatus(status: string | null): Application['status'] {
-  if (status === 'accepted' || status === 'selected') return 'accepted';
-  if (status === 'rejected') return 'rejected';
-  return 'pending';
-}
-
-function statusClass(status: Application['status']): string {
-  if (status === 'accepted') return 'bg-green-100 text-green-700';
-  if (status === 'rejected') return 'bg-red-100 text-red-700';
-  return 'bg-yellow-100 text-yellow-700';
-}
-
-function bookingStatusClass(status: string): string {
-  return status === 'confirmed'
-    ? 'bg-green-100 text-green-700'
-    : 'bg-stone-100 text-stone-600';
-}
-
-function budgetText(mission: MissionRef | null): string {
-  if (!mission) return 'Budget non renseigné';
-  if (mission.budget_min !== null && mission.budget_max !== null) {
-    return `${mission.budget_min}€ – ${mission.budget_max}€/j`;
-  }
-  if (mission.budget_min !== null) {
-    return `À partir de ${mission.budget_min}€/j`;
-  }
-  return 'Budget non renseigné';
+function QuickAction({
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+    >
+      <span className="text-xl">{icon}</span>
+      <div>
+        <p className="text-sm font-medium text-gray-900">{title}</p>
+        <p className="text-xs text-gray-400">{description}</p>
+      </div>
+      <span className="ml-auto text-gray-300">›</span>
+    </button>
+  );
 }
 
 export default function ProDashboard() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const userId = session?.user?.id ?? null;
+  const { data, chartData, loading, error } = useDashboard(userId, 'pro');
+  const dashboard = data as ProDashboardData | null;
+  const dashboardProfile = profile as DashboardProfile;
 
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'applications' | 'bookings'>('applications');
-  const [reviewTarget, setReviewTarget] = useState<{ missionId: string; reviewedId: string; reviewedName: string } | null>(null);
-  const [reviewedByMissionId, setReviewedByMissionId] = useState<Record<string, boolean>>({});
+  const greetingName = dashboardProfile?.full_name?.trim()
+    || dashboardProfile?.username?.trim()
+    || dashboardProfile?.display_name?.trim()
+    || 'Pro';
+  const recentApplications = dashboard?.recent_applications ?? [];
+  const ratingAvg = dashboard?.rating_avg ?? null;
+  const ratingCount = dashboard?.rating_count ?? 0;
 
-  useEffect(() => {
-    let active = true;
-
-    const fetchDashboard = async () => {
-      const userId = session?.user?.id;
-      if (!userId) {
-        if (!active) return;
-        setApplications([]);
-        setBookings([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const applicationsColumns: string = `
-          id,
-          status,
-          cover_letter,
-          proposed_rate,
-          created_at,
-          mission_id,
-          missions:mission_id (
-            id,
-            title,
-            status,
-            studio_id,
-            category,
-            mission_type,
-            budget_min,
-            budget_max,
-            profiles:studio_id (
-              company_name
-            )
-          )
-        `;
-        const { data: applicationsData, error: applicationsError } = await supabase
-          .from('applications')
-          .select(applicationsColumns)
-          .eq('pro_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (applicationsError) throw applicationsError;
-
-        const bookingsColumns: string = `
-          id,
-          status,
-          created_at,
-          mission_id,
-          missions:mission_id (
-            title,
-            profiles:studio_id (
-              company_name
-            )
-          )
-        `;
-        let bookingsData: BookingRow[] | null = null;
-        const bookingsResult = await supabase
-          .from('booking_sessions' as never)
-          .select(bookingsColumns)
-          .eq('pro_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (bookingsResult.error) {
-          const relationMissing =
-            bookingsResult.error.code === '42P01'
-            || bookingsResult.error.code === 'PGRST205'
-            || bookingsResult.error.message.toLowerCase().includes('booking_sessions');
-          if (relationMissing) {
-            bookingsData = [];
-          } else {
-            throw bookingsResult.error;
-          }
-        } else {
-          bookingsData = bookingsResult.data as unknown as BookingRow[] | null;
-        }
-
-        if (!active) return;
-
-        const mappedApplications: Application[] = (applicationsData as unknown as ApplicationRow[] | null ?? []).map((application) => {
-          const missionRef = Array.isArray(application.missions)
-            ? application.missions[0] ?? null
-            : application.missions;
-
-          return {
-            id: application.id,
-            status: normalizeApplicationStatus(application.status),
-            cover_letter: application.cover_letter,
-            proposed_rate: application.proposed_rate,
-            created_at: application.created_at,
-            mission_id: application.mission_id,
-            missions: missionRef,
-          };
-        });
-
-        const mappedBookings: Booking[] = (bookingsData ?? []).map((booking) => {
-          const missionRef = Array.isArray(booking.missions)
-            ? booking.missions[0] ?? null
-            : booking.missions;
-          return {
-            id: booking.id,
-            status: booking.status ?? 'unknown',
-            created_at: booking.created_at,
-            mission_id: booking.mission_id,
-            missions: missionRef,
-          };
-        });
-
-        setApplications(mappedApplications);
-        setBookings(mappedBookings);
-
-        const completedAcceptedMissionIds = Array.from(
-          new Set(
-            mappedApplications
-              .filter((application) =>
-                application.status === 'accepted'
-                && application.missions?.status === 'completed'
-                && Boolean(application.missions?.studio_id))
-              .map((application) => application.mission_id),
-          ),
-        );
-
-        if (completedAcceptedMissionIds.length > 0) {
-          const reviewedEntries = await Promise.all(
-            completedAcceptedMissionIds.map(async (missionId) => {
-              const hasReviewed = await reviewService.hasReviewed(missionId, userId);
-              return [missionId, hasReviewed] as const;
-            }),
-          );
-          setReviewedByMissionId(Object.fromEntries(reviewedEntries));
-        } else {
-          setReviewedByMissionId({});
-        }
-      } catch (fetchError) {
-        if (!active) return;
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le dashboard');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void fetchDashboard();
-
-    return () => {
-      active = false;
-    };
-  }, [session?.user?.id]);
-
-  const stats = useMemo(
-    () => ({
-      totalApplications: applications.length,
-      pendingApplications: applications.filter((item) => item.status === 'pending').length,
-      acceptedApplications: applications.filter((item) => item.status === 'accepted').length,
-      bookingsCount: bookings.length,
-    }),
-    [applications, bookings.length],
-  );
-
-  const profileIdentity = profile as
-    | {
-      full_name?: string | null
-      username?: string | null
-      display_name?: string | null
-    }
-    | null;
-  const greetingName =
-    profileIdentity?.full_name ??
-    profileIdentity?.username ??
-    profileIdentity?.display_name ??
-    'Pro';
-
-  if (loading) {
+  if (loading && !dashboard) {
     return (
       <div className="app-shell">
         <div className="app-container flex min-h-screen items-center justify-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+          <div className="flex items-center gap-3 text-white/60">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+            Chargement du dashboard pro…
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app-shell">
-      <Helmet>
-        <title>StudioLink — Tableau de bord Pro</title>
-        <meta
-          name="description"
-          content="Suivez vos candidatures, vos missions acceptées et vos bookings depuis votre tableau de bord pro."
-        />
-      </Helmet>
+    <div id="dashboard-pro" className="app-shell">
+      <PageMeta
+        title="Mon Dashboard"
+        description="Vos statistiques et votre activité récente côté pro."
+        canonicalPath="/dashboard"
+      />
+
       <div className="app-container">
         <header className="mb-5">
           <div className="flex items-center gap-3">
-            {profile?.avatar_url ? (
+            {dashboardProfile?.avatar_url ? (
               <img
-                src={profile.avatar_url}
+                src={dashboardProfile.avatar_url}
                 alt="Avatar pro"
                 className="h-12 w-12 rounded-full border border-white/50 object-cover"
               />
@@ -308,220 +107,184 @@ export default function ProDashboard() {
             )}
             <div>
               <h1 className="app-title">Bonjour, {greetingName} 👋</h1>
-              <p className="app-subtitle">{applications.length} candidature(s) envoyée(s)</p>
+              <p className="app-subtitle">
+                {dashboard?.total_applications ?? 0} candidature(s) envoyée(s) · {dashboard?.active_sessions ?? 0} session(s) active(s)
+              </p>
             </div>
           </div>
         </header>
 
-        {error ? <p className="text-red-400 text-center mb-4">{error}</p> : null}
+        {error ? (
+          <div className="mb-5 rounded-3xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+            {error}
+          </div>
+        ) : null}
 
         <section className="app-stats-grid mb-5">
-          <div className="app-stat-card">
-            <p className="text-2xl font-bold">{stats.totalApplications}</p>
-            <p className="text-sm app-muted">Candidatures envoyées</p>
-          </div>
-          <div className="app-stat-card">
-            <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-            <p className="text-sm app-muted">En attente</p>
-          </div>
-          <div className="app-stat-card">
-            <p className="text-2xl font-bold">{stats.acceptedApplications}</p>
-            <p className="text-sm app-muted">Acceptées</p>
-          </div>
-          <div className="app-stat-card">
-            <p className="text-2xl font-bold">{stats.bookingsCount}</p>
-            <p className="text-sm app-muted">Missions bookées</p>
-          </div>
+          <StatCard
+            id="stat-total-applications"
+            label="Candidatures envoyées"
+            value={dashboard?.total_applications ?? 0}
+            icon={<Send size={20} />}
+            color="orange"
+          />
+          <StatCard
+            id="stat-success-rate"
+            label="Taux de succès"
+            value={(dashboard?.success_rate ?? 0).toFixed(1)}
+            unit="%"
+            icon={<Percent size={20} />}
+            color="green"
+          />
+          <StatCard
+            id="stat-active-sessions"
+            label="Sessions actives"
+            value={dashboard?.active_sessions ?? 0}
+            icon={<Activity size={20} />}
+            color="blue"
+          />
+          <StatCard
+            id="stat-total-earned"
+            label="Gains totaux"
+            value={formatCurrency(dashboard?.total_earned ?? 0)}
+            icon={<BadgeEuro size={20} />}
+            color="violet"
+          />
         </section>
 
         <section className="mb-5 space-y-3">
-          <button
-            type="button"
+          <QuickAction
+            icon="📋"
+            title="Mes candidatures"
+            description="Voir le statut de tes candidatures"
             onClick={() => navigate('/pro/applications')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
-          >
-            <span className="text-xl">📋</span>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Mes candidatures</p>
-              <p className="text-xs text-gray-400">Voir le statut de tes candidatures</p>
-            </div>
-            <span className="ml-auto text-gray-300">›</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/pro/feed')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
-          >
-            <span className="text-xl">🎯</span>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Explorer les missions</p>
-              <p className="text-xs text-gray-400">Trouve ta prochaine mission</p>
-            </div>
-            <span className="ml-auto text-gray-300">›</span>
-          </button>
-
-          <button
-            type="button"
+          />
+          <QuickAction
+            icon="🎯"
+            title="Explorer les missions"
+            description="Trouve ta prochaine mission"
+            onClick={() => navigate('/missions')}
+          />
+          <QuickAction
+            icon="💬"
+            title="Mes messages"
+            description="Accéder à mes conversations"
             onClick={() => navigate('/pro/conversations')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
-          >
-            <span className="text-xl">💬</span>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Mes messages</p>
-              <p className="text-xs text-gray-400">Accéder à mes conversations</p>
-            </div>
-            <span className="ml-auto text-gray-300">›</span>
-          </button>
-
-          <button
-            type="button"
+          />
+          <QuickAction
+            icon="⚙️"
+            title="Paramètres"
+            description="Sécurité et préférences du compte"
             onClick={() => navigate('/settings')}
-            className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
-          >
-            <span className="text-xl">⚙️</span>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Paramètres</p>
-              <p className="text-xs text-gray-400">Sécurité et préférences du compte</p>
-            </div>
-            <span className="ml-auto text-gray-300">›</span>
-          </button>
+          />
         </section>
 
-        <div className="mb-4 flex gap-5 border-b border-black/10">
-          <button
-            type="button"
-            onClick={() => setActiveTab('applications')}
-            className={`pb-2 text-sm transition-colors ${
-              activeTab === 'applications'
-                ? 'border-b-2 border-orange-500 text-black'
-                : 'app-muted'
-            }`}
-          >
-            Mes candidatures
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('bookings')}
-            className={`pb-2 text-sm transition-colors ${
-              activeTab === 'bookings'
-                ? 'border-b-2 border-orange-500 text-black'
-                : 'app-muted'
-            }`}
-          >
-            Mes bookings
-          </button>
-        </div>
+        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+          <div id="chart-applications-over-time" className="app-card p-5">
+            <MiniLineChart
+              data={chartData}
+              label="Mes candidatures"
+              color="#38bdf8"
+              id="mini-line-chart-applications"
+            />
+          </div>
 
-        {activeTab === 'applications' ? (
-          applications.length === 0 ? (
-            <div className="text-center app-muted py-8">
-              Tu n&apos;as encore postulé à aucune mission.
-              <br />
+          <div className="app-card p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Dernières candidatures</h2>
+                <p className="text-xs text-white/45">5 dernières actions côté pro</p>
+              </div>
               <button
-                onClick={() => navigate('/pro/feed')}
-                className="text-orange-600 underline mt-2"
+                type="button"
+                onClick={() => navigate('/pro/applications')}
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
               >
-                Découvrir les missions
+                Tout voir
               </button>
             </div>
-          ) : (
-            <div className="app-list">
-              {applications.map((application) => (
-                <article key={application.id} className="app-card-soft p-4">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold">{application.missions?.title ?? 'Mission supprimée'}</p>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass(application.status)}`}>
-                      {application.status === 'pending'
-                        ? 'En attente'
-                        : application.status === 'accepted'
-                          ? 'Acceptée'
-                          : 'Refusée'}
-                    </span>
+
+            {recentApplications.length === 0 ? (
+              <div id="recent-applications-list">
+                <EmptyState
+                  icon="🎯"
+                  title="Trouvez votre première mission"
+                  description="Vos candidatures récentes apparaîtront ici, avec le suivi de statut et l’accès rapide au chat."
+                  action={{ label: 'Explorer les missions', onClick: () => navigate('/missions') }}
+                  className="px-4 py-8"
+                />
+              </div>
+            ) : (
+              <div id="recent-applications-list" className="space-y-3">
+                {recentApplications.map((application) => (
+                  <div key={application.id} className="recent-application-item app-card-soft p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold text-white">{application.mission_title}</p>
+                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${applicationStatusClass(application.status)}`}>
+                            {applicationStatusLabel(application.status)}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm text-orange-200">
+                          {application.budget !== null ? formatCurrency(application.budget) : 'Budget non renseigné'}
+                        </p>
+                        <p className="mt-2 text-xs text-white/50">
+                          Candidature du {formatLongDate(application.created_at)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/missions/${application.mission_id}`)}
+                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                      >
+                        Voir la mission
+                      </button>
+                      {application.session_id ? (
+                        <button
+                          id={`btn-open-chat-${application.session_id}`}
+                          type="button"
+                          onClick={() => navigate(`/chat/${application.session_id}`)}
+                          className="rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15"
+                        >
+                          Ouvrir le chat
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-
-                  <p className="text-sm app-muted">
-                    {application.missions?.profiles?.company_name ?? 'Studio inconnu'}
-                  </p>
-
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="app-chip">
-                      {application.missions?.category ?? 'Catégorie inconnue'}
-                    </span>
-                    <span className="app-chip">
-                      {application.missions?.mission_type ?? 'Type inconnu'}
-                    </span>
-                  </div>
-
-                  <p className="mt-2 text-sm text-orange-700">{budgetText(application.missions)}</p>
-                  {application.proposed_rate ? (
-                    <p className="mt-1 text-sm text-stone-600">Tarif proposé : {application.proposed_rate}€/j</p>
-                  ) : null}
-                  <p className="mt-1 text-xs app-muted">
-                    Candidature du {new Date(application.created_at).toLocaleDateString('fr-FR')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/mission/${application.mission_id}`)}
-                    className="text-orange-500 text-xs hover:underline mt-1 block"
-                  >
-                    Voir la mission →
-                  </button>
-                  {(application.status === 'accepted'
-                    && application.missions?.status === 'completed'
-                    && application.missions?.studio_id) ? (
-                    <button
-                      type="button"
-                      onClick={() => setReviewTarget({
-                        missionId: application.mission_id,
-                        reviewedId: application.missions.studio_id,
-                        reviewedName: application.missions.profiles?.company_name ?? 'Ce studio',
-                      })}
-                      disabled={Boolean(reviewedByMissionId[application.mission_id])}
-                      className={reviewedByMissionId[application.mission_id]
-                        ? 'text-xs text-gray-400 cursor-not-allowed mt-2 block'
-                        : 'text-xs text-orange-500 hover:underline mt-2 block'}
-                    >
-                      {reviewedByMissionId[application.mission_id] ? '✓ Avis déposé' : 'Noter ce studio →'}
-                    </button>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          )
-        ) : bookings.length === 0 ? (
-          <p className="text-center app-muted py-8">Aucun booking confirmé pour l&apos;instant.</p>
-        ) : (
-          <div className="app-list">
-            {bookings.map((booking) => (
-              <article key={booking.id} className="app-card-soft p-4">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="font-semibold">{booking.missions?.title ?? 'Mission'}</p>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${bookingStatusClass(booking.status)}`}>
-                    {booking.status}
-                  </span>
-                </div>
-                <p className="text-sm app-muted">{booking.missions?.profiles?.company_name ?? 'Studio'}</p>
-                <p className="mt-1 text-xs app-muted">
-                  Booking du {new Date(booking.created_at).toLocaleDateString('fr-FR')}
-                </p>
-              </article>
-            ))}
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </section>
+
+        <section
+          id="pro-rating-display"
+          className="app-card mt-6 p-6"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/40">Note moyenne</p>
+              <div className="mt-3 flex items-center gap-3">
+                <p className="text-4xl font-bold tracking-tight text-white">
+                  {ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}
+                </p>
+                <div>
+                  <p className="text-lg text-orange-200">{ratingStars(ratingAvg)}</p>
+                  <p className="text-xs text-white/45">{ratingCount} avis</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65">
+              {dashboard?.completed_sessions ?? 0} session(s) terminée(s)
+            </div>
+          </div>
+        </section>
       </div>
-      {reviewTarget ? (
-        <ReviewModal
-          isOpen={Boolean(reviewTarget)}
-          missionId={reviewTarget.missionId}
-          reviewedId={reviewTarget.reviewedId}
-          reviewedName={reviewTarget.reviewedName}
-          onSubmitted={() => {
-            setReviewedByMissionId((prev) => ({ ...prev, [reviewTarget.missionId]: true }));
-          }}
-          onClose={() => setReviewTarget(null)}
-        />
-      ) : null}
     </div>
   );
 }

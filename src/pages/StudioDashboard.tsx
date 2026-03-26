@@ -1,272 +1,141 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { Activity, BadgeEuro, FolderKanban, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
-import { useToast } from '@/components/ui/Toast';
-import { Helmet } from 'react-helmet-async';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { MiniLineChart } from '@/components/shared/MiniLineChart';
+import { PageMeta } from '@/components/shared/PageMeta';
+import { StatCard } from '@/components/shared/StatCard';
+import { useDashboard } from '@/hooks/useDashboard';
+import { useAuth } from '@/lib/supabase/auth';
+import { formatCurrency, formatLongDate, ratingStars, type StudioDashboard as StudioDashboardData } from '@/lib/analytics/analyticsUtils';
+import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
+import { chatService } from '@/lib/chat/chatService';
 
-type Mission = {
-  id: string
-  title: string
-  status: 'draft' | 'open' | 'in_progress' | 'closed' | 'completed'
-  created_at: string
-  deadline: string | null
-  budget_min: number | null
-  budget_max: number | null
-}
+type DashboardProfile = {
+  avatar_url?: string | null;
+  company_name?: string | null;
+  full_name?: string | null;
+} | null;
 
-type Application = {
-  id: string
-  status: 'pending' | 'accepted' | 'rejected'
-  mission_id: string
-  created_at: string
-}
-
-type MissionRow = {
-  id: string
-  title: string
-  status: string | null
-  created_at: string
-  deadline: string | null
-  budget_min: number | null
-  budget_max: number | null
-}
-
-type ApplicationRow = {
-  id: string
-  status: string | null
-  mission_id: string
-  created_at: string
-}
-
-function mapMissionStatus(status: string | null): Mission['status'] {
-  if (status === 'draft') return 'draft';
-  if (status === 'open' || status === 'published' || status === 'selecting') return 'open';
-  if (status === 'in_progress' || status === 'filled') return 'in_progress';
-  if (status === 'completed' || status === 'rated') return 'completed';
-  return 'closed';
-}
-
-function mapApplicationStatus(status: string | null): Application['status'] {
-  if (status === 'pending') return 'pending';
-  if (status === 'accepted' || status === 'selected') return 'accepted';
-  return 'rejected';
-}
-
-function statusBadgeClass(status: Mission['status']): string {
-  if (status === 'open') return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
-  if (status === 'draft') return 'bg-stone-100 text-stone-600 border border-stone-200';
-  if (status === 'in_progress') return 'bg-blue-100 text-blue-700 border border-blue-200';
-  if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
-  return 'bg-red-100 text-red-700 border border-red-200';
-}
-
-function statusLabel(status: Mission['status']): ReactNode {
-  if (status === 'open') return 'Ouverte';
-  if (status === 'draft') return 'Brouillon';
-  if (status === 'in_progress') return 'En cours';
-  if (status === 'completed') return 'Terminée';
+function missionStatusLabel(status: string): string {
+  const normalized = normalizeMissionStatus(status);
+  if (normalized === 'open') return 'Ouverte';
+  if (normalized === 'draft') return 'Brouillon';
+  if (normalized === 'in_progress') return 'En cours';
+  if (normalized === 'completed') return 'Terminée';
   return 'Clôturée';
+}
+
+function missionStatusClass(status: string): string {
+  const normalized = normalizeMissionStatus(status);
+  if (normalized === 'open') return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
+  if (normalized === 'draft') return 'border-amber-400/20 bg-amber-400/10 text-amber-200';
+  if (normalized === 'in_progress') return 'border-sky-400/20 bg-sky-400/10 text-sky-200';
+  if (normalized === 'completed') return 'border-stone-400/20 bg-stone-400/10 text-stone-200';
+  return 'border-red-400/20 bg-red-400/10 text-red-200';
+}
+
+function QuickAction({
+  icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
+    >
+      <span className="text-xl">{icon}</span>
+      <div>
+        <p className="text-sm font-semibold tracking-wide text-white">{title}</p>
+        <p className="mt-0.5 text-xs tracking-wider text-white/50">{description}</p>
+      </div>
+      <span className="ml-auto text-white/30">›</span>
+    </button>
+  );
 }
 
 export default function StudioDashboard() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
-  const { showToast } = useToast();
+  const userId = session?.user?.id ?? null;
+  const { data, chartData, loading, error } = useDashboard(userId, 'studio');
+  const dashboard = data as StudioDashboardData | null;
+  const dashboardProfile = profile as DashboardProfile;
+  const [openingMissionId, setOpeningMissionId] = useState<string | null>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
 
-  const [missions, setMissions] = useState<Mission[] | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loadingMissions, setLoadingMissions] = useState(true);
-  const [statusActionMissionId, setStatusActionMissionId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const companyName = dashboardProfile?.company_name?.trim()
+    || dashboardProfile?.full_name?.trim()
+    || 'Studio';
+  const recentMissions = dashboard?.recent_missions ?? [];
+  const ratingAvg = dashboard?.rating_avg ?? null;
+  const ratingCount = dashboard?.rating_count ?? 0;
 
-  useEffect(() => {
-    let active = true;
+  const openChatForMission = async (missionId: string, sessionId: string | null) => {
+    setOpeningMissionId(missionId);
+    setChatError(null);
 
-    const fetchDashboardData = async () => {
-      if (!session?.user?.id) {
-        if (!active) return;
-        setMissions([]);
-        setApplications([]);
-        setLoadingMissions(false);
-        return;
-      }
-
-      setLoadingMissions(true);
-      setError(null);
-
-      try {
-        const missionColumns: string = 'id, title, status, created_at, deadline, budget_min, budget_max';
-        const { data: missionRows, error: missionError } = await supabase
-          .from('missions')
-          .select(missionColumns)
-          .eq('studio_id', session.user.id)
-          .order('created_at', { ascending: false });
-
-        if (missionError) throw missionError;
-
-        const normalizedMissions: Mission[] = (missionRows as unknown as MissionRow[] | null ?? []).map((mission) => ({
-          id: mission.id,
-          title: mission.title,
-          status: mapMissionStatus(mission.status),
-          created_at: mission.created_at,
-          deadline: mission.deadline,
-          budget_min: mission.budget_min,
-          budget_max: mission.budget_max,
-        }));
-
-        if (!active) return;
-        setMissions(normalizedMissions);
-
-        if (normalizedMissions.length === 0) {
-          setApplications([]);
-          return;
-        }
-
-        const missionIds = normalizedMissions.map((mission) => mission.id);
-        const { data: applicationRows, error: applicationError } = await supabase
-          .from('applications')
-          .select('id, status, mission_id, created_at')
-          .in('mission_id', missionIds);
-
-        if (applicationError) throw applicationError;
-
-        if (!active) return;
-        setApplications((applicationRows as ApplicationRow[] | null ?? []).map((application) => ({
-          id: application.id,
-          status: mapApplicationStatus(application.status),
-          mission_id: application.mission_id,
-          created_at: application.created_at,
-        })));
-      } catch (fetchError) {
-        if (!active) return;
-        setMissions([]);
-        setApplications([]);
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger le dashboard.');
-      } finally {
-        if (active) setLoadingMissions(false);
-      }
-    };
-
-    void fetchDashboardData();
-
-    return () => {
-      active = false;
-    };
-  }, [session?.user?.id]);
-
-  const stats = useMemo(() => {
-    const missionList = missions ?? [];
-    return {
-      activeMissions: missionList.filter(
-        (mission) => mission.status === 'open' || mission.status === 'in_progress',
-      ).length,
-      applicationsCount: applications.length,
-      pendingApplications: applications.filter((application) => application.status === 'pending').length,
-      closedMissions: missionList.filter(
-        (mission) => mission.status === 'closed' || mission.status === 'completed',
-      ).length,
-    };
-  }, [applications, missions]);
-
-  const recentMissions = useMemo(() => (missions ?? []).slice(0, 5), [missions]);
-  const companyName = (profile as { company_name?: string } | null)?.company_name ?? 'Studio';
-
-  const updateMissionStatus = async (missionId: string, status: Mission['status']) => {
-    setStatusActionMissionId(missionId);
-    setError(null);
     try {
-      const preferredStatus =
-        status === 'closed'
-          ? 'closed'
-          : status === 'open'
-            ? 'open'
-            : status;
-
-      const { error: preferredError } = await supabase
-        .from('missions')
-        .update({ status: preferredStatus } as never)
-        .eq('id', missionId);
-
-      if (preferredError) {
-        const fallbackStatus =
-          status === 'open'
-            ? 'published'
-            : status === 'closed'
-              ? 'cancelled'
-              : status === 'in_progress'
-                ? 'filled'
-                : status === 'completed'
-                  ? 'rated'
-                  : status;
-
-        const { error: fallbackError } = await supabase
-          .from('missions')
-          .update({ status: fallbackStatus } as never)
-          .eq('id', missionId);
-
-        if (fallbackError) throw fallbackError;
-      }
-
-      setMissions((previous) =>
-        (previous ?? []).map((mission) =>
-          mission.id === missionId ? { ...mission, status } : mission,
-        ),
+      const chatSessionId = sessionId ?? (await chatService.getOrCreateSession(missionId)).id;
+      navigate(`/chat/${chatSessionId}`);
+    } catch (openError) {
+      setChatError(
+        openError instanceof Error ? openError.message : "Impossible d'ouvrir le chat.",
       );
-      showToast({ title: 'Statut mission mis à jour', variant: 'default' });
-    } catch (statusError) {
-      setError(
-        statusError instanceof Error
-          ? statusError.message
-          : 'Impossible de mettre à jour le statut de la mission.',
-      );
-      showToast({
-        title: 'Mise à jour impossible',
-        description: statusError instanceof Error ? statusError.message : undefined,
-        variant: 'destructive',
-      });
     } finally {
-      setStatusActionMissionId(null);
+      setOpeningMissionId(null);
     }
   };
 
-  if (loadingMissions) {
+  if (loading && !dashboard) {
     return (
       <div className="app-shell">
         <div className="app-container-wide flex min-h-screen items-center justify-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+          <div className="flex items-center gap-3 text-white/60">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+            Chargement du dashboard studio…
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app-shell">
-      <Helmet>
-        <title>StudioLink — Tableau de bord Studio</title>
-        <meta
-          name="description"
-          content="Gérez vos missions, vos candidatures et vos actions studio depuis votre tableau de bord StudioLink."
-        />
-      </Helmet>
+    <div id="dashboard-studio" className="app-shell">
+      <PageMeta
+        title="Mon Dashboard"
+        description="Vos statistiques et votre activité récente côté studio."
+        canonicalPath="/dashboard"
+      />
+
       <div className="app-container-wide">
         <header className="app-header">
           <div className="flex items-center gap-3">
-            {profile?.avatar_url ? (
+            {dashboardProfile?.avatar_url ? (
               <img
-                src={profile.avatar_url}
+                src={dashboardProfile.avatar_url}
                 alt="Avatar studio"
-                className="h-14 w-14 rounded-full border border-white/20 object-cover shadow-[0_4px_20px_rgba(249,115,22,0.4)]"
+                className="h-14 w-14 rounded-full border border-white/20 object-cover shadow-[0_4px_20px_rgba(249,115,22,0.35)]"
               />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-400 text-xl font-bold text-white shadow-[0_4px_20px_rgba(249,115,22,0.4)] border border-white/20">
-                {profile?.full_name?.charAt(0) || 'S'}
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-orange-500 to-orange-400 text-xl font-bold text-white shadow-[0_4px_20px_rgba(249,115,22,0.35)]">
+                {companyName.charAt(0).toUpperCase()}
               </div>
             )}
             <div>
               <h1 className="app-title">Bonjour, {companyName} 👋</h1>
-              <p className="app-subtitle">{missions?.length ?? 0} mission(s) publiée(s)</p>
+              <p className="app-subtitle">
+                {dashboard?.total_missions ?? 0} mission(s) au total · {dashboard?.active_sessions ?? 0} session(s) active(s)
+              </p>
             </div>
           </div>
 
@@ -278,168 +147,185 @@ export default function StudioDashboard() {
           </Button>
         </header>
 
-        <section className="mb-5 space-y-3">
-          <button
-            type="button"
+        <section className="mb-6 space-y-3">
+          <QuickAction
+            icon="📌"
+            title="Mes missions"
+            description="Gérer vos offres publiées"
             onClick={() => navigate('/studio/missions')}
-            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
-          >
-            <span className="text-xl">📌</span>
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-white">Mes missions</p>
-              <p className="text-xs tracking-wider text-white/50 mt-0.5">Gérer vos offres publiées</p>
-            </div>
-            <span className="ml-auto text-white/30">›</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/studio/search-pros')}
-            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
-          >
-            <span className="text-xl">🔍</span>
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-white">Trouver des pros</p>
-              <p className="text-xs tracking-wider text-white/50 mt-0.5">Parcourir les profils disponibles</p>
-            </div>
-            <span className="ml-auto text-white/30">›</span>
-          </button>
-          <button
-            type="button"
+          />
+          <QuickAction
+            icon="🔍"
+            title="Trouver des pros"
+            description="Parcourir les profils disponibles"
+            onClick={() => navigate('/pros')}
+          />
+          <QuickAction
+            icon="💬"
+            title="Mes conversations"
+            description="Messages avec les pros"
             onClick={() => navigate('/studio/conversations')}
-            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
-          >
-            <span className="text-xl">💬</span>
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-white">Mes conversations</p>
-              <p className="text-xs tracking-wider text-white/50 mt-0.5">Messages avec les pros</p>
-            </div>
-            <span className="ml-auto text-white/30">›</span>
-          </button>
-          <button
-            type="button"
+          />
+          <QuickAction
+            icon="⚙️"
+            title="Paramètres"
+            description="Sécurité et préférences du compte"
             onClick={() => navigate('/settings')}
-            className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
-          >
-            <span className="text-xl">⚙️</span>
-            <div>
-              <p className="text-sm font-semibold tracking-wide text-white">Paramètres</p>
-              <p className="text-xs tracking-wider text-white/50 mt-0.5">Sécurité et préférences du compte</p>
-            </div>
-            <span className="ml-auto text-white/30">›</span>
-          </button>
+          />
         </section>
 
-        {error ? (
-          <p className="text-red-400 text-center">{error}</p>
-        ) : (
-          <>
-            <section className="app-stats-grid">
-              <div className="app-stat-card">
-                <p className="text-2xl font-bold">{stats.activeMissions}</p>
-                <p className="text-sm app-muted">Missions actives</p>
-              </div>
-              <div className="app-stat-card">
-                <p className="text-2xl font-bold">{stats.applicationsCount}</p>
-                <p className="text-sm app-muted">Candidatures reçues</p>
-              </div>
-              <div className="app-stat-card">
-                <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-                <p className="text-sm app-muted">En attente</p>
-              </div>
-              <div className="app-stat-card">
-                <p className="text-2xl font-bold">{stats.closedMissions}</p>
-                <p className="text-sm app-muted">Missions clôturées</p>
-              </div>
-            </section>
+        {error || chatError ? (
+          <div className="mb-6 rounded-3xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+            {error ?? chatError}
+          </div>
+        ) : null}
 
-            <section className="app-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Missions récentes</h2>
-                <span className="text-xs app-muted">5 plus récentes</span>
+        <section className="app-stats-grid">
+          <StatCard
+            id="stat-published-missions"
+            label="Missions publiées"
+            value={dashboard?.published_missions ?? 0}
+            icon={<FolderKanban size={20} />}
+            color="orange"
+          />
+          <StatCard
+            id="stat-pending-applications"
+            label="Candidatures en attente"
+            value={dashboard?.pending_applications ?? 0}
+            icon={<Sparkles size={20} />}
+            color="blue"
+          />
+          <StatCard
+            id="stat-active-sessions"
+            label="Sessions actives"
+            value={dashboard?.active_sessions ?? 0}
+            icon={<Activity size={20} />}
+            color="green"
+          />
+          <StatCard
+            id="stat-total-spent"
+            label="Budget dépensé"
+            value={formatCurrency(dashboard?.total_spent ?? 0)}
+            icon={<BadgeEuro size={20} />}
+            color="violet"
+          />
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+          <div id="chart-applications-over-time" className="app-card p-5">
+            <MiniLineChart
+              data={chartData}
+              label="Candidatures reçues"
+              color="#fb923c"
+              id="mini-line-chart-applications"
+            />
+          </div>
+
+          <div className="app-card p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-white">Missions récentes</h2>
+                <p className="text-xs text-white/45">5 dernières missions créées</p>
               </div>
+              <button
+                type="button"
+                onClick={() => navigate('/studio/missions')}
+                className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
+              >
+                Tout voir
+              </button>
+            </div>
 
-              {recentMissions.length === 0 ? (
-                <div className="app-empty-state">
-                  Aucune mission publiée pour l&apos;instant.
-                  <br />
-                  <button
-                    onClick={() => navigate('/studio/create-mission')}
-                    className="text-white/60 hover:text-white transition-colors mt-3 text-sm"
-                  >
-                    Créer votre première mission
-                  </button>
-                </div>
-              ) : (
-                <div className="app-list">
-                  {recentMissions.map((mission) => {
-                    const candidateCount = applications.filter(
-                      (application) => application.mission_id === mission.id,
-                    ).length;
-
-                    return (
-                      <div
-                        key={mission.id}
-                        className="app-card-soft flex flex-wrap items-center justify-between gap-3 p-4"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium">{mission.title}</p>
-                          <p className="text-xs app-muted">
-                            Créée le {new Date(mission.created_at).toLocaleDateString('fr-FR')}
-                          </p>
-                          <p className="text-xs app-muted mt-1">
-                            {candidateCount} candidature{candidateCount > 1 ? 's' : ''}
-                          </p>
+            {recentMissions.length === 0 ? (
+              <div id="recent-missions-list">
+                <EmptyState
+                  icon="🎬"
+                  title="Publiez votre première mission"
+                  description="Dès que vous créez une mission, elle apparaît ici avec ses candidatures et l’accès rapide au chat."
+                  action={{ label: 'Créer une mission', onClick: () => navigate('/studio/missions/new') }}
+                  className="px-4 py-8"
+                />
+              </div>
+            ) : (
+              <div id="recent-missions-list" className="space-y-3">
+                {recentMissions.map((mission) => (
+                  <div key={mission.id} className="recent-mission-item app-card-soft p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold text-white">{mission.title}</p>
+                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${missionStatusClass(mission.status)}`}>
+                            {missionStatusLabel(mission.status)}
+                          </span>
                         </div>
-
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(mission.status)}`}>
-                          {statusLabel(mission.status)}
-                        </span>
-
-                        <button
-                          type="button"
-                          className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white transition hover:bg-white/20"
-                          onClick={() => navigate(`/studio/applications/${mission.id}`)}
-                        >
-                          Voir les candidatures
-                        </button>
-                        {mission.status === 'draft' ? (
-                          <button
-                            type="button"
-                            disabled={statusActionMissionId === mission.id}
-                            onClick={() => void updateMissionStatus(mission.id, 'open')}
-                            className="rounded-full bg-orange-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-orange-600 disabled:opacity-60"
-                          >
-                            Publier
-                          </button>
-                        ) : null}
-                        {mission.status === 'open' ? (
-                          <button
-                            type="button"
-                            disabled={statusActionMissionId === mission.id}
-                            onClick={() => void updateMissionStatus(mission.id, 'closed')}
-                            className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-60"
-                          >
-                            Clôturer
-                          </button>
-                        ) : null}
-                        {mission.status === 'in_progress' ? (
-                          <button
-                            type="button"
-                            disabled={statusActionMissionId === mission.id}
-                            onClick={() => void updateMissionStatus(mission.id, 'completed')}
-                            className="rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:opacity-60"
-                          >
-                            Marquer terminée
-                          </button>
-                        ) : null}
+                        <p className="mt-2 text-xs text-white/50">
+                          Créée le {formatLongDate(mission.created_at)}
+                        </p>
+                        <p className="mt-2 text-sm text-orange-200">
+                          {mission.application_count} candidature{mission.application_count > 1 ? 's' : ''}
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/studio/missions/${mission.id}/applications`)}
+                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                      >
+                        Voir les candidatures
+                      </button>
+                      {normalizeMissionStatus(mission.status) === 'in_progress' ? (
+                        <button
+                          id={mission.session_id ? `btn-open-chat-${mission.session_id}` : undefined}
+                          type="button"
+                          disabled={openingMissionId === mission.id}
+                          onClick={() => void openChatForMission(mission.id, mission.session_id)}
+                          className="rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-60"
+                        >
+                          Ouvrir le chat
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/studio/missions/${mission.id}/edit`)}
+                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                      >
+                        Modifier
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section
+          id="studio-rating-display"
+          className="app-card mt-6 p-6"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/40">Note moyenne</p>
+              <div className="mt-3 flex items-center gap-3">
+                <p className="text-4xl font-bold tracking-tight text-white">
+                  {ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}
+                </p>
+                <div>
+                  <p className="text-lg text-orange-200">{ratingStars(ratingAvg)}</p>
+                  <p className="text-xs text-white/45">
+                    {ratingCount} avis
+                  </p>
                 </div>
-              )}
-            </section>
-          </>
-        )}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/65">
+              {dashboard?.completed_sessions ?? 0} session(s) terminée(s)
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

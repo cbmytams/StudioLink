@@ -6,6 +6,11 @@ import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import {
+  getDashboardPath,
+  isProfileIncomplete,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 type InvitationLookup = {
   code: string;
@@ -29,21 +34,21 @@ export default function InvitationPage() {
       return;
     }
 
-    const profileType = (profile as { user_type?: 'studio' | 'pro'; type?: 'studio' | 'pro' } | null)?.user_type
-      ?? (profile as { user_type?: 'studio' | 'pro'; type?: 'studio' | 'pro' } | null)?.type
-      ?? null;
-    const fullName = (
-      profile as { full_name?: string | null; display_name?: string | null } | null
-    )?.full_name?.trim() ?? (
-      profile as { full_name?: string | null; display_name?: string | null } | null
-    )?.display_name?.trim() ?? '';
+    const invitationProfile = profile as {
+      user_type?: 'studio' | 'pro' | null;
+      type?: 'studio' | 'pro' | null;
+      full_name?: string | null;
+      display_name?: string | null;
+      bio?: string | null;
+    } | null;
+    const profileType = resolveProfileType(invitationProfile);
 
-    if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+    if (isProfileIncomplete(invitationProfile)) {
       navigate('/onboarding', { replace: true });
       return;
     }
 
-    navigate(profileType === 'studio' ? '/studio/dashboard' : '/pro/dashboard', { replace: true });
+    navigate(getDashboardPath(profileType), { replace: true });
   }, [authLoading, navigate, profile, session]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -93,7 +98,15 @@ export default function InvitationPage() {
         sessionStorage.setItem('invitationEmail', invitation.email);
       }
 
-      navigate('/login?mode=signup', { replace: true });
+      navigate('/login?mode=signup', {
+        replace: true,
+        state: {
+          mode: 'signup',
+          type: invitation.invitation_type,
+          code: invitation.code,
+          email: invitation.email,
+        },
+      });
     } catch {
       setError('Code invalide ou introuvable');
     } finally {

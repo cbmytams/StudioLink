@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
-import { getUnreadCount } from '@/services/notificationService';
+import { chatService } from '@/lib/chat/chatService';
 
 export function useUnreadCount() {
   const { session } = useAuth();
@@ -18,7 +18,7 @@ export function useUnreadCount() {
 
     const refresh = async () => {
       try {
-        const nextCount = await getUnreadCount(userId);
+        const nextCount = await chatService.getUnreadCount(userId);
         if (!active) return;
         setCount(nextCount);
       } catch {

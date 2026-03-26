@@ -7,6 +7,7 @@ type AvatarUploadProps = {
   currentUrl: string | null
   fallbackLetter: string
   userId: string
+  inputId?: string
   onUploadSuccess: (newUrl: string) => void
 }
 
@@ -14,6 +15,7 @@ export function AvatarUpload({
   currentUrl,
   fallbackLetter,
   userId,
+  inputId,
   onUploadSuccess,
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -99,6 +101,7 @@ export function AvatarUpload({
       </button>
 
       <input
+        id={inputId}
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"

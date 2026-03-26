@@ -103,7 +103,14 @@ export default function InvitationLanding() {
       sessionStorage.setItem('invitationEmail', invitation.email)
     }
 
-    navigate('/login?mode=signup')
+    navigate('/login?mode=signup', {
+      state: {
+        mode: 'signup',
+        type: invitation.type,
+        code: invitation.code,
+        email: invitation.email,
+      },
+    })
   }
 
   return (

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { getPublicProfilesMap } from '@/services/publicProfileService';
 import type { ReviewRecord } from '@/types/backend';
 
 export type ReviewWithReviewer = ReviewRecord & {
@@ -13,16 +14,10 @@ function ensureClient() {
 }
 
 function resolveReviewerName(profile: {
-  full_name?: string | null;
-  company_name?: string | null;
   display_name?: string | null;
-  username?: string | null;
 } | null | undefined): string {
   return (
-    profile?.full_name
-    ?? profile?.company_name
-    ?? profile?.display_name
-    ?? profile?.username
+    profile?.display_name
     ?? 'Utilisateur'
   );
 }
@@ -73,22 +68,7 @@ export const reviewService = {
     if (reviews.length === 0) return [];
 
     const reviewerIds = Array.from(new Set(reviews.map((review) => review.reviewer_id)));
-    const { data: profilesData, error: profilesError } = await client
-      .from('profiles')
-      .select('id, full_name, company_name, display_name, username')
-      .in('id', reviewerIds as never);
-
-    if (profilesError) throw profilesError;
-
-    const profilesById = new Map(
-      ((profilesData ?? []) as Array<{
-        id: string;
-        full_name?: string | null;
-        company_name?: string | null;
-        display_name?: string | null;
-        username?: string | null;
-      }>).map((profile) => [profile.id, profile]),
-    );
+    const profilesById = await getPublicProfilesMap(reviewerIds);
 
     return reviews.map((review) => ({
       ...review,

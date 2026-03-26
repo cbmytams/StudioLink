@@ -1,19 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 
-type PublicProProfile = {
-  id: string
-  full_name: string | null
-  bio: string | null
-  city: string | null
-  daily_rate: number | null
-  skills: string[] | null
-  avatar_url: string | null
-  type: string
-};
+type PublicProProfile = PublicProfileRecord;
 
 export default function ProPublicProfile() {
   const navigate = useNavigate();
@@ -44,16 +35,9 @@ export default function ProPublicProfile() {
       setError(null);
 
       try {
-        const { data, error: queryError } = await supabase
-          .from('profiles')
-          .select('id, full_name, bio, city, daily_rate, skills, avatar_url, type')
-          .eq('id', id)
-          .eq('type', 'pro')
-          .maybeSingle();
-
-        if (queryError) throw queryError;
+        const data = await getPublicProfile(id);
         if (!active) return;
-        setProfile((data as PublicProProfile | null) ?? null);
+        setProfile(data?.role === 'pro' ? data : null);
       } catch (fetchError) {
         if (!active) return;
         setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger ce profil.');
@@ -68,8 +52,11 @@ export default function ProPublicProfile() {
     };
   }, [id]);
 
-  const displayName = profile?.full_name ?? 'Profil pro';
-  const hasSkills = (profile?.skills?.length ?? 0) > 0;
+  const displayName = getPublicProfileDisplayName(profile);
+  const hasSkills = (profile?.skills.length ?? 0) > 0;
+  const ratingText = profile?.rating_avg
+    ? `${profile.rating_avg.toFixed(1)} · ${profile.rating_count} avis`
+    : null;
 
   return (
     <div className="app-shell min-h-screen pb-24">
@@ -80,11 +67,11 @@ export default function ProPublicProfile() {
         <meta property="og:description" content="Consultez les compétences et le profil public d’un pro sur StudioLink." />
       </Helmet>
 
-      <div className="app-container-compact">
+      <div className="app-container-compact pb-28">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
+          className="mb-6 flex items-center gap-1 text-sm text-white/50 transition hover:text-white"
         >
           <span>←</span> Retour
         </button>
@@ -112,11 +99,11 @@ export default function ProPublicProfile() {
         {!loading && !error && !profile ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-3">👤</p>
-            <p className="text-gray-500 text-sm">Ce profil n&apos;existe pas ou n&apos;est plus disponible.</p>
+            <p className="text-white/55 text-sm">Ce profil n&apos;existe pas ou n&apos;est plus disponible.</p>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="text-orange-500 text-sm hover:underline mt-2 block mx-auto"
+              className="mt-2 block mx-auto text-sm text-orange-300 hover:underline"
             >
               Retour
             </button>
@@ -125,7 +112,7 @@ export default function ProPublicProfile() {
 
         {!loading && !error && profile ? (
           <>
-            <header>
+            <header className="app-card p-6">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -140,33 +127,38 @@ export default function ProPublicProfile() {
                 </div>
               )}
 
-              <h1 className="text-2xl font-bold text-gray-900 mt-3">{displayName}</h1>
-              <p className="text-sm text-gray-400 mt-1">
-                {profile.city ? <span>{profile.city}</span> : null}
-                {profile.city && profile.daily_rate ? <span> · </span> : null}
+              <h1 className="mt-4 text-3xl font-bold text-white">{displayName}</h1>
+              <p className="mt-2 text-sm text-white/65">
+                {profile.location ? <span>{profile.location}</span> : null}
+                {profile.location && profile.daily_rate ? <span> · </span> : null}
                 {profile.daily_rate ? (
-                  <span className="text-orange-500 font-medium">{profile.daily_rate} €/j</span>
+                  <span className="font-medium text-orange-300">{profile.daily_rate} €/j</span>
                 ) : null}
               </p>
+              {ratingText ? (
+                <div className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70">
+                  {ratingText}
+                </div>
+              ) : null}
             </header>
 
-            <section className="mt-8">
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">À propos</h2>
+            <section className="mt-5 app-card p-5">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
               {profile.bio ? (
-                <p className="text-sm text-gray-700 leading-relaxed">{profile.bio}</p>
+                <p className="text-sm leading-relaxed text-white/72">{profile.bio}</p>
               ) : (
-                <p className="text-sm text-gray-400 italic">Aucune bio renseignée.</p>
+                <p className="text-sm italic text-white/45">Aucune bio renseignée.</p>
               )}
             </section>
 
             {hasSkills ? (
-              <section className="mt-6">
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compétences</h2>
+              <section className="mt-5 app-card p-5">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-white/40">Compétences</h2>
                 <div className="flex flex-wrap gap-2">
                   {profile.skills?.map((skill) => (
                     <span
                       key={skill}
-                      className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full"
+                      className="rounded-full border border-orange-400/30 bg-orange-500/12 px-2.5 py-1 text-xs text-orange-100"
                     >
                       {skill}
                     </span>
@@ -179,7 +171,7 @@ export default function ProPublicProfile() {
       </div>
 
       {!loading && !error && profile && (!user || viewerType === 'studio') ? (
-        <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-[#f4ece4] border-t border-black/5">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl">
           <div className="mx-auto max-w-lg">
             <button
               type="button"
@@ -189,10 +181,10 @@ export default function ProPublicProfile() {
                   return;
                 }
                 navigate('/studio/new-conversation', {
-                  state: { proId: profile.id, proName: profile.full_name },
+                  state: { proId: profile.id, proName: profile.display_name },
                 });
               }}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-2xl transition-colors"
+              className="w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
             >
               Contacter ce pro
             </button>

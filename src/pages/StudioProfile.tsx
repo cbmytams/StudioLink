@@ -16,6 +16,8 @@ type EditableStudioProfile = {
   contact_email?: string | null
   phone?: string | null
   avatar_url?: string | null
+  rating_avg?: number | null
+  rating_count?: number | null
 }
 
 type FieldErrors = {
@@ -71,6 +73,10 @@ export default function StudioProfile() {
     const timeout = window.setTimeout(() => setSuccessMessage(null), 3000);
     return () => window.clearTimeout(timeout);
   }, [successMessage]);
+
+  useEffect(() => {
+    void refreshProfile();
+  }, [refreshProfile]);
 
   const validate = (): boolean => {
     const nextFieldErrors: FieldErrors = {};
@@ -205,6 +211,17 @@ export default function StudioProfile() {
             <div>
               <h1 className="text-xl font-semibold">{companyName || profileData?.company_name || 'Studio'}</h1>
               <p className="text-sm text-black/50">Studio</p>
+              {typeof profileData?.rating_avg === 'number' && (profileData.rating_count ?? 0) > 0 ? (
+                <div id="profile-rating" className="mt-1 flex items-center gap-2 text-sm text-orange-600">
+                  <span>
+                    {'★'.repeat(Math.max(1, Math.round(profileData.rating_avg)))}
+                    {'☆'.repeat(Math.max(0, 5 - Math.round(profileData.rating_avg)))}
+                  </span>
+                  <span className="text-black/60">
+                    {profileData.rating_avg.toFixed(1)} ({profileData.rating_count ?? 0} avis)
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
 

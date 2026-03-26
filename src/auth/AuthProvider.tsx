@@ -7,11 +7,10 @@ import {
   useMemo,
   useState,
 } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import type { AuthTokenResponsePassword, Session } from '@supabase/supabase-js';
 import type { Profile } from '@/types/backend';
 import {
   getCurrentProfile,
-  getCurrentSession,
   onAuthStateChange,
   sendMagicLink as sendMagicLinkService,
   signInPassword as signInPasswordService,
@@ -25,28 +24,39 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signInPassword: (email: string, password: string) => Promise<void>;
+  signInPassword: (email: string, password: string) => Promise<AuthTokenResponsePassword>;
   sendMagicLink: (email: string, redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-const AUTH_TIMEOUT_MS = 8000;
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | null = null;
+function getSupabaseStorageKey(): string | null {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (!supabaseUrl) return null;
+
   try {
-    return await Promise.race<T>([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => {
-          reject(new Error(`Auth timeout after ${timeoutMs}ms`));
-        }, timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+    return `sb-${projectRef}-auth-token`;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredSession(): Session | null {
+  if (typeof window === 'undefined') return null;
+
+  const storageKey = getSupabaseStorageKey();
+  if (!storageKey) return null;
+
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as Session;
+  } catch {
+    return null;
   }
 }
 
@@ -75,26 +85,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let unsubscribe = () => {};
 
     const bootstrap = async () => {
-      if (!hasSupabaseConfig) {
-        if (isMounted) {
-          setSession(null);
-          setProfile(null);
-          setLoading(false);
-        }
-        return;
+      const storedSession = readStoredSession();
+      if (isMounted) {
+        setSession(storedSession);
       }
 
       try {
-        const currentSession = await withTimeout(getCurrentSession(), AUTH_TIMEOUT_MS);
-        if (!isMounted) return;
-        setSession(currentSession);
-        await withTimeout(hydrateProfile(currentSession), AUTH_TIMEOUT_MS);
+        await hydrateProfile(storedSession);
       } catch {
         if (!isMounted) return;
-        setSession(null);
         setProfile(null);
+        if (!storedSession) {
+          setSession(null);
+        }
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -102,32 +108,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    void bootstrap();
-
     if (!hasSupabaseConfig) {
+      setSession(null);
+      setProfile(null);
+      setLoading(false);
       return () => {
         isMounted = false;
       };
     }
 
-    const { data } = onAuthStateChange(async (_event, nextSession) => {
-      try {
-        setSession(nextSession);
-        await withTimeout(hydrateProfile(nextSession), AUTH_TIMEOUT_MS);
-      } catch {
-        if (!isMounted) return;
-        setSession(null);
-        setProfile(null);
-      } finally {
+    void (async () => {
+      await bootstrap();
+      if (!isMounted) return;
+
+      const { data } = onAuthStateChange(async (_event, nextSession) => {
         if (isMounted) {
-          setLoading(false);
+          setLoading(true);
         }
-      }
-    });
+        try {
+          setSession(nextSession);
+          await hydrateProfile(nextSession);
+        } catch {
+          if (!isMounted) return;
+          setSession(null);
+          setProfile(null);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      });
+
+      unsubscribe = () => {
+        data.subscription.unsubscribe();
+      };
+    })();
 
     return () => {
       isMounted = false;
-      data.subscription.unsubscribe();
+      unsubscribe();
     };
   }, [hydrateProfile]);
 
@@ -150,8 +169,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [profile, setCurrentStep, setOnboardingComplete, setUserType]);
 
   const signInPassword = useCallback(async (email: string, password: string) => {
-    await signInPasswordService(email, password);
-  }, []);
+    setLoading(true);
+    try {
+      const result = await signInPasswordService(email, password);
+      const nextSession = result.session ?? null;
+
+      if (nextSession) {
+        setSession(nextSession);
+        await hydrateProfile(nextSession);
+      }
+
+      return result;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
+  }, [hydrateProfile]);
 
   const sendMagicLink = useCallback(async (email: string, redirectTo?: string) => {
     const callbackUrl = new URL('/auth/callback', window.location.origin);
@@ -161,9 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await signOutService();
-    setProfile(null);
-    setSession(null);
+    try {
+      await signOutService();
+    } finally {
+      setProfile(null);
+      setSession(null);
+    }
   }, []);
 
   const value = useMemo<AuthContextValue>(

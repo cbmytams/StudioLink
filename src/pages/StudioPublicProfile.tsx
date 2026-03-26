@@ -3,17 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 
-type PublicStudioProfile = {
-  id: string
-  company_name: string | null
-  full_name: string | null
-  city: string | null
-  bio: string | null
-  avatar_url: string | null
-  type: string | null
-  user_type: string | null
-};
+type PublicStudioProfile = PublicProfileRecord;
 
 type StudioMission = {
   id: string
@@ -26,7 +18,7 @@ type StudioMission = {
 };
 
 function isStudioType(profile: PublicStudioProfile | null): boolean {
-  const value = profile?.type ?? profile?.user_type ?? null;
+  const value = profile?.role ?? null;
   return value === 'studio';
 }
 
@@ -57,25 +49,7 @@ export default function StudioPublicProfile() {
       setError(null);
 
       try {
-        let profileRow: PublicStudioProfile | null = null;
-        const primaryProfile = await supabase
-          .from('profiles')
-          .select('id, company_name, full_name, city, bio, avatar_url, type, user_type')
-          .eq('id', id)
-          .maybeSingle();
-
-        if (!primaryProfile.error && primaryProfile.data) {
-          profileRow = primaryProfile.data as PublicStudioProfile;
-        } else {
-          const fallbackProfile = await supabase
-            .from('profiles')
-            .select('id, company_name, full_name, city, bio, avatar_url, user_type')
-            .eq('id', id)
-            .eq('user_type', 'studio')
-            .maybeSingle();
-          if (fallbackProfile.error) throw fallbackProfile.error;
-          profileRow = (fallbackProfile.data as PublicStudioProfile | null) ?? null;
-        }
+        const profileRow = await getPublicProfile(id);
 
         if (!active) return;
         if (!profileRow || !isStudioType(profileRow)) {
@@ -86,28 +60,11 @@ export default function StudioPublicProfile() {
 
         setStudio(profileRow);
 
-        let missionRows: StudioMission[] = [];
-        const primaryMissions = await supabase
-          .from('missions')
-          .select('id, title, city, daily_rate, status')
-          .eq('studio_id', id)
-          .eq('status', 'open')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (!primaryMissions.error) {
-          missionRows = (primaryMissions.data as StudioMission[] | null) ?? [];
-        } else {
-          const fallbackMissions = await supabase
-            .from('missions')
-            .select('id, title, location, budget_min, status')
-            .eq('studio_id', id)
-            .in('status', ['open', 'published', 'selecting'] as never)
-            .order('created_at', { ascending: false })
-            .limit(5);
-          if (fallbackMissions.error) throw fallbackMissions.error;
-          missionRows = (fallbackMissions.data as StudioMission[] | null) ?? [];
-        }
+        const publicMissions = await supabase.rpc('get_public_studio_missions', {
+          p_studio_id: id,
+        });
+        if (publicMissions.error) throw publicMissions.error;
+        const missionRows = (publicMissions.data as StudioMission[] | null) ?? [];
 
         if (!active) return;
         setMissions(missionRows);
@@ -127,7 +84,10 @@ export default function StudioPublicProfile() {
     };
   }, [id]);
 
-  const displayName = studio?.company_name ?? studio?.full_name ?? 'Studio';
+  const displayName = getPublicProfileDisplayName(studio);
+  const ratingText = studio?.rating_avg
+    ? `${studio.rating_avg.toFixed(1)} · ${studio.rating_count} avis`
+    : null;
   const viewerType = (profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.user_type
     ?? (profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.type
     ?? null;
@@ -142,11 +102,11 @@ export default function StudioPublicProfile() {
         <meta property="og:description" content="Consultez les missions ouvertes et le profil public d’un studio sur StudioLink." />
       </Helmet>
 
-      <div className="app-container-compact">
+      <div className="app-container-compact pb-28">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
+          className="mb-6 flex items-center gap-1 text-sm text-white/50 transition hover:text-white"
         >
           <span>←</span> Retour
         </button>
@@ -174,11 +134,11 @@ export default function StudioPublicProfile() {
         {!loading && !error && !studio ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-3">🏢</p>
-            <p className="text-gray-500 text-sm">Ce studio n&apos;existe pas ou n&apos;est plus disponible.</p>
+            <p className="text-white/55 text-sm">Ce studio n&apos;existe pas ou n&apos;est plus disponible.</p>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="text-orange-500 text-sm hover:underline mt-2 block mx-auto"
+              className="mt-2 block mx-auto text-sm text-orange-300 hover:underline"
             >
               Retour
             </button>
@@ -187,7 +147,7 @@ export default function StudioPublicProfile() {
 
         {!loading && !error && studio ? (
           <>
-            <header>
+            <header className="app-card p-6">
               {studio.avatar_url ? (
                 <img
                   src={studio.avatar_url}
@@ -202,21 +162,26 @@ export default function StudioPublicProfile() {
                 </div>
               )}
 
-              <h1 className="text-2xl font-bold text-gray-900 mt-3">{displayName}</h1>
-              {studio.city ? <p className="text-sm text-gray-500 mt-1">{studio.city}</p> : null}
+              <h1 className="mt-4 text-3xl font-bold text-white">{displayName}</h1>
+              {studio.location ? <p className="mt-2 text-sm text-white/65">{studio.location}</p> : null}
+              {ratingText ? (
+                <div className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70">
+                  {ratingText}
+                </div>
+              ) : null}
             </header>
 
             <section className="mt-6 app-card p-4">
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">À propos</h2>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {studio.bio?.trim() ? studio.bio : '—'}
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">À propos</h2>
+              <p className="text-sm leading-relaxed text-white/72">
+                {studio.bio?.trim() ? studio.bio : 'Aucune présentation renseignée pour le moment.'}
               </p>
             </section>
 
             <section className="mt-4 app-card p-4">
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Missions ouvertes</h2>
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/40">Missions ouvertes</h2>
               {missions.length === 0 ? (
-                <p className="text-sm text-gray-400">Aucune mission ouverte pour le moment.</p>
+                <p className="text-sm text-white/45">Aucune mission ouverte pour le moment.</p>
               ) : (
                 <div className="space-y-2">
                   {missions.map((mission) => (
@@ -224,10 +189,10 @@ export default function StudioPublicProfile() {
                       key={mission.id}
                       type="button"
                       onClick={() => navigate(`/pro/offer/${mission.id}`)}
-                      className="w-full rounded-xl border border-white/50 bg-white p-3 text-left transition hover:bg-orange-50"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10"
                     >
-                      <p className="text-sm font-medium text-gray-900">{mission.title ?? 'Mission'}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm font-medium text-white">{mission.title ?? 'Mission'}</p>
+                      <p className="mt-1 text-xs text-white/55">
                         {(mission.city ?? mission.location ?? 'Localisation à définir')}
                         {(mission.daily_rate ?? mission.budget_min) !== null
                           ? ` · ${(mission.daily_rate ?? mission.budget_min)} €/j`
@@ -243,7 +208,7 @@ export default function StudioPublicProfile() {
       </div>
 
       {!loading && !error && studio && canContact ? (
-        <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-[#f4ece4] border-t border-black/5">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl">
           <div className="mx-auto max-w-lg">
             <button
               type="button"
@@ -256,7 +221,7 @@ export default function StudioPublicProfile() {
                   state: { studioId: studio.id, studioName: displayName },
                 });
               }}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-2xl transition-colors"
+              className="w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
             >
               Contacter ce studio
             </button>

@@ -181,7 +181,7 @@ export default function CalendarPage() {
   const selectedMissionIds = useMemo(() => {
     if (userType !== 'pro') return [];
     return myApplications
-      .filter((application) => application.status === 'selected')
+      .filter((application) => application.status === 'accepted')
       .map((application) => application.mission_id);
   }, [myApplications, userType]);
 
@@ -217,7 +217,7 @@ export default function CalendarPage() {
       await Promise.all(
         studioMissionIds.map(async (missionId) => {
           const applications = await applicationService.getMissionApplications(missionId);
-          const selected = applications.find((application) => application.status === 'selected');
+          const selected = applications.find((application) => application.status === 'accepted');
           if (selected) map[missionId] = selected.pro_id;
         }),
       );

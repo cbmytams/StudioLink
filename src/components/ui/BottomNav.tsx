@@ -1,4 +1,4 @@
-import { Home, Plus, MessageCircle, User, Zap, List } from 'lucide-react';
+import { LayoutDashboard, Plus, MessageCircle, User, List } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth';
@@ -17,14 +17,14 @@ export function BottomNav({ userType }: BottomNavProps) {
   const unreadMessages = useUnreadMessages();
 
   const studioTabs = [
-    { icon: Home, label: 'Missions', path: '/studio/dashboard' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Plus, label: 'Créer', path: '/studio/missions/create' },
     { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: User, label: 'Profil', path: '/studio/profile' },
   ];
 
   const proTabs = [
-    { icon: Zap, label: 'Feed', path: '/pro/feed' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: MessageCircle, label: 'Chat', path: '/chat' },
     { icon: List, label: 'Candidatures', path: '/pro/applications' },
     { icon: User, label: 'Profil', path: '/pro/profile' },
@@ -35,7 +35,7 @@ export function BottomNav({ userType }: BottomNavProps) {
     location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#f4ece4]/80 backdrop-blur-md border-t border-black/5 pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/5 bg-[#f4ece4]/80 pb-safe backdrop-blur-md md:hidden">
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
         {tabs.map((tab) => {
           const isActive = isTabActive(tab.path);

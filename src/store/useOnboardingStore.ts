@@ -42,8 +42,8 @@ export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set) => ({
       currentStep: 1,
-      setCurrentStep: (step) => set({ currentStep: Math.max(1, Math.min(3, step)) }),
-      nextStep: () => set((state) => ({ currentStep: Math.min(3, state.currentStep + 1) })),
+      setCurrentStep: (step) => set({ currentStep: Math.max(1, Math.min(4, step)) }),
+      nextStep: () => set((state) => ({ currentStep: Math.min(4, state.currentStep + 1) })),
       prevStep: () => set((state) => ({ currentStep: Math.max(1, state.currentStep - 1) })),
 
       onboardingComplete: false,

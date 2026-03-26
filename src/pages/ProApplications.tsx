@@ -3,23 +3,24 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { useToast } from '@/components/ui/Toast';
+import { applicationService } from '@/services/applicationService';
+import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
+import { chatService } from '@/lib/chat/chatService';
+import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 
 type FilterValue = 'all' | 'pending' | 'accepted' | 'rejected';
 
-type StudioRef = {
-  id: string
-  full_name: string | null
-  company_name: string | null
-  avatar_url: string | null
-};
+type StudioRef = PublicProfileRecord;
 
 type Offer = {
   id: string
+  studio_id: string
   title: string | null
+  city: string | null
   location: string | null
-  budget_min: number | null
-  budget_max: number | null
-  profiles: StudioRef | null
+  daily_rate: number | null
+  studio: StudioRef | null
 };
 
 type Application = {
@@ -32,11 +33,11 @@ type Application = {
 
 type OfferRow = {
   id: string
+  studio_id: string
   title: string | null
+  city: string | null
   location: string | null
-  budget_min: number | null
-  budget_max: number | null
-  profiles: StudioRef | StudioRef[] | null
+  daily_rate: number | null
 };
 
 type ApplicationRow = {
@@ -69,19 +70,10 @@ const STATUS_CONFIG: Record<Application['status'], { label: string; className: s
   },
 };
 
-function normalizeStatus(value: string | null): Application['status'] {
-  if (value === 'accepted' || value === 'selected') return 'accepted';
-  if (value === 'rejected') return 'rejected';
-  return 'pending';
-}
-
 function budgetLabel(offer: Offer | null): string {
   if (!offer) return 'Budget non renseigné';
-  if (offer.budget_min !== null && offer.budget_max !== null) {
-    return `${offer.budget_min}€ – ${offer.budget_max}€/j`;
-  }
-  if (offer.budget_min !== null) {
-    return `À partir de ${offer.budget_min}€/j`;
+  if (offer.daily_rate !== null) {
+    return `${offer.daily_rate} €/j`;
   }
   return 'Budget non renseigné';
 }
@@ -89,11 +81,14 @@ function budgetLabel(offer: Offer | null): string {
 export default function ProApplications() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { showToast } = useToast();
 
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterValue>('all');
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [sessionIdsByMission, setSessionIdsByMission] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -118,16 +113,11 @@ export default function ProApplications() {
           mission_id,
           offer:mission_id (
             id,
+            studio_id,
             title,
+            city,
             location,
-            budget_min,
-            budget_max,
-            profiles:studio_id (
-              id,
-              full_name,
-              company_name,
-              avatar_url
-            )
+            daily_rate
           )
         `;
 
@@ -140,34 +130,64 @@ export default function ProApplications() {
         if (fetchError) throw fetchError;
         if (!active) return;
 
-        const mapped = (data as unknown as ApplicationRow[] | null ?? []).map((row) => {
+        const rawApplications = (data as unknown as ApplicationRow[] | null ?? []);
+        const studioIds = Array.from(new Set(rawApplications.map((row) => {
           const rawOffer = Array.isArray(row.offer) ? row.offer[0] ?? null : row.offer;
-          const rawStudio = rawOffer
-            ? (Array.isArray(rawOffer.profiles) ? rawOffer.profiles[0] ?? null : rawOffer.profiles)
-            : null;
+          return rawOffer?.studio_id ?? null;
+        }).filter((value): value is string => Boolean(value))));
+        const studiosById = await getPublicProfilesMap(studioIds);
+
+        const mapped = rawApplications.map((row) => {
+          const rawOffer = Array.isArray(row.offer) ? row.offer[0] ?? null : row.offer;
 
           return {
             id: row.id,
-            status: normalizeStatus(row.status),
+            status: normalizeApplicationStatus(row.status),
             created_at: row.created_at,
             mission_id: row.mission_id,
             offer: rawOffer
               ? {
                 id: rawOffer.id,
+                studio_id: rawOffer.studio_id,
                 title: rawOffer.title,
+                city: rawOffer.city,
                 location: rawOffer.location,
-                budget_min: rawOffer.budget_min,
-                budget_max: rawOffer.budget_max,
-                profiles: rawStudio,
+                daily_rate: rawOffer.daily_rate,
+                studio: studiosById.get(rawOffer.studio_id) ?? null,
               }
               : null,
           } satisfies Application;
         });
 
         setApplications(mapped);
+
+        if (mapped.length === 0) {
+          setSessionIdsByMission({});
+          return;
+        }
+
+        const missionIds = mapped.map((application) => application.mission_id);
+        const { data: sessionRows, error: sessionsError } = await supabase
+          .from('sessions')
+          .select('id, mission_id')
+          .eq('pro_id', userId)
+          .in('mission_id', missionIds);
+
+        if (sessionsError) throw sessionsError;
+        if (!active) return;
+
+        const nextSessions = ((sessionRows as Array<{ id: string; mission_id: string }> | null) ?? []).reduce<Record<string, string>>(
+          (acc, row) => {
+            acc[row.mission_id] = row.id;
+            return acc;
+          },
+          {},
+        );
+        setSessionIdsByMission(nextSessions);
       } catch (fetchError) {
         if (!active) return;
         setApplications([]);
+        setSessionIdsByMission({});
         setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger les candidatures.');
       } finally {
         if (active) setLoading(false);
@@ -176,10 +196,65 @@ export default function ProApplications() {
 
     void fetchApplications();
 
+    const userId = session?.user?.id;
+    if (!userId) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const channel = supabase
+      .channel(`pro-applications:${userId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'applications',
+        filter: `pro_id=eq.${userId}`,
+      }, () => {
+        void fetchApplications();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'sessions',
+        filter: `pro_id=eq.${userId}`,
+      }, () => {
+        void fetchApplications();
+      })
+      .subscribe();
+
     return () => {
       active = false;
+      void supabase.removeChannel(channel);
     };
   }, [session?.user?.id]);
+
+  const handleWithdraw = async (applicationId: string) => {
+    setWithdrawingId(applicationId);
+    setError(null);
+    try {
+      await applicationService.withdrawApplication(applicationId);
+      setApplications((previous) => previous.filter((application) => application.id !== applicationId));
+      showToast({ title: 'Candidature retirée', variant: 'default' });
+    } catch (withdrawError) {
+      const message = withdrawError instanceof Error ? withdrawError.message : 'Impossible de retirer la candidature.';
+      setError(message);
+      showToast({ title: 'Retrait impossible', description: message, variant: 'destructive' });
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
+  const handleOpenChat = async (missionId: string, existingSessionId?: string) => {
+    try {
+      const sessionId = existingSessionId ?? (await chatService.getOrCreateSession(missionId)).id;
+      navigate(`/chat/${sessionId}`);
+    } catch (chatError) {
+      const message = chatError instanceof Error ? chatError.message : "Impossible d'ouvrir le chat.";
+      setError(message);
+      showToast({ title: 'Chat indisponible', description: message, variant: 'destructive' });
+    }
+  };
 
   const filteredApplications = useMemo(
     () => (activeFilter === 'all'
@@ -277,16 +352,15 @@ export default function ProApplications() {
         ) : null}
 
         {!loading && !error && filteredApplications.length > 0 ? (
-          <div className="app-list">
+          <div id="applications-list" className="app-list">
             {filteredApplications.map((application) => {
               const status = STATUS_CONFIG[application.status];
-              const studioName = application.offer?.profiles?.company_name
-                ?? application.offer?.profiles?.full_name
-                ?? 'Studio';
+                  const studioName = getPublicProfileDisplayName(application.offer?.studio);
               const offerTitle = application.offer?.title ?? 'Offre supprimée';
               const studioAvatar = application.offer?.profiles?.avatar_url ?? null;
-              const offerLocation = application.offer?.location;
+              const offerLocation = application.offer?.city ?? application.offer?.location;
               const applicationDate = new Date(application.created_at).toLocaleDateString('fr-FR');
+              const sessionId = sessionIdsByMission[application.mission_id];
 
               return (
                 <button
@@ -299,7 +373,7 @@ export default function ProApplications() {
                     }
                     navigate(`/mission/${application.mission_id}`);
                   }}
-                  className="w-full rounded-2xl border border-white/50 bg-white p-4 text-left transition-colors hover:bg-orange-50"
+                  className="application-card w-full rounded-2xl border border-white/50 bg-white p-4 text-left transition-colors hover:bg-orange-50"
                 >
                   <div className="mb-2 flex items-center gap-2">
                     {studioAvatar ? (
@@ -316,7 +390,7 @@ export default function ProApplications() {
                       </div>
                     )}
                     <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{studioName}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
+                    <span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
                       {status.label}
                     </span>
                   </div>
@@ -329,6 +403,52 @@ export default function ProApplications() {
                     {' · '}
                     {applicationDate}
                   </p>
+                  {application.status === 'pending' ? (
+                    <span
+                      id={`btn-withdraw-${application.id}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleWithdraw(application.id);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          void handleWithdraw(application.id);
+                        }
+                      }}
+                      className={`mt-3 inline-flex text-xs font-medium ${
+                        withdrawingId === application.id
+                          ? 'text-stone-400'
+                          : 'text-orange-500 hover:underline'
+                      }`}
+                    >
+                      {withdrawingId === application.id ? 'Retrait...' : 'Retirer'}
+                    </span>
+                  ) : null}
+                  {application.status === 'accepted' ? (
+                    <span
+                      id={sessionId ? `btn-open-chat-${sessionId}` : undefined}
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleOpenChat(application.mission_id, sessionId);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          void handleOpenChat(application.mission_id, sessionId);
+                        }
+                      }}
+                      className="mt-3 inline-flex text-xs font-medium text-orange-500 hover:underline"
+                    >
+                      Ouvrir le chat
+                    </span>
+                  ) : null}
                 </button>
               );
             })}

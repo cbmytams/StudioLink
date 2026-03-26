@@ -17,6 +17,8 @@ type EditableProfile = {
   daily_rate?: number | null
   skills?: string[] | null
   avatar_url?: string | null
+  rating_avg?: number | null
+  rating_count?: number | null
 }
 
 type FieldErrors = {
@@ -81,6 +83,10 @@ export default function ProProfile() {
       active = false;
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    void refreshProfile();
+  }, [refreshProfile]);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -323,6 +329,17 @@ export default function ProProfile() {
             <div>
               <h1 className="text-xl font-semibold">{fullName || profileData?.full_name || 'Profil Pro'}</h1>
               <p className="text-sm text-black/50">@{username || profileData?.username || 'username'}</p>
+              {typeof profileData?.rating_avg === 'number' && (profileData.rating_count ?? 0) > 0 ? (
+                <div id="profile-rating" className="mt-1 flex items-center gap-2 text-sm text-orange-600">
+                  <span>
+                    {'★'.repeat(Math.max(1, Math.round(profileData.rating_avg)))}
+                    {'☆'.repeat(Math.max(0, 5 - Math.round(profileData.rating_avg)))}
+                  </span>
+                  <span className="text-black/60">
+                    {profileData.rating_avg.toFixed(1)} ({profileData.rating_count ?? 0} avis)
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
 

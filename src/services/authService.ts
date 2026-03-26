@@ -123,7 +123,7 @@ export async function completeMagicSignup(params: CompleteMagicSignupParams) {
 
 export async function signOut() {
   const client = assertSupabase();
-  const { error } = await client.auth.signOut();
+  const { error } = await client.auth.signOut({ scope: 'local' });
   if (error) throw error;
 }
 

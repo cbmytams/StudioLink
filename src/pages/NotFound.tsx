@@ -1,7 +1,11 @@
 import { useAuth } from '@/lib/supabase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/Button';
+import { PageMeta } from '@/components/shared/PageMeta';
+import {
+  getDashboardPath,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 type AuthProfile = {
   type?: 'studio' | 'pro' | 'admin';
@@ -13,30 +17,36 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   const user = session?.user ?? null;
-  const profileType = (profile as AuthProfile)?.type ?? (profile as AuthProfile)?.user_type ?? null;
+  const profileType = resolveProfileType(profile as AuthProfile);
 
   const handleBack = () => {
-    if (user && profileType === 'studio') navigate('/studio/dashboard');
-    else if (user && profileType === 'pro') navigate('/pro/dashboard');
+    if (user) navigate(getDashboardPath(profileType));
     else navigate('/');
   };
 
   return (
-    <div className="app-shell flex flex-col items-center justify-center text-center px-4">
-      <Helmet>
-        <title>404 — StudioLink</title>
-        <meta name="description" content="Page introuvable sur StudioLink." />
-      </Helmet>
-      <p className="text-8xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-4">
-        404
-      </p>
-      <h1 className="text-2xl font-bold text-black mb-2">Page introuvable</h1>
-      <p className="text-stone-500 text-sm mb-8">
-        Cette page n&apos;existe pas ou a été supprimée.
-      </p>
-      <Button onClick={handleBack} className="bg-orange-500 text-white hover:bg-orange-600">
-        Retour à l&apos;accueil
-      </Button>
+    <div id="page-404" className="app-shell flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <PageMeta
+        title="Page introuvable"
+        description="La page demandée n'existe pas ou n'est plus disponible."
+        canonicalPath="/404"
+      />
+      <div className="max-w-lg rounded-[2.5rem] border border-white/15 bg-white/6 px-8 py-12 shadow-[0_18px_48px_rgba(12,12,12,0.18)]">
+        <p className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-8xl font-bold text-transparent">
+          404
+        </p>
+        <h1 className="mt-5 text-2xl font-semibold text-white">Page introuvable</h1>
+        <p className="mt-3 text-sm leading-6 text-white/60">
+          Le lien est peut-être erroné, expiré ou la page a été déplacée. Tu peux revenir vers ton espace principal.
+        </p>
+        <Button
+          id="btn-back-home"
+          onClick={handleBack}
+          className="mt-8 bg-orange-500 text-white hover:bg-orange-600"
+        >
+          Retour au dashboard
+        </Button>
+      </div>
     </div>
   );
 }

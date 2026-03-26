@@ -11,12 +11,18 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { Toaster } from '@/components/ui/Toast';
 import StudioLayout from '@/layouts/StudioLayout';
 import ProLayout from '@/layouts/ProLayout';
+import {
+  getDashboardPath,
+  isProfileIncomplete,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const InvitationPage = lazy(() => import('@/pages/InvitationPage'));
 const InvitationLandingPage = lazy(() => import('@/pages/InvitationLanding'));
 const AuthCallbackPage = lazy(() => import('@/pages/AuthCallback'));
+const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
 const OnboardingPage = lazy(() => import('@/pages/Onboarding'));
 const StudioDashboardPage = lazy(() => import('@/pages/StudioDashboard'));
 const MissionFormPage = lazy(() => import('@/pages/MissionForm'));
@@ -26,6 +32,9 @@ const ManageApplicationsPage = lazy(() => import('@/pages/ManageApplications'));
 const StudioProfilePage = lazy(() => import('@/pages/StudioProfile'));
 const SearchProsPage = lazy(() => import('@/pages/SearchPros'));
 const ProFeedPage = lazy(() => import('@/pages/ProFeed'));
+const MissionsPage = lazy(() => import('@/pages/MissionsPage'));
+const ProsPage = lazy(() => import('@/pages/ProsPage'));
+const ProMissionsPage = lazy(() => import('@/pages/ProMissionsPage'));
 const ProDashboardPage = lazy(() => import('@/pages/ProDashboard'));
 const ProApplicationsPage = lazy(() => import('@/pages/ProApplications'));
 const ProProfilePage = lazy(() => import('@/pages/ProProfile'));
@@ -46,22 +55,8 @@ type AppProfile = {
   type?: 'studio' | 'pro' | null;
   full_name?: string | null;
   display_name?: string | null;
+  bio?: string | null;
 } | null;
-
-function resolveProfileType(profile: AppProfile): 'studio' | 'pro' | null {
-  const value = profile?.user_type ?? profile?.type ?? null;
-  return value === 'studio' || value === 'pro' ? value : null;
-}
-
-function getDashboardPath(type: 'studio' | 'pro' | null): string {
-  return type === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
-}
-
-function hasCompleteProfile(profile: AppProfile): boolean {
-  const profileType = resolveProfileType(profile);
-  const fullName = profile?.full_name?.trim() ?? profile?.display_name?.trim() ?? '';
-  return Boolean(profileType && fullName.length > 0);
-}
 
 function PublicOnlyRoute({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
@@ -75,7 +70,7 @@ function PublicOnlyRoute({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!hasCompleteProfile(appProfile)) {
+  if (isProfileIncomplete(appProfile)) {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -94,7 +89,7 @@ function OnboardingRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (hasCompleteProfile(appProfile)) {
+  if (!isProfileIncomplete(appProfile)) {
     return <Navigate to={getDashboardPath(resolveProfileType(appProfile))} replace />;
   }
 
@@ -119,6 +114,15 @@ function RoleMissionPage() {
   return <MissionDetailPage />;
 }
 
+function RoleDashboardPage() {
+  const { profile } = useAuth();
+  const profileType = resolveProfileType(profile as AppProfile);
+  if (profileType === 'studio') {
+    return <StudioDashboardPage />;
+  }
+  return <ProDashboardPage />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -133,6 +137,15 @@ export default function App() {
               </PublicOnlyRoute>
             )}
           />
+          <Route
+            path="/register"
+            element={(
+              <PublicOnlyRoute>
+                <LoginPage />
+              </PublicOnlyRoute>
+            )}
+          />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route
             path="/invitation"
             element={(
@@ -233,6 +246,16 @@ export default function App() {
             )}
           />
           <Route
+            path="/dashboard"
+            element={(
+              <ProtectedRoute>
+                <RoleLayout>
+                  <RoleDashboardPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
             path="/studio/settings"
             element={(
               <ProtectedRoute>
@@ -259,12 +282,66 @@ export default function App() {
             )}
           />
           <Route
+            path="/sessions"
+            element={(
+              <ProtectedRoute>
+                <Navigate to="/chat" replace />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/applications"
+            element={(
+              <ProtectedRoute requiredType="pro">
+                <Navigate to="/pro/applications" replace />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/missions/new"
+            element={(
+              <ProtectedRoute requiredType="studio">
+                <Navigate to="/studio/missions/new" replace />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/missions/:id/manage"
+            element={(
+              <ProtectedRoute requiredType="studio">
+                <RoleLayout>
+                  <ManageApplicationsPage />
+                </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
             path="/missions/:id"
             element={(
               <ProtectedRoute>
                 <RoleLayout>
                   <RoleMissionPage />
                 </RoleLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/missions"
+            element={(
+              <ProtectedRoute requiredType="pro">
+                <ProLayout>
+                  <MissionsPage />
+                </ProLayout>
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/pros"
+            element={(
+              <ProtectedRoute requiredType="studio">
+                <StudioLayout>
+                  <ProsPage />
+                </StudioLayout>
               </ProtectedRoute>
             )}
           />
@@ -289,8 +366,16 @@ export default function App() {
             )}
           />
           <Route
+            path="/pros/:id"
+            element={<ProPublicProfilePage />}
+          />
+          <Route
             path="/pro/public/:id"
             element={<ProPublicProfilePage />}
+          />
+          <Route
+            path="/studios/:id"
+            element={<StudioPublicProfilePage />}
           />
           <Route
             path="/studio/public/:id"
@@ -317,11 +402,12 @@ export default function App() {
             <Route path="/studio/missions/:id/applications" element={<ManageApplicationsPage />} />
             <Route path="/studio/profile" element={<StudioProfilePage />} />
             <Route path="/studio/calendrier" element={<CalendarPage />} />
-            <Route path="/studio/search-pros" element={<SearchProsPage />} />
+            <Route path="/studio/search-pros" element={<ProsPage />} />
           </Route>
 
           <Route element={<ProtectedRoute requiredType="pro"><ProLayout /></ProtectedRoute>}>
-            <Route path="/pro/feed" element={<ProFeedPage />} />
+            <Route path="/pro/feed" element={<MissionsPage />} />
+            <Route path="/pro/missions" element={<ProMissionsPage />} />
             <Route path="/pro/dashboard" element={<ProDashboardPage />} />
             <Route path="/pro/applications" element={<ProApplicationsPage />} />
             <Route path="/pro/conversations" element={<ConversationListPage />} />

@@ -1,9 +1,15 @@
 export type MissionStatus =
   | 'draft'
+  | 'open'
   | 'published'
+  | 'selecting'
   | 'in_progress'
+  | 'filled'
   | 'completed'
-  | 'cancelled';
+  | 'rated'
+  | 'expired'
+  | 'cancelled'
+  | 'closed';
 
 export interface Mission {
   id: string;

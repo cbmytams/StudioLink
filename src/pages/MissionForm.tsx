@@ -3,72 +3,99 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { FileUpload } from '@/components/shared/FileUpload';
+import { useToast } from '@/components/ui/Toast';
+import type { MissionFileRecord } from '@/types/backend';
+import { deleteFile, getMissionFiles, uploadMissionFile } from '@/lib/files/fileService';
+import {
+  buildMissionWritePayload,
+  normalizeMissionStatus,
+} from '@/lib/missions/phase1Compat';
+
+const CATEGORIES = [
+  'Photo',
+  'Vidéo',
+  'Son',
+  'Lumière',
+  'Régie',
+  'Maquillage',
+  'Costume',
+  'Direction artistique',
+  'Autre',
+] as const;
 
 type FormStatus = 'open' | 'closed' | 'draft';
 
-type MissionPrimaryRow = {
-  id: string
-  title: string
-  description: string | null
-  city: string | null
-  daily_rate: number | null
-  skills: string[] | null
-  start_date: string | null
-  end_date: string | null
-  status: string | null
-};
-
-type MissionFallbackRow = {
-  id: string
-  title: string
-  description: string | null
-  location: string | null
-  budget_min: number | null
-  required_skills: string[] | null
-  start_date: string | null
-  deadline: string | null
-  status: string | null
+type MissionRecord = {
+  title?: string | null
+  description?: string | null
+  category?: string | null
+  service_type?: string | null
+  location?: string | null
+  city?: string | null
+  date?: string | null
+  end_date?: string | null
+  daily_rate?: number | null
+  price?: string | null
+  skills_required?: string[] | null
+  skills?: string[] | null
+  required_skills?: string[] | null
+  genres?: string[] | null
+  status?: string | null
 };
 
 type FieldErrors = Partial<Record<
-  'title' | 'description' | 'daily_rate' | 'end_date' | 'status',
+  'title' | 'description' | 'category' | 'location' | 'date' | 'daily_rate' | 'end_date',
   string
 >>;
 
-function normalizeFormStatus(status: string | null): FormStatus {
-  if (status === 'draft') return 'draft';
-  if (status === 'open' || status === 'published' || status === 'selecting') return 'open';
-  return 'closed';
+function parseLegacyRate(value: number | string | null | undefined): string {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+  if (typeof value === 'string') {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length > 0) {
+      return String(Number.parseInt(digits, 10));
+    }
+  }
+  return '';
 }
 
-function mapLegacyStatus(status: FormStatus): string {
-  if (status === 'open') return 'published';
-  if (status === 'closed') return 'cancelled';
-  return 'draft';
+function normalizeFormStatus(status: string | null | undefined): FormStatus {
+  const normalized = normalizeMissionStatus(status ?? null);
+  if (normalized === 'draft') return 'draft';
+  if (normalized === 'open') return 'open';
+  return 'closed';
 }
 
 export default function MissionForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const { session } = useAuth();
+  const { showToast } = useToast();
   const isEdit = Boolean(id);
   const userId = session?.user?.id ?? null;
+  const activeMissionId = id ?? null;
 
   const [loadingMission, setLoadingMission] = useState(isEdit);
+  const [loadingFiles, setLoadingFiles] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [referenceFiles, setReferenceFiles] = useState<MissionFileRecord[]>([]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [location, setLocation] = useState('');
   const [city, setCity] = useState('');
-  const [dailyRate, setDailyRate] = useState('');
-  const [startDate, setStartDate] = useState('');
+  const [missionDate, setMissionDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [dailyRate, setDailyRate] = useState('');
   const [status, setStatus] = useState<FormStatus>('open');
-
   const [skillInput, setSkillInput] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
+  const [skillsRequired, setSkillsRequired] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -78,6 +105,7 @@ export default function MissionForm() {
         setLoadingMission(false);
         return;
       }
+
       if (!userId) {
         if (!active) return;
         setError('Session expirée. Reconnecte-toi pour modifier une mission.');
@@ -89,56 +117,44 @@ export default function MissionForm() {
       setError(null);
 
       try {
-        const primarySelect = 'id, title, description, city, daily_rate, skills, start_date, end_date, status';
-        const primaryResult = await supabase
+        const { data, error: fetchError } = await supabase
           .from('missions')
-          .select(primarySelect)
+          .select('*')
           .eq('id', id)
           .eq('studio_id', userId)
           .maybeSingle();
 
         if (!active) return;
-
-        if (!primaryResult.error && primaryResult.data) {
-          const mission = primaryResult.data as unknown as MissionPrimaryRow;
-          setTitle(mission.title ?? '');
-          setDescription(mission.description ?? '');
-          setCity(mission.city ?? '');
-          setDailyRate(mission.daily_rate !== null ? String(mission.daily_rate) : '');
-          setStartDate(mission.start_date ?? '');
-          setEndDate(mission.end_date ?? '');
-          setSkills(mission.skills ?? []);
-          setStatus(normalizeFormStatus(mission.status));
-          return;
-        }
-
-        const fallbackSelect = 'id, title, description, location, budget_min, required_skills, start_date, deadline, status';
-        const fallbackResult = await supabase
-          .from('missions')
-          .select(fallbackSelect)
-          .eq('id', id)
-          .eq('studio_id', userId)
-          .maybeSingle();
-
-        if (!active) return;
-        if (fallbackResult.error) throw fallbackResult.error;
-        if (!fallbackResult.data) {
+        if (fetchError) throw fetchError;
+        if (!data) {
           setError('Mission introuvable ou accès non autorisé.');
           return;
         }
 
-        const mission = fallbackResult.data as unknown as MissionFallbackRow;
+        const mission = data as MissionRecord;
         setTitle(mission.title ?? '');
         setDescription(mission.description ?? '');
-        setCity(mission.location ?? '');
-        setDailyRate(mission.budget_min !== null ? String(mission.budget_min) : '');
-        setStartDate(mission.start_date ?? '');
-        setEndDate(mission.deadline ?? '');
-        setSkills(mission.required_skills ?? []);
+        setCategory(mission.category ?? mission.service_type ?? '');
+        setLocation(mission.location ?? mission.city ?? '');
+        setCity(mission.city ?? '');
+        setMissionDate(mission.date ?? '');
+        setEndDate(mission.end_date ?? '');
+        setDailyRate(parseLegacyRate(mission.daily_rate ?? mission.price));
+        setSkillsRequired(
+          mission.skills_required
+          ?? mission.skills
+          ?? mission.required_skills
+          ?? mission.genres
+          ?? [],
+        );
         setStatus(normalizeFormStatus(mission.status));
-      } catch (fetchError) {
+      } catch (fetchMissionError) {
         if (!active) return;
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger la mission.');
+        setError(
+          fetchMissionError instanceof Error
+            ? fetchMissionError.message
+            : 'Impossible de charger la mission.',
+        );
       } finally {
         if (active) setLoadingMission(false);
       }
@@ -151,19 +167,50 @@ export default function MissionForm() {
     };
   }, [id, isEdit, userId]);
 
+  useEffect(() => {
+    let active = true;
+
+    const loadFiles = async () => {
+      if (!activeMissionId) {
+        if (!active) return;
+        setReferenceFiles([]);
+        setLoadingFiles(false);
+        return;
+      }
+
+      setLoadingFiles(true);
+      try {
+        const files = await getMissionFiles(activeMissionId);
+        if (!active) return;
+        setReferenceFiles(files);
+      } catch {
+        if (!active) return;
+        setReferenceFiles([]);
+      } finally {
+        if (active) setLoadingFiles(false);
+      }
+    };
+
+    void loadFiles();
+
+    return () => {
+      active = false;
+    };
+  }, [activeMissionId]);
+
   const addSkill = () => {
     const nextSkill = skillInput.trim().replace(/,$/, '');
-    if (!nextSkill || skills.length >= 10) return;
-    if (skills.some((existing) => existing.toLowerCase() === nextSkill.toLowerCase())) {
+    if (!nextSkill || skillsRequired.length >= 10) return;
+    if (skillsRequired.some((existing) => existing.toLowerCase() === nextSkill.toLowerCase())) {
       setSkillInput('');
       return;
     }
-    setSkills((prev) => [...prev, nextSkill]);
+    setSkillsRequired((prev) => [...prev, nextSkill]);
     setSkillInput('');
   };
 
   const removeSkill = (skillToRemove: string) => {
-    setSkills((prev) => prev.filter((skill) => skill !== skillToRemove));
+    setSkillsRequired((prev) => prev.filter((skill) => skill !== skillToRemove));
   };
 
   const onSkillInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -174,32 +221,24 @@ export default function MissionForm() {
 
   const validateForm = (): boolean => {
     const nextErrors: FieldErrors = {};
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
 
-    if (!trimmedTitle) {
-      nextErrors.title = 'Le titre est requis.';
-    } else if (trimmedTitle.length > 100) {
-      nextErrors.title = 'Maximum 100 caractères.';
-    }
+    if (!title.trim()) nextErrors.title = 'Le titre est requis.';
+    if (!description.trim()) nextErrors.description = 'La description est requise.';
+    if (!category.trim()) nextErrors.category = 'La catégorie est requise.';
+    if (!location.trim()) nextErrors.location = 'Le lieu est requis.';
+    if (!missionDate) nextErrors.date = 'La date est requise.';
 
-    if (trimmedDescription.length > 2000) {
-      nextErrors.description = 'Maximum 2000 caractères.';
-    }
-
-    if (dailyRate.trim()) {
+    if (!dailyRate.trim()) {
+      nextErrors.daily_rate = 'Le tarif journalier est requis.';
+    } else {
       const parsedRate = Number(dailyRate);
-      if (Number.isNaN(parsedRate) || parsedRate < 0) {
+      if (Number.isNaN(parsedRate) || parsedRate <= 0) {
         nextErrors.daily_rate = 'Tarif invalide.';
       }
     }
 
-    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
-      nextErrors.end_date = 'La date de fin doit être après la date de début.';
-    }
-
-    if (!status) {
-      nextErrors.status = 'Le statut est requis.';
+    if (missionDate && endDate && new Date(endDate) < new Date(missionDate)) {
+      nextErrors.end_date = 'La date de fin doit être postérieure à la date de mission.';
     }
 
     setFieldErrors(nextErrors);
@@ -207,9 +246,23 @@ export default function MissionForm() {
   };
 
   const submitLabel = useMemo(() => {
-    if (saving) return isEdit ? 'Enregistrement en cours…' : 'Publication en cours…';
-    return isEdit ? 'Enregistrer les modifications' : 'Publier la mission';
+    if (saving) return isEdit ? 'Enregistrement en cours…' : 'Création en cours…';
+    return isEdit ? 'Enregistrer les modifications' : 'Créer la mission';
   }, [isEdit, saving]);
+
+  const handleReferenceUpload = async (file: File) => {
+    if (!activeMissionId) {
+      throw new Error('Crée d’abord la mission avant d’ajouter des fichiers.');
+    }
+
+    const uploaded = await uploadMissionFile(activeMissionId, file);
+    setReferenceFiles((previous) => [uploaded, ...previous.filter((entry) => entry.id !== uploaded.id)]);
+  };
+
+  const handleReferenceDelete = async (file: MissionFileRecord) => {
+    await deleteFile(file.id, 'mission-files', file.file_url);
+    setReferenceFiles((previous) => previous.filter((entry) => entry.id !== file.id));
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -219,62 +272,59 @@ export default function MissionForm() {
       setError('Session expirée. Reconnecte-toi pour continuer.');
       return;
     }
+
     if (!validateForm()) return;
 
     setSaving(true);
 
-    const preferredPayload = {
-      title: title.trim(),
-      description: description.trim() || null,
-      city: city.trim() || null,
-      daily_rate: dailyRate.trim() ? Number(dailyRate) : null,
-      skills,
-      start_date: startDate || null,
-      end_date: endDate || null,
-      status,
-    } as const;
-
-    const fallbackPayload = {
-      title: title.trim(),
-      description: description.trim() || null,
-      location: city.trim() || null,
-      budget_min: dailyRate.trim() ? Number(dailyRate) : null,
-      required_skills: skills,
-      start_date: startDate || null,
-      deadline: endDate || null,
-      status: mapLegacyStatus(status),
-    } as const;
-
     try {
+      const payload = buildMissionWritePayload({
+        studioId: userId,
+        title,
+        description,
+        category,
+        location,
+        city,
+        date: missionDate,
+        endDate,
+        dailyRate,
+        skillsRequired,
+        status,
+      });
+
       if (isEdit && id) {
-        const preferredUpdate = await supabase
+        const { error: updateError } = await supabase
           .from('missions')
-          .update(preferredPayload as never)
+          .update(payload as never)
           .eq('id', id)
           .eq('studio_id', userId);
 
-        if (preferredUpdate.error) {
-          const fallbackUpdate = await supabase
-            .from('missions')
-            .update(fallbackPayload as never)
-            .eq('id', id)
-            .eq('studio_id', userId);
-          if (fallbackUpdate.error) throw fallbackUpdate.error;
-        }
+        if (updateError) throw updateError;
+        showToast({
+          title: 'Mission enregistrée',
+          description: 'Les modifications ont été sauvegardées.',
+          variant: 'default',
+        });
       } else {
-        const preferredInsert = await supabase
+        const { data: insertedMission, error: insertError } = await supabase
           .from('missions')
-          .insert({ ...preferredPayload, studio_id: userId } as never);
+          .insert(payload as never)
+          .select('id')
+          .single();
 
-        if (preferredInsert.error) {
-          const fallbackInsert = await supabase
-            .from('missions')
-            .insert({ ...fallbackPayload, studio_id: userId } as never);
-          if (fallbackInsert.error) throw fallbackInsert.error;
+        if (insertError) throw insertError;
+        const createdMissionId = (insertedMission as { id: string } | null)?.id;
+        if (!createdMissionId) {
+          throw new Error('Mission créée sans identifiant exploitable.');
         }
-      }
 
-      navigate('/studio/missions');
+        showToast({
+          title: 'Mission créée',
+          description: 'Ajoute des fichiers de référence si besoin, puis reviens au dashboard.',
+          variant: 'default',
+        });
+        navigate(`/studio/missions/${createdMissionId}/edit`, { replace: true });
+      }
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Impossible d’enregistrer la mission.');
     } finally {
@@ -296,10 +346,10 @@ export default function MissionForm() {
       <div className="app-container-compact">
         <button
           type="button"
-          onClick={() => navigate('/studio/missions')}
+          onClick={() => navigate('/studio/dashboard')}
           className="mb-4 text-sm app-muted transition-colors hover:text-black"
         >
-          ← {isEdit ? 'Modifier la mission' : 'Nouvelle mission'}
+          ← {isEdit ? 'Retour aux missions' : 'Retour au dashboard'}
         </button>
 
         {loadingMission ? (
@@ -324,9 +374,7 @@ export default function MissionForm() {
                 onChange={(event) => setTitle(event.target.value)}
                 className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
-              {fieldErrors.title ? (
-                <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p>
-              ) : null}
+              {fieldErrors.title ? <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p> : null}
             </div>
 
             <div>
@@ -341,9 +389,53 @@ export default function MissionForm() {
                 onChange={(event) => setDescription(event.target.value)}
                 className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
-              {fieldErrors.description ? (
-                <p className="text-xs text-red-500 mt-1">{fieldErrors.description}</p>
-              ) : null}
+              {fieldErrors.description ? <p className="text-xs text-red-500 mt-1">{fieldErrors.description}</p> : null}
+            </div>
+
+            <FileUpload
+              label="Fichiers de référence"
+              accept="audio/*,.pdf,.zip"
+              maxSizeMb={500}
+              onUpload={handleReferenceUpload}
+              existingFiles={referenceFiles}
+              onDelete={handleReferenceDelete}
+              disabled={!activeMissionId}
+              helperText={activeMissionId
+                ? 'Références privées visibles uniquement par les candidats et le studio.'
+                : 'Crée la mission une première fois pour activer l’upload des références.'}
+            />
+            {loadingFiles ? <p className="text-xs text-gray-400">Chargement des fichiers…</p> : null}
+
+            <div>
+              <label htmlFor="mission-category" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Catégorie
+              </label>
+              <select
+                id="mission-category"
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+              >
+                <option value="">Choisir une catégorie</option>
+                {CATEGORIES.map((entry) => (
+                  <option key={entry} value={entry}>{entry}</option>
+                ))}
+              </select>
+              {fieldErrors.category ? <p className="text-xs text-red-500 mt-1">{fieldErrors.category}</p> : null}
+            </div>
+
+            <div>
+              <label htmlFor="mission-location" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Lieu
+              </label>
+              <input
+                id="mission-location"
+                type="text"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+              {fieldErrors.location ? <p className="text-xs text-red-500 mt-1">{fieldErrors.location}</p> : null}
             </div>
 
             <div>
@@ -355,39 +447,24 @@ export default function MissionForm() {
                 type="text"
                 value={city}
                 onChange={(event) => setCity(event.target.value)}
+                placeholder="Optionnel, sinon la ville reprend le lieu"
                 className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
-            </div>
-
-            <div>
-              <label htmlFor="mission-rate" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Tarif €/j
-              </label>
-              <input
-                id="mission-rate"
-                type="number"
-                min={0}
-                value={dailyRate}
-                onChange={(event) => setDailyRate(event.target.value)}
-                className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
-              />
-              {fieldErrors.daily_rate ? (
-                <p className="text-xs text-red-500 mt-1">{fieldErrors.daily_rate}</p>
-              ) : null}
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="mission-start" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                  Date début
+                <label htmlFor="mission-date" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  Date
                 </label>
                 <input
-                  id="mission-start"
+                  id="mission-date"
                   type="date"
-                  value={startDate}
-                  onChange={(event) => setStartDate(event.target.value)}
+                  value={missionDate}
+                  onChange={(event) => setMissionDate(event.target.value)}
                   className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
+                {fieldErrors.date ? <p className="text-xs text-red-500 mt-1">{fieldErrors.date}</p> : null}
               </div>
               <div>
                 <label htmlFor="mission-end" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
@@ -400,30 +477,43 @@ export default function MissionForm() {
                   onChange={(event) => setEndDate(event.target.value)}
                   className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
-                {fieldErrors.end_date ? (
-                  <p className="text-xs text-red-500 mt-1">{fieldErrors.end_date}</p>
-                ) : null}
+                {fieldErrors.end_date ? <p className="text-xs text-red-500 mt-1">{fieldErrors.end_date}</p> : null}
               </div>
             </div>
 
             <div>
+              <label htmlFor="mission-rate" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Tarif journalier (€)
+              </label>
+              <input
+                id="mission-rate"
+                type="number"
+                min={0}
+                value={dailyRate}
+                onChange={(event) => setDailyRate(event.target.value)}
+                className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+              {fieldErrors.daily_rate ? <p className="text-xs text-red-500 mt-1">{fieldErrors.daily_rate}</p> : null}
+            </div>
+
+            <div>
               <label htmlFor="mission-skills-input" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                Compétences
+                Compétences requises
               </label>
               <input
                 id="mission-skills-input"
                 type="text"
                 value={skillInput}
-                disabled={skills.length >= 10}
+                disabled={skillsRequired.length >= 10}
                 onChange={(event) => setSkillInput(event.target.value)}
                 onKeyDown={onSkillInputKeyDown}
                 onBlur={addSkill}
-                placeholder={skills.length >= 10 ? 'Maximum 10 compétences atteint' : 'Ajouter une compétence (Entrée ou ,)'}
+                placeholder={skillsRequired.length >= 10 ? 'Maximum 10 compétences atteint' : 'Ajouter une compétence (Entrée ou ,)'}
                 className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-stone-100 disabled:text-stone-400"
               />
-              {skills.length > 0 ? (
+              {skillsRequired.length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {skills.map((skill) => (
+                  {skillsRequired.map((skill) => (
                     <span
                       key={skill}
                       className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs text-orange-600"
@@ -457,16 +547,13 @@ export default function MissionForm() {
                 <option value="closed">Fermée</option>
                 <option value="draft">Brouillon</option>
               </select>
-              {fieldErrors.status ? (
-                <p className="text-xs text-red-500 mt-1">{fieldErrors.status}</p>
-              ) : null}
             </div>
           </form>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe bg-[#f4ece4] border-t border-black/5">
-        <div className="mx-auto max-w-2xl">
+      <div className="fixed bottom-20 left-0 right-0 z-40 border-t border-black/5 bg-[#f4ece4] p-4 pb-safe md:static md:mt-6 md:border-t-0 md:bg-transparent md:p-0">
+        <div className="mx-auto max-w-2xl md:px-0">
           {error ? (
             <div className="mb-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
               {error}

@@ -1,0 +1,60 @@
+import { Search } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+type GlobalSearchBarProps = {
+  userType: 'studio' | 'pro';
+};
+
+function targetPath(userType: 'studio' | 'pro'): string {
+  return userType === 'studio' ? '/pros' : '/missions';
+}
+
+export function GlobalSearchBar({ userType }: GlobalSearchBarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [query, setQuery] = useState('');
+  const hiddenOnCurrentRoute = location.pathname.startsWith('/chat/');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setQuery(params.get('q') ?? '');
+  }, [location.search]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    const value = query.trim();
+    if (value) params.set('q', value);
+    navigate(`${targetPath(userType)}${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
+  if (hiddenOnCurrentRoute) {
+    return null;
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="pointer-events-auto fixed left-4 right-20 top-4 z-40 md:left-8 md:right-auto md:top-6 md:w-[320px]"
+    >
+      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+        <input
+          id="global-search-input"
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={userType === 'studio' ? 'Rechercher un pro' : 'Rechercher une mission'}
+          className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/35 outline-none"
+        />
+        <button
+          id="btn-global-search"
+          type="submit"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-white transition hover:bg-orange-400"
+        >
+          <Search size={16} />
+        </button>
+      </div>
+    </form>
+  );
+}

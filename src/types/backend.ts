@@ -1,8 +1,22 @@
 export type UserType = 'studio' | 'pro';
 
-export type MissionStatus = 'draft' | 'published' | 'in_progress' | 'completed' | 'cancelled';
-export type ApplicationStatus = 'pending' | 'selected' | 'rejected';
+export type MissionStatus =
+  | 'draft'
+  | 'open'
+  | 'published'
+  | 'selecting'
+  | 'in_progress'
+  | 'filled'
+  | 'completed'
+  | 'rated'
+  | 'expired'
+  | 'cancelled'
+  | 'closed';
+export type ApplicationStatus = 'pending' | 'accepted' | 'rejected';
 export type InvitationStatus = 'available' | 'used';
+export type SessionStatus = 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+export type ChatFileType = 'audio' | 'document' | 'image';
+export type MissionFileType = 'reference' | 'delivery';
 
 export type NotificationType =
   | 'new_application'
@@ -10,7 +24,10 @@ export type NotificationType =
   | 'application_selected'
   | 'application_rejected'
   | 'new_message'
-  | 'mission_completed';
+  | 'delivery_uploaded'
+  | 'session_completed'
+  | 'mission_completed'
+  | 'new_rating';
 
 export type SavedItemType = 'mission' | 'pro' | 'studio';
 
@@ -28,6 +45,10 @@ export interface Profile {
   onboarding_step: number;
   avatar_url: string | null;
   display_name: string | null;
+  full_name?: string | null;
+  company_name?: string | null;
+  rating_avg?: number | null;
+  rating_count?: number | null;
   notification_preferences?: NotificationPreferences | null;
   created_at: string;
   updated_at?: string;
@@ -91,10 +112,12 @@ export interface ApplicationRecord {
   id: string;
   mission_id: string;
   pro_id: string;
-  message: string | null;
+  cover_letter: string | null;
   status: ApplicationStatus;
-  applied_at: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
+  message?: string | null;
+  applied_at?: string;
 }
 
 export interface NotificationRecord {
@@ -103,6 +126,7 @@ export interface NotificationRecord {
   type: NotificationType;
   title: string;
   body: string | null;
+  data: Record<string, unknown> | null;
   link: string | null;
   read: boolean;
   created_at: string;
@@ -143,14 +167,54 @@ export interface ConversationRecord {
   created_at: string;
 }
 
+export interface SessionRecord {
+  id: string;
+  mission_id: string;
+  studio_id: string;
+  pro_id: string;
+  application_id: string;
+  status: SessionStatus;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+}
+
+export interface RatingRecord {
+  id: string;
+  session_id: string;
+  rater_id: string;
+  rated_id: string;
+  score: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface MissionFileRecord {
+  id: string;
+  mission_id: string;
+  session_id: string | null;
+  uploaded_by: string;
+  file_type: MissionFileType;
+  file_url: string;
+  file_name: string;
+  file_size: number | null;
+  mime_type: string | null;
+  created_at: string;
+}
+
 export interface MessageRecord {
   id: string;
-  conversation_id: string;
+  session_id: string | null;
   sender_id: string;
   content: string | null;
   file_url: string | null;
-  read: boolean;
+  file_name?: string | null;
+  file_type?: ChatFileType | null;
+  is_read: boolean;
   created_at: string;
+  conversation_id?: string | null;
+  read?: boolean;
+  read_at?: string | null;
 }
 
 export interface InvitationValidationResult {
@@ -175,8 +239,7 @@ export interface CreateMissionInput {
 
 export interface CreateApplicationInput {
   mission_id: string;
-  message: string;
-  proposed_budget?: number;
+  cover_letter?: string;
 }
 
 export interface CreateReviewInput {

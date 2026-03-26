@@ -6,7 +6,17 @@ import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
+import {
+  buildSignupEmailRedirect,
+  getAuthMode,
+  getInvitationContext,
+} from '@/lib/auth/invitationFlow';
 import { useToast } from '@/components/ui/Toast';
+import {
+  getDashboardPath,
+  isProfileIncomplete,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 type AuthMode = 'signin' | 'signup';
 type InvitationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
@@ -19,26 +29,30 @@ type InvitationLookup = {
   expires_at: string | null;
 };
 
-type ClaimResult = {
-  claimed?: boolean;
-} | boolean | null;
+type AuthRouteState = {
+  mode?: AuthMode;
+  type?: 'studio' | 'pro';
+  code?: string;
+  email?: string | null;
+} | null;
 
-function extractClaimSuccess(value: unknown): boolean {
-  if (typeof value === 'boolean') return value;
-  if (!value || typeof value !== 'object') return false;
-  if ('claimed' in value && typeof (value as { claimed?: unknown }).claimed === 'boolean') {
-    return (value as { claimed: boolean }).claimed;
-  }
-  return false;
-}
+type RedirectProfile = {
+  user_type?: 'studio' | 'pro' | null;
+  type?: 'studio' | 'pro' | null;
+  full_name?: string | null;
+  display_name?: string | null;
+  bio?: string | null;
+} | null;
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { session, profile, loading: authLoading, signInPassword } = useAuth();
   const { showToast } = useToast();
+  const routeState = location.state as AuthRouteState;
 
   const [mode, setMode] = useState<AuthMode>('signin');
+  const [step, setStep] = useState<'form' | 'confirm-email'>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -53,31 +67,26 @@ export default function LoginPage() {
   } | null>(null);
 
   useEffect(() => {
-    const storedCode = sessionStorage.getItem('invitationCode');
-    const storedType = sessionStorage.getItem('invitationType');
-    const storedEmail = sessionStorage.getItem('invitationEmail');
     const params = new URLSearchParams(location.search);
     const explicitMode = params.get('mode');
+    const isRegisterPath = location.pathname === '/register';
+    const nextInvitationContext = getInvitationContext({
+      routeCode: routeState?.code ?? null,
+      routeType: routeState?.type ?? null,
+      routeEmail: routeState?.email ?? null,
+      storageCode: sessionStorage.getItem('invitationCode'),
+      storageType: sessionStorage.getItem('invitationType'),
+      storageEmail: sessionStorage.getItem('invitationEmail'),
+      userMetadata: session?.user?.user_metadata as Record<string, unknown> | null | undefined,
+    });
 
-    if (
-      storedCode
-      && (storedType === 'studio' || storedType === 'pro')
-    ) {
-      setInvitationContext({
-        code: storedCode.trim().toUpperCase(),
-        type: storedType,
-        email: storedEmail ?? null,
-      });
-    } else {
-      setInvitationContext(null);
+    setInvitationContext(nextInvitationContext);
+    if (nextInvitationContext?.email) {
+      setEmail((currentEmail) => currentEmail || nextInvitationContext.email || '');
     }
 
-    if (explicitMode === 'signup' || storedType === 'studio' || storedType === 'pro') {
-      setMode('signup');
-    } else {
-      setMode('signin');
-    }
-  }, [location.search]);
+    setMode(isRegisterPath ? 'signup' : getAuthMode(explicitMode, routeState?.mode ?? null));
+  }, [location.pathname, location.search, routeState?.code, routeState?.email, routeState?.mode, routeState?.type, session?.user?.id, session?.user?.user_metadata]);
 
   useEffect(() => {
     if (authLoading || !session) return;
@@ -87,31 +96,20 @@ export default function LoginPage() {
       type?: 'studio' | 'pro' | null;
       full_name?: string | null;
       display_name?: string | null;
+      bio?: string | null;
     } | null;
-    const profileType = authProfile?.user_type ?? authProfile?.type ?? null;
-    const fullName = authProfile?.full_name?.trim() ?? authProfile?.display_name?.trim() ?? '';
+    const profileType = resolveProfileType(authProfile);
 
     if (!profile) {
-      const invitationCode = sessionStorage.getItem('invitationCode');
-      const invitationType = sessionStorage.getItem('invitationType');
-      if (invitationCode && (invitationType === 'studio' || invitationType === 'pro')) {
-        navigate('/onboarding', { replace: true });
-      } else {
-        navigate('/invitation', { replace: true });
-      }
       return;
     }
 
-    if (!fullName || (profileType !== 'studio' && profileType !== 'pro')) {
+    if (isProfileIncomplete(authProfile)) {
       navigate('/onboarding', { replace: true });
       return;
     }
 
-    if (profileType === 'studio') {
-      navigate('/studio/dashboard', { replace: true });
-      return;
-    }
-    navigate('/pro/dashboard', { replace: true });
+    navigate(getDashboardPath(profileType), { replace: true });
   }, [authLoading, navigate, profile, session]);
 
   useEffect(() => {
@@ -169,6 +167,36 @@ export default function LoginPage() {
 
   const isSignIn = mode === 'signin';
 
+  if (step === 'confirm-email') {
+    return (
+      <div className="app-shell flex min-h-screen items-center justify-center p-4">
+        <Helmet>
+          <title>Confirmation email — StudioLink</title>
+          <meta name="description" content="Confirme ton adresse email pour activer ton compte StudioLink." />
+        </Helmet>
+        <GlassCard className="w-full max-w-sm p-8 text-center">
+          <p className="mb-4 text-5xl">📬</p>
+          <h2 className="mb-2 text-xl font-bold text-white">Vérifie ta boîte mail</h2>
+          <p className="mb-6 text-sm text-white/60">
+            Un lien de confirmation a été envoyé à{' '}
+            <span className="font-medium text-white">{email}</span>.
+            Clique dessus pour activer ton compte.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setStep('form');
+              navigate('/login', { replace: true });
+            }}
+            className="glass-btn-primary w-full"
+          >
+            Retour à la connexion
+          </button>
+        </GlassCard>
+      </div>
+    );
+  }
+
   const validateForm = (): boolean => {
     if (!email.trim()) {
       setError('Adresse email requise');
@@ -208,8 +236,31 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isSignIn) {
-        await signInPassword(email.trim(), password);
+        const signInData = await signInPassword(email.trim(), password);
+        const signedInUserId = signInData.user?.id ?? signInData.session?.user?.id;
+
+        if (!signedInUserId) {
+          navigate('/onboarding', { replace: true });
+          showToast({ title: 'Connexion réussie', variant: 'default' });
+          return;
+        }
+
+        const { data: nextProfile } = await supabase
+          .from('profiles')
+          .select('user_type, type, full_name, display_name, bio')
+          .eq('id', signedInUserId)
+          .maybeSingle();
+
+        const redirectProfile = nextProfile as RedirectProfile;
+        const profileType = resolveProfileType(redirectProfile);
+
         showToast({ title: 'Connexion réussie', variant: 'default' });
+        if (!redirectProfile || isProfileIncomplete(redirectProfile)) {
+          navigate('/onboarding', { replace: true });
+          return;
+        }
+
+        navigate(getDashboardPath(profileType), { replace: true });
         return;
       }
 
@@ -226,6 +277,14 @@ export default function LoginPage() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
+        options: {
+          emailRedirectTo: buildSignupEmailRedirect(window.location.origin),
+          data: {
+            invitation_code: invitationContext.code,
+            invitation_type: invitationContext.type,
+            invitation_email: invitationContext.email,
+          },
+        },
       });
       if (signUpError) {
         setError(signUpError.message);
@@ -247,26 +306,18 @@ export default function LoginPage() {
         return;
       }
 
-      const { data: claimData, error: claimError } = await supabase.rpc('claim_invitation', {
-        p_code: invitationContext.code,
-        p_user_id: data.user.id,
-      });
-      const claimPayload = (Array.isArray(claimData) ? claimData[0] : claimData) as ClaimResult;
-      const claimSuccess = extractClaimSuccess(claimPayload);
-
-      if (claimError || !claimSuccess) {
-        const message = claimError?.message ?? "Impossible de valider l'invitation.";
-        setError(message);
-        showToast({
-          title: 'Invitation invalide',
-          description: message,
-          variant: 'destructive',
-        });
+      if (data.session) {
+        showToast({ title: 'Compte créé', description: 'Complète maintenant ton profil.', variant: 'default' });
+        navigate('/onboarding', { replace: true });
         return;
       }
 
-      setSuccessMessage('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.');
-      showToast({ title: 'Compte créé', description: 'Vérifie ta boîte mail.', variant: 'default' });
+      setStep('confirm-email');
+      showToast({
+        title: 'Confirmation email requise',
+        description: 'Confirme ton email puis reconnecte-toi pour continuer.',
+        variant: 'default',
+      });
       setPassword('');
       setConfirmPassword('');
     } catch (submitError) {
@@ -284,13 +335,35 @@ export default function LoginPage() {
   };
 
   const toggleMode = () => {
-    setMode((prev) => (prev === 'signin' ? 'signup' : 'signin'));
+    setStep('form');
     setError(null);
     setSuccessMessage(null);
     setConfirmPassword('');
+
+    if (isSignIn) {
+      if (invitationContext) {
+        navigate('/login?mode=signup', {
+          replace: true,
+          state: {
+            mode: 'signup',
+            type: invitationContext.type,
+            code: invitationContext.code,
+            email: invitationContext.email,
+          },
+        });
+        return;
+      }
+      navigate('/register', { replace: true });
+      return;
+    }
+
+    navigate('/login', { replace: true });
   };
 
   const signupBlocked = mode === 'signup' && (invitationState === 'missing' || invitationState === 'invalid');
+  const signupSubtitle = invitationContext
+    ? 'Invitation validée · Finalise ton inscription'
+    : 'Inscription sur invitation uniquement';
 
   return (
     <div className="app-shell flex min-h-screen items-center justify-center p-4">
@@ -308,9 +381,36 @@ export default function LoginPage() {
           </div>
           <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
           <p className="text-sm text-white/70">
-            {isSignIn ? 'Bienvenue de retour' : 'Invitation acceptée · Finalise ton inscription'}
+            {isSignIn ? 'Bienvenue de retour' : signupSubtitle}
           </p>
         </div>
+
+        {!isSignIn && !invitationContext ? (
+          <div className="mb-5 rounded-2xl border border-orange-400/20 bg-orange-400/10 px-4 py-3 text-sm text-orange-50">
+            StudioLink fonctionne sur invitation. Renseigne d&apos;abord ton code ou ouvre ton lien reçu par email.
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-white/6 px-3 py-3">
+                <p className="text-sm font-semibold text-white">🎬 Compte Studio</p>
+                <p className="mt-1 text-xs text-white/60">
+                  Publiez des missions, suivez les candidatures et pilotez vos sessions.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/6 px-3 py-3">
+                <p className="text-sm font-semibold text-white">🎤 Compte Pro</p>
+                <p className="mt-1 text-xs text-white/60">
+                  Candidaturez aux missions, échangez en chat et livrez vos fichiers.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/invitation')}
+              className="mt-2 block text-xs font-medium text-orange-200 underline underline-offset-2"
+            >
+              Entrer mon code d&apos;invitation
+            </button>
+          </div>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
@@ -347,6 +447,18 @@ export default function LoginPage() {
             />
           </div>
 
+          {isSignIn ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-xs text-white/55 transition hover:text-white"
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
+          ) : null}
+
           {mode === 'signup' && (
             <div className="space-y-1.5">
               <label className="block text-xs font-medium tracking-wide text-white/60 ml-1">
@@ -367,7 +479,7 @@ export default function LoginPage() {
           {mode === 'signup' && invitationState === 'checking' ? (
             <p className="text-xs text-white/50 text-center">Validation de l&apos;invitation...</p>
           ) : null}
-          {mode === 'signup' && signupBlocked ? (
+          {mode === 'signup' && invitationState === 'invalid' ? (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-xs text-red-600">
               Invitation invalide ou absente.
               <button

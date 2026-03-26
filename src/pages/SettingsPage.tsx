@@ -4,13 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
+import { resolveProfileType } from '@/lib/auth/profileCompleteness';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { session, signOut } = useAuth();
+  const { session, signOut, profile } = useAuth();
   const { showToast } = useToast();
 
   const user = session?.user ?? null;
+  const profileType = resolveProfileType(profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null);
+  const profileRoute = profileType === 'studio' ? '/studio/profile' : '/pro/profile';
   const [loadingAction, setLoadingAction] = useState<'reset' | 'logout' | 'delete' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,19 +45,23 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     setLoadingAction('logout');
     setError(null);
+    let message: string | null = null;
     try {
       await signOut();
-      navigate('/login', { replace: true });
     } catch (logoutError) {
-      const message = logoutError instanceof Error ? logoutError.message : 'Impossible de se déconnecter.';
+      message = logoutError instanceof Error ? logoutError.message : 'Impossible de se déconnecter.';
+      console.error('Logout error:', logoutError);
       setError(message);
-      showToast({
-        title: 'Déconnexion impossible',
-        description: message,
-        variant: 'destructive',
-      });
     } finally {
       setLoadingAction(null);
+      if (message) {
+        showToast({
+          title: 'Déconnexion impossible',
+          description: message,
+          variant: 'destructive',
+        });
+      }
+      navigate('/login', { replace: true });
     }
   };
 
@@ -68,16 +75,16 @@ export default function SettingsPage() {
     try {
       const { error: rpcError } = await supabase.rpc('delete_user');
       if (rpcError) {
-        setError('Suppression automatique indisponible. Contactez le support.');
+        setError('Impossible de supprimer le compte. Contacte le support.');
         showToast({
-          title: 'Suppression indisponible',
-          description: 'Contactez le support pour supprimer votre compte.',
+          title: 'Suppression impossible',
+          description: 'Impossible de supprimer le compte. Contacte le support.',
           variant: 'destructive',
         });
         return;
       }
 
-      await signOut();
+      await supabase.auth.signOut();
       showToast({ title: 'Compte supprimé', variant: 'default' });
       navigate('/login', { replace: true });
     } catch (deleteError) {
@@ -116,6 +123,13 @@ export default function SettingsPage() {
         <section className="app-card p-5 mb-4">
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Compte</h2>
           <p className="text-sm text-gray-700">{user?.email ?? 'Email indisponible'}</p>
+          <button
+            type="button"
+            onClick={() => navigate(profileRoute)}
+            className="mt-4 inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:bg-stone-50"
+          >
+            Modifier mon profil
+          </button>
         </section>
 
         {error ? (
@@ -135,7 +149,9 @@ export default function SettingsPage() {
           </button>
 
           <button
+            id="logout-btn"
             type="button"
+            aria-label="Déconnexion"
             disabled={loadingAction !== null}
             onClick={() => void handleLogout()}
             className="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
@@ -162,4 +178,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

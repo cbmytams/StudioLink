@@ -1,34 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { Bell, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth';
-import { markConversationAsRead } from '@/services/notificationService';
-
-type ConversationProfile = {
-  id: string
-  full_name: string | null
-  avatar_url: string | null
-};
-
-type ConversationRow = {
-  id: string
-  last_message_at: string | null
-  studio_id: string | null
-  pro_id: string | null
-  participant_1?: string | null
-  participant_2?: string | null
-  studio?: ConversationProfile | ConversationProfile[] | null
-  pro?: ConversationProfile | ConversationProfile[] | null
-};
-
-type ConversationNotification = {
-  id: string
-  lastMessageAt: string
-  contact: ConversationProfile | null
-  unreadCount: number
-};
+import { EmptyState } from '@/components/shared/EmptyState';
+import { getNotificationTarget } from '@/lib/notifications/notificationUtils';
+import { useMarkAllRead, useMarkAsRead, useNotifications } from '@/hooks/useNotifications';
+import type { NotificationRecord } from '@/types/backend';
 
 function formatRelativeTime(dateIso: string): string {
   const timestamp = new Date(dateIso).getTime();
@@ -45,6 +23,21 @@ function formatRelativeTime(dateIso: string): string {
   return new Date(dateIso).toLocaleDateString('fr-FR');
 }
 
+function getDateGroupLabel(dateIso: string): string {
+  const date = new Date(dateIso);
+  if (Number.isNaN(date.getTime())) return 'Plus ancien';
+
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const diffDays = Math.floor((startOfToday - startOfTarget) / (24 * 60 * 60 * 1000));
+
+  if (diffDays <= 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  if (diffDays < 7) return 'Cette semaine';
+  return 'Plus ancien';
+}
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
   const { session, profile } = useAuth();
@@ -54,189 +47,29 @@ export default function NotificationsPage() {
   )?.user_type
     ?? (
       profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
-    )?.type
+  )?.type
     ?? null;
   const fallbackRoute = profileType === 'studio' ? '/studio/dashboard' : '/pro/dashboard';
-
-  const [conversations, setConversations] = useState<ConversationNotification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [markingAll, setMarkingAll] = useState(false);
-
-  useEffect(() => {
-    if (!userId) {
-      setConversations([]);
-      setLoading(false);
-      return;
-    }
-
-    let active = true;
-
-    const fetchNotificationsCenter = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        let rows: ConversationRow[] = [];
-
-        const primary = await supabase
-          .from('conversations')
-          .select(`
-            id,
-            last_message_at,
-            studio_id,
-            pro_id,
-            studio:profiles!conversations_studio_id_fkey(id, full_name, avatar_url),
-            pro:profiles!conversations_pro_id_fkey(id, full_name, avatar_url)
-          `)
-          .or(`studio_id.eq.${userId},pro_id.eq.${userId}`)
-          .order('last_message_at', { ascending: false });
-
-        if (!primary.error && primary.data) {
-          rows = primary.data as unknown as ConversationRow[];
-        } else {
-          const fallback = await supabase
-            .from('conversations')
-            .select('id, last_message_at, participant_1, participant_2')
-            .or(`participant_1.eq.${userId},participant_2.eq.${userId}`)
-            .order('last_message_at', { ascending: false });
-          if (fallback.error) throw fallback.error;
-
-          const fallbackRows = (fallback.data as ConversationRow[] | null) ?? [];
-          const otherIds = Array.from(new Set(fallbackRows.map((row) => (
-            row.participant_1 === userId ? row.participant_2 : row.participant_1
-          )).filter((id): id is string => Boolean(id))));
-
-          let profileMap: Record<string, ConversationProfile> = {};
-          if (otherIds.length > 0) {
-            const profiles = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .in('id', otherIds);
-            if (profiles.error) throw profiles.error;
-            profileMap = ((profiles.data as ConversationProfile[] | null) ?? []).reduce<Record<string, ConversationProfile>>(
-              (acc, item) => {
-                acc[item.id] = item;
-                return acc;
-              },
-              {},
-            );
-          }
-
-          rows = fallbackRows.map((row) => {
-            const otherId = row.participant_1 === userId ? row.participant_2 : row.participant_1;
-            const mappedContact = otherId ? (profileMap[otherId] ?? null) : null;
-            return {
-              ...row,
-              studio_id: null,
-              pro_id: null,
-              studio: mappedContact,
-              pro: null,
-            };
-          });
-        }
-
-        const conversationIds = rows.map((row) => row.id);
-        const unreadMap: Record<string, number> = {};
-
-        if (conversationIds.length > 0) {
-          const unreadPrimary = await supabase
-            .from('messages')
-            .select('conversation_id')
-            .in('conversation_id', conversationIds)
-            .neq('sender_id', userId)
-            .is('read_at', null);
-
-          if (!unreadPrimary.error) {
-            ((unreadPrimary.data as Array<{ conversation_id: string }> | null) ?? []).forEach((item) => {
-              unreadMap[item.conversation_id] = (unreadMap[item.conversation_id] ?? 0) + 1;
-            });
-          } else {
-            const unreadFallback = await supabase
-              .from('messages')
-              .select('conversation_id')
-              .in('conversation_id', conversationIds)
-              .neq('sender_id', userId)
-              .eq('read', false);
-            if (unreadFallback.error) throw unreadFallback.error;
-            ((unreadFallback.data as Array<{ conversation_id: string }> | null) ?? []).forEach((item) => {
-              unreadMap[item.conversation_id] = (unreadMap[item.conversation_id] ?? 0) + 1;
-            });
-          }
-        }
-
-        if (!active) return;
-        const mapped = rows.map((row) => {
-          const studioProfile = Array.isArray(row.studio) ? (row.studio[0] ?? null) : (row.studio ?? null);
-          const proProfile = Array.isArray(row.pro) ? (row.pro[0] ?? null) : (row.pro ?? null);
-          const contact = row.studio_id === userId ? proProfile : studioProfile;
-
-          return {
-            id: row.id,
-            lastMessageAt: row.last_message_at ?? new Date().toISOString(),
-            contact,
-            unreadCount: unreadMap[row.id] ?? 0,
-          };
-        });
-        setConversations(mapped);
-      } catch (fetchError) {
-        if (!active) return;
-        setConversations([]);
-        setError(fetchError instanceof Error ? fetchError.message : 'Impossible de charger les conversations.');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void fetchNotificationsCenter();
-
-    const channel = supabase
-      .channel(`notifications-center:${userId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-        void fetchNotificationsCenter();
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, () => {
-        void fetchNotificationsCenter();
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' }, () => {
-        void fetchNotificationsCenter();
-      })
-      .subscribe();
-
-    return () => {
-      active = false;
-      void supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
-  const totalUnread = useMemo(
-    () => conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0),
-    [conversations],
-  );
-
-  const markAllAsRead = async () => {
-    if (!userId) return;
-    const unreadConversations = conversations.filter((conversation) => conversation.unreadCount > 0);
-    if (unreadConversations.length === 0) return;
-
-    setMarkingAll(true);
-    try {
-      await Promise.all(
-        unreadConversations.map((conversation) => markConversationAsRead(conversation.id, userId)),
-      );
-      setConversations((previous) => previous.map((conversation) => ({ ...conversation, unreadCount: 0 })));
-    } catch {
-      // L'affichage d'erreur global reste suffisant via le refresh realtime.
-    } finally {
-      setMarkingAll(false);
-    }
-  };
+  const notificationsQuery = useNotifications(userId ?? undefined);
+  const markAsReadMutation = useMarkAsRead();
+  const markAllReadMutation = useMarkAllRead(userId ?? undefined);
+  const notifications = notificationsQuery.data ?? [];
+  const loading = notificationsQuery.isLoading;
+  const error = notificationsQuery.error instanceof Error
+    ? notificationsQuery.error.message
+    : null;
+  const totalUnread = notifications.filter((item) => !item.read).length;
+  const groupedNotifications = useMemo(() => notifications.reduce<Record<string, NotificationRecord[]>>((acc, item) => {
+    const label = getDateGroupLabel(item.created_at);
+    acc[label] = [...(acc[label] ?? []), item];
+    return acc;
+  }, {}), [notifications]);
 
   return (
     <main className="app-shell">
       <Helmet>
         <title>Notifications — StudioLink</title>
-        <meta name="description" content="Consultez vos conversations non lues sur StudioLink." />
+        <meta name="description" content="Consultez vos notifications StudioLink triées par date." />
       </Helmet>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
@@ -244,8 +77,9 @@ export default function NotificationsPage() {
           <h1 className="app-title">Notifications</h1>
           <button
             type="button"
-            onClick={() => void markAllAsRead()}
-            disabled={markingAll || totalUnread === 0}
+            id="btn-mark-all-read"
+            onClick={() => void markAllReadMutation.mutateAsync()}
+            disabled={markAllReadMutation.isPending || totalUnread === 0}
             className="min-h-[44px] text-sm font-medium text-orange-600 disabled:opacity-50"
           >
             Tout marquer comme lu
@@ -281,53 +115,74 @@ export default function NotificationsPage() {
           </div>
         ) : null}
 
-        {!loading && !error && conversations.length === 0 ? (
-          <div className="app-card p-8 text-center">
-            <Bell size={20} className="mx-auto mb-2 text-stone-400" />
-            <p className="text-sm text-stone-500">Aucune conversation</p>
+        {!loading && !error && notifications.length === 0 ? (
+          <div id="notification-empty">
+            <EmptyState
+              icon="✓"
+              title="Vous êtes à jour"
+              description="Les nouvelles candidatures, messages, livraisons et évaluations apparaîtront ici."
+              tone="light"
+            />
           </div>
         ) : null}
 
-        {!loading && !error && conversations.length > 0 ? (
+        {!loading && !error && notifications.length > 0 ? (
           <div className="space-y-3">
-            {conversations.map((conversation) => {
-              const name = conversation.contact?.full_name ?? 'Contact';
-              return (
-                <button
-                  key={conversation.id}
-                  type="button"
-                  onClick={() => navigate(`/chat/${conversation.id}`)}
-                  className="w-full rounded-2xl border border-white/50 bg-white p-4 text-left transition-colors hover:bg-orange-50"
-                >
-                  <div className="flex items-center gap-3">
-                    {conversation.contact?.avatar_url ? (
-                      <img
-                        src={conversation.contact.avatar_url}
-                        alt={name}
-                        className="h-10 w-10 rounded-full border border-white/50 object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
-                        <span className="text-xs font-bold text-orange-600">
-                          {name.charAt(0).toUpperCase() || '?'}
-                        </span>
+            {Object.entries(groupedNotifications).map(([groupLabel, items]: [string, NotificationRecord[]]) => (
+              <section key={groupLabel}>
+                <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                  {groupLabel}
+                </p>
+                <div className="space-y-3">
+                  {items.map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      onClick={() => {
+                        if (!notification.read) {
+                          void markAsReadMutation.mutateAsync(notification.id);
+                        }
+                        navigate(getNotificationTarget(notification));
+                      }}
+                      className={`notification-item w-full rounded-2xl border p-4 text-left transition-colors hover:bg-orange-50 ${
+                        notification.read
+                          ? 'border-white/50 bg-white'
+                          : 'notification-item--unread border-orange-100 bg-orange-50/90'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                          <Bell size={16} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-stone-900">
+                                {notification.title}
+                              </p>
+                              {notification.body ? (
+                                <p className="mt-1 text-sm leading-5 text-stone-600">
+                                  {notification.body}
+                                </p>
+                              ) : null}
+                            </div>
+                            {!notification.read ? (
+                              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-orange-500" />
+                            ) : null}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-3 text-xs text-stone-400">
+                            <span>{formatRelativeTime(notification.created_at)}</span>
+                            <span className="inline-flex items-center gap-1 font-medium text-orange-600">
+                              Ouvrir <ChevronRight size={14} />
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-stone-900 truncate">{name}</p>
-                      <p className="text-xs text-stone-500">{formatRelativeTime(conversation.lastMessageAt)}</p>
-                    </div>
-
-                    {conversation.unreadCount > 0 ? (
-                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                        {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              );
-            })}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         ) : null}
       </div>

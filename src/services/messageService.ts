@@ -184,7 +184,6 @@ export const messageService = {
       upsert: false,
     });
     if (error) throw error;
-    const { data } = client.storage.from('message-files').getPublicUrl(path);
-    return data.publicUrl;
+    return path;
   },
 };

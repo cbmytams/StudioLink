@@ -1,31 +1,53 @@
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
+import { chatService, type ChatMessage, type ChatSession, type ChatUpload } from '@/lib/chat/chatService';
+import type { ChatFileType } from '@/types/backend';
 import { markConversationAsRead } from '@/services/notificationService';
+import { useToast } from '@/components/ui/Toast';
+import { classifyMissionAsset } from '@/lib/files/fileUtils';
+import { getSignedUrl, uploadDeliveryFile } from '@/lib/files/fileService';
+import { DeliveryPanel } from '@/components/shared/DeliveryPanel';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { PageMeta } from '@/components/shared/PageMeta';
+import { RatingModal } from '@/components/shared/RatingModal';
+import { getPublicProfile, getPublicProfileDisplayName, type PublicProfileRecord } from '@/services/publicProfileService';
 
-type ConversationData = {
-  id: string
-  studio_id: string | null
-  pro_id: string | null
-  participant_1: string | null
-  participant_2: string | null
+type CounterpartyProfile = PublicProfileRecord;
+
+type LegacyConversationData = {
+  id: string;
+  studio_id: string | null;
+  pro_id: string | null;
+  participant_1: string | null;
+  participant_2: string | null;
 };
 
-type CounterpartyProfile = {
-  id: string
-  full_name: string | null
-  company_name: string | null
-  avatar_url: string | null
+type LegacyMessageRow = {
+  id: string;
+  session_id: string | null;
+  conversation_id: string | null;
+  sender_id: string;
+  content: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: ChatFileType | null;
+  is_read: boolean | null;
+  read: boolean | null;
+  read_at: string | null;
+  created_at: string;
 };
 
-type ChatMessage = {
-  id: string
-  conversation_id: string
-  sender_id: string
-  content: string
-  created_at: string
+type DisplayMessage = {
+  id: string;
+  sender_id: string;
+  content: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: ChatFileType | null;
+  is_read: boolean;
+  created_at: string;
 };
 
 function formatTime(dateIso: string): string {
@@ -34,29 +56,81 @@ function formatTime(dateIso: string): string {
   return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+function mapLegacyMessage(row: LegacyMessageRow): DisplayMessage {
+  return {
+    id: row.id,
+    sender_id: row.sender_id,
+    content: row.content,
+    file_url: row.file_url,
+    file_name: row.file_name,
+    file_type: row.file_type,
+    is_read: row.is_read ?? (Boolean(row.read_at) || Boolean(row.read)),
+    created_at: row.created_at,
+  };
+}
+
+function buildFallbackRoute(profileType: 'studio' | 'pro' | null): string {
+  return profileType === 'studio' ? '/studio/conversations' : '/pro/conversations';
+}
+
+function isSessionMessage(message: DisplayMessage): boolean {
+  return Boolean(message.file_url) || Boolean(message.content);
+}
+
 export default function ChatPage() {
   const navigate = useNavigate();
-  const { conversationId } = useParams<{ conversationId: string }>();
+  const { conversationId: chatId } = useParams<{ conversationId: string }>();
   const { session, profile } = useAuth();
-  const userId = session?.user?.id ?? null;
-  const profileType = (profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.user_type
-    ?? (profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null)?.type
-    ?? null;
-  const conversationListRoute = profileType === 'studio' ? '/studio/conversations' : '/pro/conversations';
+  const { showToast } = useToast();
 
+  const userId = session?.user?.id ?? null;
+  const profileType = (
+    profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+  )?.user_type
+    ?? (
+      profile as { user_type?: 'studio' | 'pro' | null; type?: 'studio' | 'pro' | null } | null
+    )?.type
+    ?? null;
+  const conversationListRoute = buildFallbackRoute(profileType);
+
+  const [mode, setMode] = useState<'session' | 'legacy' | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [conversation, setConversation] = useState<ConversationData | null>(null);
+  const [sessionData, setSessionData] = useState<ChatSession | null>(null);
+  const [conversation, setConversation] = useState<LegacyConversationData | null>(null);
   const [counterparty, setCounterparty] = useState<CounterpartyProfile | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [attachment, setAttachment] = useState<ChatUpload | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [signedAttachmentUrls, setSignedAttachmentUrls] = useState<Record<string, string>>({});
+  const [deliveryRefreshKey, setDeliveryRefreshKey] = useState(0);
+  const [completingSession, setCompletingSession] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const counterpartName = useMemo(() => {
-    return counterparty?.full_name ?? counterparty?.company_name ?? 'Contact';
-  }, [counterparty?.company_name, counterparty?.full_name]);
+  const counterpartName = useMemo(
+    () => getPublicProfileDisplayName(counterparty),
+    [counterparty],
+  );
+  const missionTitle = sessionData?.mission?.title ?? null;
+  const resolvedUserType = useMemo<'studio' | 'pro' | null>(() => {
+    if (sessionData && userId) {
+      if (sessionData.studio_id === userId) return 'studio';
+      if (sessionData.pro_id === userId) return 'pro';
+    }
+    return profileType;
+  }, [profileType, sessionData, userId]);
+  const canAttachFiles = mode !== 'session' || resolvedUserType === 'pro';
+  const isStudioUser = resolvedUserType === 'studio';
+  const otherParticipant = useMemo(() => {
+    if (!sessionData || !userId) return null;
+    return sessionData.studio_id === userId ? sessionData.pro : sessionData.studio;
+  }, [sessionData, userId]);
+  const canCompleteSession = mode === 'session' && isStudioUser && sessionData?.status === 'confirmed';
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,7 +139,104 @@ export default function ChatPage() {
   useEffect(() => {
     let active = true;
 
-    const loadConversation = async () => {
+    const resolveSignedUrls = async () => {
+      const pendingMessages = messages.filter((message) => {
+        if (!message.file_url) return false;
+        if (/^https?:\/\//i.test(message.file_url)) return false;
+        return !(message.id in signedAttachmentUrls);
+      });
+
+      if (pendingMessages.length === 0) return;
+
+      const nextEntries = await Promise.all(
+        pendingMessages.map(async (message) => {
+          const bucket = mode === 'session' ? 'delivery-files' : 'message-files';
+          const signedUrl = await getSignedUrl(bucket, message.file_url as string);
+          return [message.id, signedUrl] as const;
+        }),
+      );
+
+      if (!active) return;
+      setSignedAttachmentUrls((previous) => Object.fromEntries([...Object.entries(previous), ...nextEntries]));
+    };
+
+    void resolveSignedUrls().catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [messages, mode, signedAttachmentUrls]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadLegacyConversation = async () => {
+      if (!userId || !chatId) {
+        throw new Error('Conversation introuvable.');
+      }
+
+      let conversationData: LegacyConversationData | null = null;
+
+      const primaryConversation = await supabase
+        .from('conversations')
+        .select('id, studio_id, pro_id, participant_1, participant_2')
+        .eq('id', chatId)
+        .maybeSingle();
+
+      if (primaryConversation.error) {
+        const fallbackConversation = await supabase
+          .from('conversations')
+          .select('id, participant_1, participant_2')
+          .eq('id', chatId)
+          .maybeSingle();
+        if (fallbackConversation.error) throw fallbackConversation.error;
+        conversationData = fallbackConversation.data
+          ? {
+              id: fallbackConversation.data.id,
+              studio_id: null,
+              pro_id: null,
+              participant_1: (fallbackConversation.data as { participant_1?: string | null }).participant_1 ?? null,
+              participant_2: (fallbackConversation.data as { participant_2?: string | null }).participant_2 ?? null,
+            }
+          : null;
+      } else {
+        conversationData = primaryConversation.data as LegacyConversationData | null;
+      }
+
+      if (!conversationData) {
+        throw new Error('Conversation introuvable.');
+      }
+
+      const participantA = conversationData.studio_id ?? conversationData.participant_1;
+      const participantB = conversationData.pro_id ?? conversationData.participant_2;
+
+      if (participantA !== userId && participantB !== userId) {
+        throw new Error('Accès non autorisé à cette conversation.');
+      }
+
+      const counterpartyId = participantA === userId ? participantB : participantA;
+      const [profileResult, messagesResult] = await Promise.all([
+        counterpartyId ? getPublicProfile(counterpartyId) : Promise.resolve(null),
+        supabase
+          .from('messages')
+          .select('id, session_id, conversation_id, sender_id, content, file_url, file_name, file_type, is_read, read, read_at, created_at')
+          .eq('conversation_id', chatId)
+          .order('created_at', { ascending: true })
+          .limit(200),
+      ]);
+
+      if (messagesResult.error) throw messagesResult.error;
+
+      if (!active) return;
+      setMode('legacy');
+      setSessionData(null);
+      setConversation(conversationData);
+      setCounterparty(profileResult ?? null);
+      setMessages(((messagesResult.data as LegacyMessageRow[] | null) ?? []).map(mapLegacyMessage));
+      await markConversationAsRead(chatId, userId);
+    };
+
+    const loadChat = async () => {
       if (!userId) {
         if (!active) return;
         setError('Session invalide.');
@@ -73,7 +244,7 @@ export default function ChatPage() {
         return;
       }
 
-      if (!conversationId) {
+      if (!chatId) {
         navigate(conversationListRoute, { replace: true });
         return;
       }
@@ -82,173 +253,166 @@ export default function ChatPage() {
       setError(null);
 
       try {
-        let conversationData: ConversationData | null = null;
-
-        const primaryConversation = await supabase
-          .from('conversations')
-          .select('id, studio_id, pro_id, participant_1, participant_2')
-          .eq('id', conversationId)
-          .maybeSingle();
-
-        if (primaryConversation.error) {
-          const fallbackConversation = await supabase
-            .from('conversations')
-            .select('id, participant_1, participant_2')
-            .eq('id', conversationId)
-            .maybeSingle();
-          if (fallbackConversation.error) throw fallbackConversation.error;
-          conversationData = fallbackConversation.data
-            ? {
-              id: fallbackConversation.data.id,
-              studio_id: null,
-              pro_id: null,
-              participant_1: (fallbackConversation.data as { participant_1?: string | null }).participant_1 ?? null,
-              participant_2: (fallbackConversation.data as { participant_2?: string | null }).participant_2 ?? null,
-            }
-            : null;
-        } else {
-          conversationData = primaryConversation.data as ConversationData | null;
-        }
-
-        if (!conversationData) {
-          if (!active) return;
-          setError('Conversation introuvable.');
-          setLoading(false);
-          return;
-        }
-
-        const participantA = conversationData.studio_id ?? conversationData.participant_1;
-        const participantB = conversationData.pro_id ?? conversationData.participant_2;
-
-        if (participantA !== userId && participantB !== userId) {
-          if (!active) return;
-          setError('Accès non autorisé à cette conversation.');
-          setLoading(false);
-          return;
-        }
-
-        const counterpartyId = participantA === userId ? participantB : participantA;
-
-        const [profileResult, messagesResult] = await Promise.all([
-          counterpartyId
-            ? supabase
-              .from('profiles')
-              .select('id, full_name, company_name, avatar_url')
-              .eq('id', counterpartyId)
-              .maybeSingle()
-            : Promise.resolve({ data: null, error: null }),
-          supabase
-            .from('messages')
-            .select('id, conversation_id, sender_id, content, created_at')
-            .eq('conversation_id', conversationId)
-            .order('created_at', { ascending: true })
-            .limit(50),
-        ]);
-
-        if (profileResult.error) throw profileResult.error;
-        if (messagesResult.error) throw messagesResult.error;
+        const nextSession = await chatService.getSession(chatId);
+        const nextCounterparty = nextSession.studio_id === userId ? nextSession.pro : nextSession.studio;
+        const sessionMessages = await chatService.getMessages(chatId);
 
         if (!active) return;
-        setConversation(conversationData);
-        setCounterparty((profileResult.data as CounterpartyProfile | null) ?? null);
-        setMessages(((messagesResult.data as ChatMessage[] | null) ?? []).filter((row) => Boolean(row.content)));
+        setMode('session');
+        setSessionData(nextSession);
+        setConversation(null);
+        setCounterparty(nextCounterparty);
+        setMessages(sessionMessages);
+        await chatService.markMessagesAsRead(chatId);
+      } catch {
         try {
-          await markConversationAsRead(conversationId, userId);
-        } catch {
-          // Non bloquant pour l'affichage de la conversation.
+          await loadLegacyConversation();
+        } catch (loadError) {
+          if (!active) return;
+          setMode(null);
+          setSessionData(null);
+          setConversation(null);
+          setCounterparty(null);
+          setMessages([]);
+          setError(loadError instanceof Error ? loadError.message : 'Impossible de charger la conversation.');
         }
-      } catch (loadError) {
-        if (!active) return;
-        setError(loadError instanceof Error ? loadError.message : 'Impossible de charger la conversation.');
       } finally {
         if (active) setLoading(false);
       }
     };
 
-    void loadConversation();
+    void loadChat();
     return () => {
       active = false;
     };
-  }, [conversationId, conversationListRoute, navigate, userId]);
+  }, [chatId, conversationListRoute, navigate, userId]);
 
   useEffect(() => {
-    if (!conversationId || !userId) return;
+    if (!chatId || !userId || !mode) return;
+
+    if (mode === 'session') {
+      const channel = chatService.subscribeToMessages(chatId, (incoming) => {
+        setMessages((previous) => (
+          previous.some((message) => message.id === incoming.id)
+            ? previous
+            : [...previous, incoming]
+        ));
+        if (incoming.sender_id !== userId) {
+          void chatService.markMessagesAsRead(chatId).catch(() => undefined);
+        }
+      });
+
+      return () => {
+        void supabase.removeChannel(channel);
+      };
+    }
 
     const channel = supabase
-      .channel(`messages:conversation:${conversationId}`)
+      .channel(`messages:conversation:${chatId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
+          filter: `conversation_id=eq.${chatId}`,
         },
         (payload) => {
-          const incoming = payload.new as ChatMessage;
-          setMessages((previous) => {
-            if (previous.some((message) => message.id === incoming.id)) return previous;
-            return [...previous, incoming];
-          });
-          void markConversationAsRead(conversationId, userId);
+          const incoming = mapLegacyMessage(payload.new as LegacyMessageRow);
+          setMessages((previous) => (
+            previous.some((message) => message.id === incoming.id)
+              ? previous
+              : [...previous, incoming]
+          ));
+          if (incoming.sender_id !== userId) {
+            void markConversationAsRead(chatId, userId).catch(() => undefined);
+          }
         },
       )
       .subscribe();
 
     return () => {
-      void channel.unsubscribe();
+      void supabase.removeChannel(channel);
     };
-  }, [conversationId, userId]);
+  }, [chatId, mode, userId]);
 
   const sendMessage = async () => {
-    if (!userId || !conversationId || sending) return;
+    if (!userId || !chatId || sending) return;
+
     const content = draft.trim();
-    if (!content) return;
+    const pendingAttachment = attachment;
+    if (!content && !pendingAttachment) return;
 
     const optimisticId = `optimistic-${Date.now()}`;
-    const optimisticMessage: ChatMessage = {
+    const optimisticMessage: DisplayMessage = {
       id: optimisticId,
-      conversation_id: conversationId,
       sender_id: userId,
-      content,
+      content: content || null,
+      file_url: pendingAttachment?.fileUrl ?? null,
+      file_name: pendingAttachment?.fileName ?? null,
+      file_type: pendingAttachment?.fileType ?? null,
+      is_read: true,
       created_at: new Date().toISOString(),
     };
 
     setError(null);
     setSending(true);
     setDraft('');
+    setAttachment(null);
     setMessages((previous) => [...previous, optimisticMessage]);
 
     try {
-      const insertResult = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: userId,
-          content,
-        })
-        .select('id, conversation_id, sender_id, content, created_at')
-        .single();
+      if (mode === 'session') {
+        const savedMessage = await chatService.sendMessage(chatId, userId, content, pendingAttachment ?? undefined);
+        setMessages((previous) => [
+          ...previous.filter((message) => message.id !== optimisticId && message.id !== savedMessage.id),
+          savedMessage,
+        ]);
+      } else {
+        const insertResult = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: chatId,
+            sender_id: userId,
+            content: content || null,
+            file_url: pendingAttachment?.fileUrl ?? null,
+            file_name: pendingAttachment?.fileName ?? null,
+            file_type: pendingAttachment?.fileType ?? null,
+            is_read: false,
+            read: false,
+            read_at: null,
+          })
+          .select('id, session_id, conversation_id, sender_id, content, file_url, file_name, file_type, is_read, read, read_at, created_at')
+          .single();
 
-      if (insertResult.error) throw insertResult.error;
+        if (insertResult.error) throw insertResult.error;
 
-      const savedMessage = insertResult.data as ChatMessage;
-      setMessages((previous) => previous.map((message) => (
-        message.id === optimisticId ? savedMessage : message
-      )));
+        const savedMessage = mapLegacyMessage(insertResult.data as LegacyMessageRow);
+        setMessages((previous) => [
+          ...previous.filter((message) => message.id !== optimisticId && message.id !== savedMessage.id),
+          savedMessage,
+        ]);
 
-      const updateResult = await supabase
-        .from('conversations')
-        .update({ last_message_at: new Date().toISOString() } as never)
-        .eq('id', conversationId);
+        const updateResult = await supabase
+          .from('conversations')
+          .update({ last_message_at: new Date().toISOString() } as never)
+          .eq('id', chatId);
 
-      if (updateResult.error) {
-        // Non bloquant pour l'expérience messagerie.
+        if (updateResult.error) {
+          // Non bloquant.
+        }
       }
     } catch (sendError) {
       setMessages((previous) => previous.filter((message) => message.id !== optimisticId));
       setDraft(content);
-      setError(sendError instanceof Error ? sendError.message : "Impossible d'envoyer ce message.");
+      setAttachment(pendingAttachment ?? null);
+      const message = sendError instanceof Error ? sendError.message : "Impossible d'envoyer ce message.";
+      setError(message);
+      showToast({
+        title: 'Envoi impossible',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setSending(false);
     }
@@ -258,6 +422,94 @@ export default function ChatPage() {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void sendMessage();
+    }
+  };
+
+  const handleSelectAttachment = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file || !userId) return;
+
+    setUploadingAttachment(true);
+    setError(null);
+
+    try {
+      const uploaded = await (mode === 'session' && sessionData?.mission_id
+        ? uploadDeliveryFile(chatId, sessionData.mission_id, file).then((missionFile) => ({
+          fileUrl: missionFile.file_url,
+          fileName: missionFile.file_name,
+          fileType: classifyMissionAsset({ type: missionFile.mime_type, name: missionFile.file_name }),
+        }))
+        : chatService.uploadFile(file, userId));
+      setAttachment(uploaded);
+      if (mode === 'session') {
+        setDeliveryRefreshKey((previous) => previous + 1);
+      }
+      showToast({
+        title: 'Fichier prêt',
+        description: uploaded.fileName,
+        variant: 'default',
+      });
+    } catch (uploadError) {
+      const message = uploadError instanceof Error ? uploadError.message : 'Impossible de joindre ce fichier.';
+      setError(message);
+      showToast({
+        title: 'Pièce jointe refusée',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(conversationListRoute);
+  };
+
+  const handleCompleteSession = async () => {
+    if (!chatId || !canCompleteSession) return;
+
+    setCompletingSession(true);
+    setError(null);
+
+    try {
+      const { error: rpcError } = await supabase.rpc('complete_session', {
+        p_session_id: chatId,
+      });
+
+      if (rpcError) throw rpcError;
+
+      setSessionData((previous) => (
+        previous
+          ? {
+              ...previous,
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            }
+          : previous
+      ));
+      setShowRatingModal(true);
+      showToast({
+        title: 'Session terminée',
+        description: 'Vous pouvez maintenant laisser une note.',
+        variant: 'default',
+      });
+    } catch (completeError) {
+      const message = completeError instanceof Error ? completeError.message : 'Impossible de terminer la session.';
+      setError(message);
+      showToast({
+        title: 'Clôture impossible',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setCompletingSession(false);
     }
   };
 
@@ -272,17 +524,23 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="app-shell min-h-screen">
-      <Helmet>
-        <title>Conversation — StudioLink</title>
-      </Helmet>
+    <div
+      id="chat-container"
+      data-chat-mode={mode ?? 'pending'}
+      data-chat-ready={!loading && (sessionData || conversation) ? 'true' : 'false'}
+      className="app-shell min-h-screen"
+    >
+      <PageMeta
+        title="Conversation"
+        description="Échangez en temps réel et partagez vos livrables dans la même discussion."
+      />
 
       <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate(conversationListRoute)}
-            className="text-sm app-muted hover:text-black transition-colors"
+            onClick={handleBack}
+            className="text-sm transition-colors hover:text-black app-muted"
           >
             ←
           </button>
@@ -294,76 +552,203 @@ export default function ChatPage() {
               className="h-10 w-10 rounded-full border border-white/50 object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
               <span className="text-sm font-bold text-orange-600">
                 {counterpartName.charAt(0).toUpperCase() || '?'}
               </span>
             </div>
           )}
 
-          <p className="font-semibold text-gray-900 truncate">{counterpartName}</p>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-gray-900">
+              {missionTitle ?? counterpartName}
+            </p>
+            {missionTitle ? (
+              <p className="truncate text-xs text-gray-500">{counterpartName}</p>
+            ) : null}
+          </div>
+
+          {canCompleteSession ? (
+            <button
+              id="btn-complete-session"
+              type="button"
+              disabled={completingSession}
+              onClick={() => void handleCompleteSession()}
+              className="ml-auto rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
+            >
+              {completingSession ? '...' : 'Terminer la session'}
+            </button>
+          ) : null}
         </div>
       </header>
 
-      <div className="mx-auto max-w-lg px-4 pt-4 pb-40">
+      <div className="mx-auto max-w-lg px-4 pb-44 pt-4">
         {error ? (
           <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
             <p className="text-sm text-red-600">{error}</p>
           </div>
         ) : null}
 
-        {!error && !conversation ? (
+        {!error && !conversation && !sessionData ? (
           <p className="app-empty-state">Conversation introuvable.</p>
         ) : null}
 
-        {messages.map((message) => {
-          const mine = message.sender_id === userId;
-          return mine ? (
-            <div key={message.id} className="mb-2 flex justify-end">
-              <div className="bg-orange-500 text-white text-sm px-3 py-2 rounded-2xl rounded-tr-sm max-w-[75%]">
-                {message.content}
-                <span className="block text-xs text-orange-200 text-right mt-0.5">
-                  {formatTime(message.created_at)}
-                </span>
+        <div id="messages-list" className="space-y-2">
+          {!error && (conversation || sessionData) && messages.length === 0 ? (
+            <EmptyState
+              icon="💬"
+              title="Démarrez la conversation"
+              description="Le premier message envoyé apparaîtra ici, avec les fichiers et livraisons liés à la mission."
+              className="px-4 py-8"
+            />
+          ) : null}
+          {messages.map((message) => {
+            const mine = message.sender_id === userId;
+            const resolvedFileUrl = message.file_url
+              ? (signedAttachmentUrls[message.id] ?? message.file_url)
+              : null;
+            return (
+              <div
+                key={message.id}
+                className={`message-bubble ${mine ? 'message-bubble--own flex justify-end' : 'flex justify-start'}`}
+              >
+                <div
+                  className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                    mine
+                      ? 'rounded-tr-sm bg-orange-500 text-white'
+                      : 'rounded-tl-sm bg-white text-gray-800'
+                  }`}
+                >
+                  {message.content ? (
+                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  ) : null}
+
+                  {message.file_url ? (
+                    <div className={message.content ? 'mt-2' : ''}>
+                      {message.file_type === 'audio' ? (
+                        resolvedFileUrl ? (
+                          <audio controls src={resolvedFileUrl} className="w-full min-w-[220px] max-w-full" />
+                        ) : (
+                          <span className={`text-xs ${mine ? 'text-white/80' : 'text-gray-500'}`}>Préparation du fichier…</span>
+                        )
+                      ) : message.file_type === 'image' ? (
+                        <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
+                          <img
+                            src={resolvedFileUrl ?? message.file_url}
+                            alt={message.file_name ?? 'Image envoyée'}
+                            className="max-h-52 w-full rounded-xl object-cover"
+                          />
+                        </a>
+                      ) : (
+                        <a
+                          href={resolvedFileUrl ?? message.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`inline-flex items-center gap-2 text-xs underline-offset-2 hover:underline ${
+                            mine ? 'text-white/90' : 'text-orange-600'
+                          }`}
+                        >
+                          <span>📎</span>
+                          <span>{message.file_name ?? 'Télécharger le document'}</span>
+                        </a>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {isSessionMessage(message) ? (
+                    <span
+                      className={`mt-1 block text-right text-xs ${
+                        mine ? 'text-orange-100' : 'text-gray-400'
+                      }`}
+                    >
+                      {formatTime(message.created_at)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div key={message.id} className="mb-2 flex justify-start gap-2">
-              <div className="bg-white text-gray-800 text-sm px-3 py-2 rounded-2xl rounded-tl-sm max-w-[75%] shadow-sm">
-                {message.content}
-                <span className="block text-xs text-gray-400 text-right mt-0.5">
-                  {formatTime(message.created_at)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
         <div ref={bottomRef} />
+
+        {mode === 'session' && sessionData?.mission_id ? (
+          <DeliveryPanel
+            sessionId={chatId ?? ''}
+            missionId={sessionData.mission_id}
+            canUpload={profileType === 'pro'}
+            refreshKey={`${messages.at(-1)?.id ?? messages.length}-${deliveryRefreshKey}`}
+          />
+        ) : null}
       </div>
 
       <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 border-t border-black/5 bg-[#f4ece4]/95 px-4 py-3 backdrop-blur-md">
-        <div className="mx-auto flex max-w-lg items-end gap-2">
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
-            onKeyDown={handleInputKeyDown}
-            placeholder="Écrire un message..."
-            rows={1}
-            className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
-          />
-          <button
-            type="button"
-            onClick={() => void sendMessage()}
-            disabled={sending || draft.trim().length === 0}
-            className="min-h-[44px] min-w-[44px] rounded-2xl bg-orange-500 px-3 text-white font-semibold disabled:opacity-50"
-          >
-            →
-          </button>
+        <div className="mx-auto max-w-lg">
+          {attachment ? (
+            <div className="mb-2 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-stone-700">
+              <span className="truncate pr-3">📎 {attachment.fileName}</span>
+              <button
+                type="button"
+                onClick={() => setAttachment(null)}
+                className="text-xs text-orange-600 hover:underline"
+              >
+                Retirer
+              </button>
+            </div>
+          ) : null}
+
+          <div className="flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*,application/pdf,.zip,application/zip,application/x-zip-compressed,image/*"
+              className="hidden"
+              onChange={handleSelectAttachment}
+            />
+            {canAttachFiles ? (
+              <button
+                id="btn-attach"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAttachment || sending}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-60"
+              >
+                {uploadingAttachment ? '…' : '+'}
+              </button>
+            ) : null}
+            <textarea
+              id="chat-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
+              onKeyDown={handleInputKeyDown}
+              placeholder="Écrire un message..."
+              rows={1}
+              className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            />
+            <button
+              id="btn-send"
+              type="button"
+              onClick={() => void sendMessage()}
+              disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
+              className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white disabled:opacity-50"
+            >
+              {sending ? '…' : '→'}
+            </button>
+          </div>
+          <p className="mx-auto mt-1 max-w-lg text-right text-[11px] text-stone-400">
+            {draft.length}/2000
+          </p>
         </div>
-        <p className="mx-auto mt-1 max-w-lg text-right text-[11px] text-stone-400">
-          {draft.length}/2000
-        </p>
       </div>
+
+      {mode === 'session' && chatId && otherParticipant ? (
+        <RatingModal
+          isOpen={showRatingModal}
+          sessionId={chatId}
+          rateeId={otherParticipant.id}
+          rateeDisplayName={getPublicProfileDisplayName(otherParticipant)}
+          onClose={() => setShowRatingModal(false)}
+        />
+      ) : null}
     </div>
   );
 }

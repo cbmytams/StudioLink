@@ -46,9 +46,11 @@ export function useUpdateApplicationStatus() {
   const { showToast } = useToast();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: ApplicationStatus }) =>
-      applicationService.updateStatus(id, status),
+      status === 'accepted'
+        ? applicationService.acceptApplication(id)
+        : applicationService.rejectApplication(id),
     onSuccess: (_data, variables) => {
-      const label = variables.status === 'selected' ? 'Candidature retenue' : 'Candidature mise à jour';
+      const label = variables.status === 'accepted' ? 'Candidature retenue' : 'Candidature mise à jour';
       showToast({ title: label, variant: 'default' });
       void queryClient.invalidateQueries({ queryKey: ['applications'] });
       void queryClient.invalidateQueries({ queryKey: ['missions'] });

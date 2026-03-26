@@ -5,13 +5,11 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
-
-function getSafeNext(next: string | null) {
-  if (!next || !next.startsWith('/')) {
-    return '/';
-  }
-  return next;
-}
+import {
+  getDashboardPath,
+  isProfileIncomplete,
+  resolveProfileType,
+} from '@/lib/auth/profileCompleteness';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -28,16 +26,47 @@ export default function AuthCallback() {
       }
 
       const code = searchParams.get('code');
-      const next = getSafeNext(searchParams.get('next'));
-
+      const nextPath = searchParams.get('next');
       try {
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
         }
 
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session) {
+          if (!cancelled) {
+            navigate('/login', { replace: true });
+          }
+          return;
+        }
+
+        if (nextPath && !cancelled) {
+          navigate(nextPath, { replace: true });
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, display_name, type, user_type, bio')
+          .eq('id', sessionData.session.user.id)
+          .maybeSingle();
+
         if (!cancelled) {
-          navigate(next, { replace: true });
+          const callbackProfile = profile as {
+            full_name?: string | null;
+            display_name?: string | null;
+            type?: 'studio' | 'pro' | null;
+            user_type?: 'studio' | 'pro' | null;
+            bio?: string | null;
+          } | null;
+          if (isProfileIncomplete(callbackProfile)) {
+            navigate('/onboarding', { replace: true });
+            return;
+          }
+          navigate(getDashboardPath(resolveProfileType(callbackProfile)), { replace: true });
         }
       } catch (callbackError) {
         if (!cancelled) {
