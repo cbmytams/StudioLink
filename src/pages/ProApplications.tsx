@@ -9,6 +9,7 @@ import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { chatService } from '@/lib/chat/chatService';
 import { getPublicProfileDisplayName, getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
+import type { Database } from '@/types/supabase';
 
 type FilterValue = 'all' | 'pending' | 'accepted' | 'rejected';
 
@@ -32,22 +33,15 @@ type Application = {
   offer: Offer | null
 };
 
-type OfferRow = {
-  id: string
-  studio_id: string
-  title: string | null
-  city: string | null
-  location: string | null
-  daily_rate: number | null
-};
+type OfferRow = Pick<
+Database['public']['Tables']['missions']['Row'],
+'id' | 'studio_id' | 'title' | 'city' | 'location' | 'daily_rate'
+>;
 
-type ApplicationRow = {
-  id: string
-  status: string | null
-  created_at: string
-  mission_id: string
-  offer: OfferRow | OfferRow[] | null
-};
+type ApplicationRow = Pick<
+Database['public']['Tables']['applications']['Row'],
+'id' | 'status' | 'created_at' | 'applied_at' | 'mission_id'
+>;
 
 const FILTERS: Array<{ label: string; value: FilterValue }> = [
   { label: 'Toutes', value: 'all' },
@@ -107,44 +101,43 @@ export default function ProApplications() {
       setError(null);
 
       try {
-        const query: string = `
-          id,
-          status,
-          created_at,
-          mission_id,
-          offer:mission_id (
-            id,
-            studio_id,
-            title,
-            city,
-            location,
-            daily_rate
-          )
-        `;
-
-        const { data, error: fetchError } = await supabase
+        const { data: applicationRows, error: fetchError } = await supabase
           .from('applications')
-          .select(query)
+          .select('id, status, created_at, applied_at, mission_id')
           .eq('pro_id', userId)
           .order('created_at', { ascending: false });
 
         if (fetchError) throw fetchError;
         if (!active) return;
 
-        const rawApplications = (data as ApplicationRow[] | null ?? []);
-        const studioIds = Array.from(new Set(rawApplications.map((row) => {
-          const rawOffer = Array.isArray(row.offer) ? row.offer[0] ?? null : row.offer;
-          return rawOffer?.studio_id ?? null;
-        }).filter((value): value is string => Boolean(value))));
+        const rawApplications: ApplicationRow[] = applicationRows ?? [];
+        const missionIds = Array.from(new Set(rawApplications.map((row) => row.mission_id)));
+        let offersByMissionId = new Map<string, OfferRow>();
+
+        if (missionIds.length > 0) {
+          const { data: missionRows, error: missionError } = await supabase
+            .from('missions')
+            .select('id, studio_id, title, city, location, daily_rate')
+            .in('id', missionIds);
+          if (missionError) throw missionError;
+
+          offersByMissionId = new Map<string, OfferRow>(
+            (missionRows ?? []).map((mission) => [mission.id, mission]),
+          );
+        }
+
+        const studioIds = Array.from(new Set(
+          Array.from(offersByMissionId.values()).map((offer) => offer.studio_id),
+        ));
         const studiosById = await getPublicProfilesMap(studioIds);
 
         const mapped = rawApplications.map((row) => {
-          const rawOffer = Array.isArray(row.offer) ? row.offer[0] ?? null : row.offer;
+          const rawOffer = offersByMissionId.get(row.mission_id) ?? null;
 
           return {
             id: row.id,
             status: normalizeApplicationStatus(row.status),
-            created_at: row.created_at,
+            created_at: row.created_at ?? row.applied_at,
             mission_id: row.mission_id,
             offer: rawOffer
               ? {
@@ -167,12 +160,12 @@ export default function ProApplications() {
           return;
         }
 
-        const missionIds = mapped.map((application) => application.mission_id);
+        const mappedMissionIds = mapped.map((application) => application.mission_id);
         const { data: sessionRows, error: sessionsError } = await supabase
           .from('sessions')
           .select('id, mission_id')
           .eq('pro_id', userId)
-          .in('mission_id', missionIds);
+          .in('mission_id', mappedMissionIds);
 
         if (sessionsError) throw sessionsError;
         if (!active) return;
