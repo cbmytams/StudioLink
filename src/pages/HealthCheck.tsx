@@ -2,13 +2,23 @@ type HealthPayload = {
   status: 'ok';
   timestamp: string;
   version: string;
+  services: {
+    analytics: boolean;
+    monitoring: boolean;
+    email: 'edge-function';
+  };
 };
 
-function buildHealthPayload(): HealthPayload {
+export function buildHealthPayload(): HealthPayload {
   return {
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: import.meta.env.VITE_APP_VERSION ?? 'unknown',
+    version: import.meta.env.VITE_APP_VERSION ?? 'dev',
+    services: {
+      analytics: Boolean(import.meta.env.VITE_POSTHOG_KEY),
+      monitoring: Boolean(import.meta.env.VITE_SENTRY_DSN),
+      email: 'edge-function',
+    },
   };
 }
 
