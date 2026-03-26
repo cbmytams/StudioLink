@@ -2,6 +2,11 @@ import posthog from 'posthog-js';
 
 let postHogInitialized = false;
 
+function readConsent() {
+  if (typeof window === 'undefined') return 'unknown';
+  return window.localStorage.getItem('cookie_consent');
+}
+
 export function initPostHog() {
   if (typeof window === 'undefined' || postHogInitialized) return;
 
@@ -16,9 +21,12 @@ export function initPostHog() {
       maskInputFn: (text) => '*'.repeat(text.length),
     },
     loaded: (ph) => {
-      if (import.meta.env.DEV || !import.meta.env.VITE_POSTHOG_KEY) {
+      const consent = readConsent();
+      if (import.meta.env.DEV || !import.meta.env.VITE_POSTHOG_KEY || consent !== 'accepted') {
         ph.opt_out_capturing();
+        return;
       }
+      ph.opt_in_capturing();
     },
   });
 

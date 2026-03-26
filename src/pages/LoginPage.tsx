@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
@@ -577,6 +577,30 @@ export default function LoginPage() {
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
+
+        {!isSignIn ? (
+          <p className="mt-3 text-center text-xs text-white/55">
+            En vous inscrivant, vous acceptez nos{' '}
+            <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+              Conditions d&apos;utilisation
+            </Link>{' '}
+            et notre{' '}
+            <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+              Politique de confidentialité
+            </Link>
+            .
+          </p>
+        ) : (
+          <p className="mt-3 text-center text-xs text-white/50">
+            <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+              Confidentialité
+            </Link>{' '}
+            ·{' '}
+            <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+              Conditions d&apos;utilisation
+            </Link>
+          </p>
+        )}
       </GlassCard>
     </div>
   );

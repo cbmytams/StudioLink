@@ -17,6 +17,8 @@ export default function SettingsPage() {
   const profileRoute = profileType === 'studio' ? '/studio/profile' : '/pro/profile';
   const [loadingAction, setLoadingAction] = useState<'reset' | 'logout' | 'delete' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   const handleResetPassword = async () => {
     if (!user?.email) return;
@@ -66,25 +68,43 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Supprimer définitivement votre compte ? Cette action est irréversible.')) {
+    if (!user?.email) {
+      setError('Email utilisateur introuvable.');
+      return;
+    }
+    if (!deletePassword.trim()) {
+      setError('Veuillez saisir votre mot de passe pour confirmer.');
       return;
     }
 
     setLoadingAction('delete');
     setError(null);
     try {
-      const { error: rpcError } = await supabase.rpc('delete_user');
-      if (rpcError) {
-        setError('Impossible de supprimer le compte. Contacte le support.');
-        showToast({
-          title: 'Suppression impossible',
-          description: 'Impossible de supprimer le compte. Contacte le support.',
-          variant: 'destructive',
-        });
-        return;
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: deletePassword,
+      });
+      if (verifyError) {
+        throw new Error('Mot de passe incorrect.');
       }
 
-      await signOut();
+      const { data, error: functionError } = await supabase.functions.invoke('delete-account', {
+        body: {},
+      });
+      if (functionError) throw functionError;
+
+      if (
+        data
+        && typeof data === 'object'
+        && 'error' in data
+        && data.error
+      ) {
+        throw new Error(String(data.error));
+      }
+
+      await signOut().catch(() => undefined);
+      setIsDeleteModalOpen(false);
+      setDeletePassword('');
       showToast({ title: 'Compte supprimé', variant: 'default' });
       navigate('/login', { replace: true });
     } catch (deleteError) {
@@ -196,14 +216,18 @@ export default function SettingsPage() {
               <p className="mt-3 text-sm text-red-100/80">
                 La suppression de compte est irréversible. Vos conversations, fichiers et données liées seront définitivement retirés.
               </p>
-              <button
-                type="button"
-                disabled={loadingAction !== null}
-                onClick={() => void handleDeleteAccount()}
-                className="mt-4 w-full rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm font-medium text-red-100 transition hover:bg-red-500/25 disabled:opacity-50"
-              >
-                {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
-              </button>
+                <button
+                  type="button"
+                  disabled={loadingAction !== null}
+                  onClick={() => {
+                    setDeletePassword('');
+                    setError(null);
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="mt-4 w-full rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm font-medium text-red-100 transition hover:bg-red-500/25 disabled:opacity-50"
+                >
+                  {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
+                </button>
               <p className="mt-2 text-xs text-red-100/55">
                 Si la suppression automatique n’est pas disponible, un message support s’affichera.
               </p>
@@ -211,6 +235,49 @@ export default function SettingsPage() {
           </aside>
         </div>
       </div>
+
+      {isDeleteModalOpen ? (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161622] p-5 shadow-xl">
+            <h2 className="text-lg font-semibold text-white">Confirmer la suppression du compte</h2>
+            <p className="mt-2 text-sm text-white/65">
+              Cette action est irreversible. Saisissez votre mot de passe pour confirmer.
+            </p>
+            <label htmlFor="delete-password" className="mt-4 block text-xs uppercase tracking-[0.18em] text-white/45">
+              Mot de passe
+            </label>
+            <input
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(event) => setDeletePassword(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400"
+              placeholder="Votre mot de passe"
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (loadingAction === 'delete') return;
+                  setIsDeleteModalOpen(false);
+                  setDeletePassword('');
+                }}
+                className="min-h-[44px] flex-1 rounded-xl border border-white/20 px-3 text-sm text-white/80 transition hover:bg-white/10"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={loadingAction === 'delete' || !deletePassword.trim()}
+                onClick={() => void handleDeleteAccount()}
+                className="min-h-[44px] flex-1 rounded-xl bg-red-500 px-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+              >
+                {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

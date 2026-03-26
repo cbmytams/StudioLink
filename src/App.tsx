@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/supabase/auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoadingScreen from '@/components/LoadingScreen';
 import { Toaster } from '@/components/ui/Toast';
+import { CookieBanner } from '@/components/shared/CookieBanner';
 import StudioLayout from '@/layouts/StudioLayout';
 import ProLayout from '@/layouts/ProLayout';
 import {
@@ -48,6 +49,8 @@ const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const HealthCheckPage = lazy(() => import('@/pages/HealthCheck'));
+const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
+const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 type AppProfile = {
@@ -171,6 +174,8 @@ export default function App() {
             )}
           />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/legal/privacy" element={<PrivacyPage />} />
+          <Route path="/legal/terms" element={<TermsPage />} />
 
           <Route
             path="/onboarding"
@@ -431,6 +436,7 @@ export default function App() {
         </Routes>
       </Suspense>
       <Toaster />
+      <CookieBanner />
     </BrowserRouter>
   );
 }

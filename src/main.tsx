@@ -39,6 +39,13 @@ if (sentryDsn) {
   });
 }
 
+if (typeof window !== 'undefined') {
+  const consent = window.localStorage.getItem('cookie_consent');
+  if (consent !== 'accepted') {
+    // PostHog reste opt-out jusqu'au consentement explicite.
+  }
+}
+
 initPostHog();
 injectAnalytics();
 injectSpeedInsights();

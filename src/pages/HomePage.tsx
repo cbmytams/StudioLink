@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/supabase/auth';
 import { Button } from '@/components/ui/Button';
 import { Helmet } from 'react-helmet-async';
@@ -207,7 +207,15 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-white/10 py-6 text-center text-white/35 text-xs">
-        © 2025 StudioLink. Tous droits réservés.
+        <p>© 2026 StudioLink. Tous droits réservés.</p>
+        <div className="mt-2 flex justify-center gap-4 text-white/55">
+          <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+            Conditions d&apos;utilisation
+          </Link>
+          <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+            Politique de confidentialite
+          </Link>
+        </div>
       </footer>
     </div>
   );
