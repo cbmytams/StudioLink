@@ -131,7 +131,7 @@ export default function ProApplications() {
         if (fetchError) throw fetchError;
         if (!active) return;
 
-        const rawApplications = (data as unknown as ApplicationRow[] | null ?? []);
+        const rawApplications = (data as ApplicationRow[] | null ?? []);
         const studioIds = Array.from(new Set(rawApplications.map((row) => {
           const rawOffer = Array.isArray(row.offer) ? row.offer[0] ?? null : row.offer;
           return rawOffer?.studio_id ?? null;
