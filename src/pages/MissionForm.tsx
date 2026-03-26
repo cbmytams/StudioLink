@@ -2,11 +2,13 @@ import { type FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useStat
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { useAuth } from '@/lib/supabase/auth';
 import { FileUpload } from '@/components/shared/FileUpload';
 import { useToast } from '@/components/ui/Toast';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import type { MissionFileRecord } from '@/types/backend';
+import type { Database } from '@/types/supabase';
 import { deleteFile, getMissionFiles, uploadMissionFile } from '@/lib/files/fileService';
 import {
   buildMissionWritePayload,
@@ -329,9 +331,10 @@ export default function MissionForm() {
       setStatus(nextStatus);
 
       if (isEdit && id) {
+        const updatePayload: Database['public']['Tables']['missions']['Update'] = payload;
         const { error: updateError } = await supabase
           .from('missions')
-          .update(payload as never)
+          .update(updatePayload)
           .eq('id', id)
           .eq('studio_id', userId);
 
@@ -342,9 +345,10 @@ export default function MissionForm() {
           variant: 'default',
         });
       } else {
+        const insertPayload: Database['public']['Tables']['missions']['Insert'] = payload;
         const { data: insertedMission, error: insertError } = await supabase
           .from('missions')
-          .insert(payload as never)
+          .insert(insertPayload)
           .select('id')
           .single();
 
@@ -362,6 +366,7 @@ export default function MissionForm() {
         navigate(`/studio/missions/${createdMissionId}/edit`, { replace: true });
       }
     } catch (submitError) {
+      if (await handleAuthError(submitError, navigate)) return;
       setError(submitError instanceof Error ? submitError.message : 'Impossible d’enregistrer la mission.');
     } finally {
       setSaving(false);
