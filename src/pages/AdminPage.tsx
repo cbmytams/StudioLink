@@ -29,15 +29,14 @@ type InvitationRow = {
 }
 
 function mapRowToInvitation(row: InvitationRow): Invitation {
-  const dynamicRow = row as unknown as Record<string, unknown>;
-  const usedBy = typeof dynamicRow.used_by === 'string' ? dynamicRow.used_by : null;
+  const usedBy = typeof row.used_by === 'string' ? row.used_by : null;
 
   return {
     id: row.id,
     code: row.code,
     type: row.type,
-    email: typeof dynamicRow.email === 'string' ? dynamicRow.email : null,
-    used: typeof dynamicRow.used === 'boolean' ? dynamicRow.used : usedBy !== null,
+    email: typeof row.email === 'string' ? row.email : null,
+    used: typeof row.used === 'boolean' ? row.used : usedBy !== null,
     expires_at: row.expires_at ?? null,
     created_at: row.created_at,
   };
@@ -119,7 +118,7 @@ export default function AdminPage() {
           .select('id, code, type, email, used, expires_at, created_at')
           .order('created_at', { ascending: false });
 
-        let data = expected.data as unknown as InvitationRow[] | null;
+        let data = expected.data as InvitationRow[] | null;
         let fetchError = expected.error;
 
         if (fetchError) {
@@ -127,7 +126,7 @@ export default function AdminPage() {
             .from('invitations')
             .select('id, code, type, used_by, expires_at, created_at')
             .order('created_at', { ascending: false });
-          data = fallback.data as unknown as InvitationRow[] | null;
+          data = fallback.data as InvitationRow[] | null;
           fetchError = fallback.error;
         }
 
@@ -170,11 +169,11 @@ export default function AdminPage() {
           used: false,
           expires_at,
           created_at: new Date().toISOString(),
-        } as never)
+        })
         .select()
         .single();
 
-      let data = expected.data as unknown as InvitationRow | null;
+      let data = expected.data as InvitationRow | null;
       let insertError = expected.error;
 
       if (insertError) {
@@ -185,11 +184,11 @@ export default function AdminPage() {
             type: newType,
             expires_at,
             created_at: new Date().toISOString(),
-          } as never)
+          })
           .select()
           .single();
 
-        data = fallback.data as unknown as InvitationRow | null;
+        data = fallback.data as InvitationRow | null;
         insertError = fallback.error;
       }
 
