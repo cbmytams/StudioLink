@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import type { Database } from '@/types/supabase';
 import type { CreateMissionInput, MissionRecord, MissionStatus } from '@/types/backend';
 import type { Mission as LegacyMission } from '@/types/mission';
@@ -106,18 +107,34 @@ export const missionService = {
       status: toDbMissionStatus(input.status, 'draft'),
     };
 
-    const { data, error } = await client.from('missions').insert(payload).select(MISSION_SELECT_COLUMNS).single();
-    if (error) throw error;
-    return data as MissionRecord;
+    try {
+      const { data, error } = await client.from('missions').insert(payload).select(MISSION_SELECT_COLUMNS).single();
+      if (error) throw error;
+      return data as MissionRecord;
+    } catch (error) {
+      const isAuthError = await handleAuthError(error);
+      if (isAuthError) {
+        throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+      }
+      throw error;
+    }
   },
 
   async updateMissionStatus(id: string, status: MissionStatus): Promise<void> {
     const client = ensureClient();
-    const { error } = await client
-      .from('missions')
-      .update({ status: toDbMissionStatus(status, 'draft') })
-      .eq('id', id);
-    if (error) throw error;
+    try {
+      const { error } = await client
+        .from('missions')
+        .update({ status: toDbMissionStatus(status, 'draft') })
+        .eq('id', id);
+      if (error) throw error;
+    } catch (error) {
+      const isAuthError = await handleAuthError(error);
+      if (isAuthError) {
+        throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+      }
+      throw error;
+    }
   },
 
   async deleteMission(id: string): Promise<void> {
