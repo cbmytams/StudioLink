@@ -1,5 +1,6 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { handleAuthError } from '@/lib/auth/handleAuthError';
 import type { ChatFileType, SessionRecord } from '@/types/backend';
 import { getPublicProfilesMap, type PublicProfileRecord } from '@/services/publicProfileService';
 import { detectChatFileType, normalizeChatMessageRow, type NormalizedChatMessage } from './chatUtils';
@@ -186,24 +187,32 @@ export const chatService = {
       read_at: null,
     };
 
-    const { data, error } = await client
-      .from('messages')
-      .insert(payload)
-      .select('id, session_id, sender_id, content, file_url, file_name, file_type, is_read, read, read_at, created_at')
-      .single();
+    try {
+      const { data, error } = await client
+        .from('messages')
+        .insert(payload)
+        .select('id, session_id, sender_id, content, file_url, file_name, file_type, is_read, read, read_at, created_at')
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    const { error: sessionError } = await client
-      .from('sessions')
-      .update({ updated_at: new Date().toISOString() } as never)
-      .eq('id', sessionId);
+      const { error: sessionError } = await client
+        .from('sessions')
+        .update({ updated_at: new Date().toISOString() } as never)
+        .eq('id', sessionId);
 
-    if (sessionError) {
-      // Non bloquant pour l'expérience chat.
+      if (sessionError) {
+        // Non bloquant pour l'expérience chat.
+      }
+
+      return normalizeChatMessageRow(data as MessageRow);
+    } catch (error) {
+      const isAuthError = await handleAuthError(error);
+      if (isAuthError) {
+        throw new Error('Session expirée. Reconnecte-toi pour continuer.');
+      }
+      throw error;
     }
-
-    return normalizeChatMessageRow(data as MessageRow);
   },
 
   subscribeToMessages(sessionId: string, onNewMessage: (message: ChatMessage) => void): RealtimeChannel {
