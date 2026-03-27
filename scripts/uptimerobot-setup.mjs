@@ -12,27 +12,27 @@ const monitors = [
   {
     friendly_name: 'StudioLink - Home',
     url: 'https://studiolink-paris.vercel.app',
-    interval: 5,
+    interval: 30,
   },
   {
     friendly_name: 'StudioLink - Login',
     url: 'https://studiolink-paris.vercel.app/login',
-    interval: 5,
+    interval: 30,
   },
   {
     friendly_name: 'StudioLink - Supabase REST',
     url: 'https://isoshywrmnvxjbnhgcqc.supabase.co/rest/v1/',
-    interval: 5,
+    interval: 30,
   },
   {
     friendly_name: 'StudioLink - API Health',
     url: 'https://studiolink-paris.vercel.app/api/health',
-    interval: 1,
+    interval: 30,
   },
   {
     friendly_name: 'StudioLink - Health',
     url: 'https://studiolink-paris.vercel.app/health',
-    interval: 5,
+    interval: 30,
   },
 ];
 
@@ -79,16 +79,16 @@ async function createMonitor(config) {
     return;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (config.interval === 1 && message.toLowerCase().includes('interval')) {
+    if (message.toLowerCase().includes('interval')) {
       await formPost('newMonitor', {
         api_key: apiKey,
         format: 'json',
         type: '1',
         friendly_name: config.friendly_name,
         url: config.url,
-        interval: '5',
+        interval: '30',
       });
-      console.log(`created (fallback interval 5): ${config.friendly_name}`);
+      console.log(`created (fallback interval 30): ${config.friendly_name}`);
       return;
     }
     throw error;
