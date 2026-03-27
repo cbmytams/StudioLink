@@ -11,9 +11,15 @@
     "lint": "npx tsc --noEmit && eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+<<<<<<< HEAD
     "test:coverage": "vitest run --coverage --coverage.include=src/lib/auth/handleAuthError.ts --coverage.include=src/lib/email/emailService.ts --coverage.include=src/lib/analytics/events.ts --coverage.include=src/lib/analytics/posthog.ts",
     "invites:generate": "node --env-file=.env scripts/generate-invites.mjs",
     "uptimerobot:setup": "node scripts/setup-uptimerobot.mjs"
+=======
+    "test:coverage": "vitest run --coverage",
+    "invites:generate": "node --env-file=.env scripts/generate-invites.mjs",
+    "uptimerobot:setup": "node scripts/uptimerobot-setup.mjs"
+>>>>>>> 13940e7 (Auto-commit: 2026-03-27 09:07:24)
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
