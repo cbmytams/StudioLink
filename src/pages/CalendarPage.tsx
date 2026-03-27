@@ -427,7 +427,7 @@ export default function CalendarPage() {
       </Helmet>
       <header className="sticky top-0 z-30 flex flex-col gap-6 bg-[#f4ece4]/90 px-4 py-6 backdrop-blur-md">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-light tracking-tight">Calendrier</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Calendrier</h1>
           <div className="flex items-center rounded-full border border-white/50 bg-white/40 p-1">
             <button
               type="button"

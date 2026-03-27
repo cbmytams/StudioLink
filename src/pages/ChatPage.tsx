@@ -132,6 +132,7 @@ export default function ChatPage() {
   }, [profileType, sessionData, userId]);
   const canAttachFiles = mode !== 'session' || resolvedUserType === 'pro';
   const isStudioUser = resolvedUserType === 'studio';
+  const typingIndicator = draft.trim().length > 0 ? 'Vous êtes en train d’écrire…' : null;
   const otherParticipant = useMemo(() => {
     if (!sessionData || !userId) return null;
     return sessionData.studio_id === userId ? sessionData.pro : sessionData.studio;
@@ -513,9 +514,23 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="app-shell">
-        <div className="app-container-wide flex min-h-[100dvh] items-center justify-center">
-          <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+      <div className="app-shell min-h-[100dvh]">
+        <div className="mx-auto max-w-6xl px-4 pb-28 pt-6">
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div
+                key={idx}
+                className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}
+              >
+                <div className="h-16 w-[78%] animate-pulse rounded-2xl bg-white/10" />
+              </div>
+            ))}
+          </div>
+          <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 border-t border-black/5 bg-[#f4ece4]/95 px-4 py-3">
+            <div className="mx-auto max-w-6xl">
+              <div className="h-11 animate-pulse rounded-2xl bg-white/70" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -538,7 +553,7 @@ export default function ChatPage() {
           <button
             type="button"
             onClick={handleBack}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-sm transition-colors hover:text-black app-muted"
+            className="app-muted flex min-h-[44px] min-w-[44px] items-center justify-center text-sm transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
           >
             ←
           </button>
@@ -557,6 +572,17 @@ export default function ChatPage() {
             {missionTitle ? (
               <p className="truncate text-xs text-gray-500">{counterpartName}</p>
             ) : null}
+            {sessionData?.status ? (
+              <span
+                className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                  sessionData.status === 'completed'
+                    ? 'bg-stone-200 text-stone-700'
+                    : 'bg-green-100 text-green-700'
+                }`}
+              >
+                {sessionData.status === 'completed' ? 'Session terminée' : 'Session active'}
+              </span>
+            ) : null}
           </div>
 
           {canCompleteSession ? (
@@ -565,7 +591,7 @@ export default function ChatPage() {
                 type="button"
               disabled={completingSession}
               onClick={() => void handleCompleteSession()}
-              className="ml-auto rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 disabled:opacity-60"
+              className="ml-auto min-h-[44px] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               {completingSession ? '...' : 'Terminer et noter'}
             </button>
@@ -716,6 +742,9 @@ export default function ChatPage() {
           style={mobileComposerStyle}
         >
           <div className="mx-auto max-w-6xl lg:pr-[344px]">
+            {typingIndicator ? (
+              <p className="mb-2 text-xs text-stone-500" data-testid="typing-indicator">{typingIndicator}</p>
+            ) : null}
             {attachment ? (
               <div className="mb-2 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm text-stone-700">
                 <span className="truncate pr-3">📎 {attachment.fileName}</span>
@@ -723,7 +752,7 @@ export default function ChatPage() {
                   type="button"
                   aria-label="Retirer la pièce jointe"
                   onClick={() => setAttachment(null)}
-                  className="text-xs text-orange-600 hover:underline"
+                  className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-xs text-orange-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Retirer
                 </button>
@@ -745,19 +774,20 @@ export default function ChatPage() {
                   aria-label="Ajouter une pièce jointe"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAttachment || sending}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 disabled:opacity-60"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition hover:border-orange-300 hover:text-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60"
                 >
                   {uploadingAttachment ? '…' : '+'}
                 </button>
               ) : null}
               <textarea
                 id="chat-input"
+                aria-label="Message"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
                 onKeyDown={handleInputKeyDown}
                 placeholder="Écrire un message..."
                 rows={1}
-                className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
               <button
                 id="btn-send"
@@ -765,7 +795,7 @@ export default function ChatPage() {
                 aria-label="Envoyer le message"
                 onClick={() => void sendMessage()}
                 disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
-                className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white disabled:opacity-50"
+                className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 {sending ? '…' : '→'}
               </button>

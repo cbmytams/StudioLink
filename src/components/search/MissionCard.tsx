@@ -80,7 +80,7 @@ export function MissionCard({ mission, hasApplied = false, onOpen }: MissionCard
           </span>
         ) : (
           <span className="font-semibold text-orange-200">
-            Voir la mission →
+            Postuler →
           </span>
         )}
       </div>

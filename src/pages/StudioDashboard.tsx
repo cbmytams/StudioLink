@@ -5,6 +5,7 @@ import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MiniLineChart } from '@/components/shared/MiniLineChart';
+import { SkeletonList } from '@/components/shared/SkeletonCard';
 import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
@@ -52,7 +53,7 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 glass-card-hover px-4 py-3 w-full text-left"
+      className="flex min-h-[44px] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
     >
       <span className="text-xl">{icon}</span>
       <div>
@@ -99,11 +100,19 @@ export default function StudioDashboard() {
 
   if (loading && !dashboard) {
     return (
-      <div className="app-shell">
-        <div className="app-container-wide flex min-h-[100dvh] items-center justify-center">
-          <div className="flex items-center gap-3 text-white/60">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
-            Chargement du dashboard studio…
+      <div className="app-shell min-h-[100dvh]">
+        <div className="app-container-wide space-y-6 pt-6">
+          <div className="app-card p-5">
+            <div className="h-6 w-56 animate-pulse rounded bg-white/10" />
+            <div className="mt-3 h-4 w-72 animate-pulse rounded bg-white/10" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="app-card h-28 animate-pulse rounded-2xl bg-white/5" />
+            ))}
+          </div>
+          <div className="app-card p-5">
+            <SkeletonList count={3} />
           </div>
         </div>
       </div>
@@ -227,7 +236,7 @@ export default function StudioDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/studio/missions')}
-                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
+                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Tout voir
               </button>
@@ -268,7 +277,7 @@ export default function StudioDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/applications`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Voir les candidatures
                       </button>
@@ -278,15 +287,20 @@ export default function StudioDashboard() {
                           type="button"
                           disabled={openingMissionId === mission.id}
                           onClick={() => void openChatForMission(mission.id, mission.session_id)}
-                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-60"
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          Ouvrir le chat
+                          {openingMissionId === mission.id ? (
+                            <span className="inline-flex items-center gap-2">
+                              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                              Ouverture...
+                            </span>
+                          ) : 'Ouvrir le chat'}
                         </button>
                       ) : null}
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/edit`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Modifier
                       </button>

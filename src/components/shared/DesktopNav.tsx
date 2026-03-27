@@ -61,7 +61,12 @@ export function DesktopNav({ userType }: DesktopNavProps) {
   return (
     <aside className="pointer-events-auto fixed inset-y-4 left-4 z-40 hidden w-[272px] md:flex">
       <div className="flex h-full w-full flex-col rounded-[28px] border border-white/10 bg-black/35 p-4 shadow-[0_12px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-        <div className="mb-4 flex items-center gap-3 px-2">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4 flex w-full items-center gap-3 rounded-xl px-2 py-1 text-left transition hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+          aria-label="Retour au dashboard"
+        >
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.35)]">
             SL
           </div>
@@ -71,7 +76,7 @@ export function DesktopNav({ userType }: DesktopNavProps) {
               {userType === 'studio' ? 'Espace studio' : 'Espace pro'}
             </p>
           </div>
-        </div>
+        </button>
 
         <GlobalSearchBar userType={userType} variant="sidebar" />
 

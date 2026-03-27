@@ -52,7 +52,7 @@ export function BottomNav({ userType }: BottomNavProps) {
               type="button"
               aria-label={tab.label}
               onClick={() => navigate(tab.path)}
-              className="relative flex min-h-[44px] w-16 flex-col items-center justify-center gap-1"
+              className="relative flex min-h-[44px] w-16 flex-col items-center justify-center gap-1 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
             >
               <Icon 
                 size={24} 

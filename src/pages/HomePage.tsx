@@ -43,7 +43,7 @@ export default function HomePage() {
             className="flex items-center gap-3 text-left"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.25)]">
-              <span className="text-base font-black tracking-tight text-white">SL</span>
+              <span className="text-base font-bold tracking-tight text-white">SL</span>
             </div>
             <div>
               <p className="text-sm font-semibold text-white">StudioLink</p>

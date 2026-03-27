@@ -130,7 +130,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
+          className="app-muted mb-4 inline-flex min-h-[44px] items-center px-1 text-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
         >
           ← Retour
         </button>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => navigate(profileRoute)}
-                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Modifier mon profil
                 </button>
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                   type="button"
                   disabled={loadingAction !== null}
                   onClick={() => void handleResetPassword()}
-                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-orange-300/20 bg-orange-500/10 px-4 py-3 text-sm font-medium text-orange-100 transition hover:bg-orange-500/15 disabled:opacity-50"
+                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-orange-300/20 bg-orange-500/10 px-4 py-3 text-sm font-medium text-orange-100 transition hover:bg-orange-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
                 >
                   {loadingAction === 'reset' ? 'Envoi…' : 'Changer mon mot de passe'}
                 </button>
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                   aria-label="Déconnexion"
                   disabled={loadingAction !== null}
                   onClick={() => void handleLogout()}
-                  className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-medium text-stone-800 transition hover:bg-stone-50 disabled:opacity-50"
+                  className="w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm font-medium text-stone-800 transition hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
                 >
                   {loadingAction === 'logout' ? 'Déconnexion…' : 'Déconnexion'}
                 </button>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => navigate(profileRoute)}
-                className="mt-4 w-full rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                className="mt-4 w-full rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Ouvrir mon profil
               </button>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                     setError(null);
                     setIsDeleteModalOpen(true);
                   }}
-                  className="mt-4 w-full rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm font-medium text-red-100 transition hover:bg-red-500/25 disabled:opacity-50"
+                  className="mt-4 w-full rounded-2xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm font-medium text-red-100 transition hover:bg-red-500/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 disabled:opacity-50"
                 >
                   {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer le compte'}
                 </button>
@@ -249,9 +249,10 @@ export default function SettingsPage() {
             <input
               id="delete-password"
               type="password"
+              autoComplete="current-password"
               value={deletePassword}
               onChange={(event) => setDeletePassword(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400"
+              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
               placeholder="Votre mot de passe"
             />
             <div className="mt-4 flex gap-2">

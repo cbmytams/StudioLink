@@ -148,7 +148,7 @@ export function FileUpload({
         }}
         className={`flex min-h-[96px] w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${
           disabled
-            ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
+            ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-500'
             : isDragOver
               ? 'border-orange-300 bg-orange-50 text-orange-600'
               : 'border-gray-200 bg-white text-gray-500 hover:bg-orange-50 hover:text-orange-600'

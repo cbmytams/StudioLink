@@ -3,7 +3,7 @@ import { HTMLAttributes } from "react";
 
 export function SectionTitle({ children, className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2 className={cn("text-2xl font-light tracking-tight text-black", className)} {...props}>
+    <h2 className={cn("text-2xl font-semibold tracking-tight text-black", className)} {...props}>
       {children}
     </h2>
   );

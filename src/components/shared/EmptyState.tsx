@@ -50,7 +50,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={action.onClick}
-          className={`mt-5 rounded-full border px-4 py-2 text-sm font-medium transition hover:bg-orange-400/15 ${
+          className={`mt-5 inline-flex min-h-[44px] items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
             isLight
               ? 'border-orange-200 bg-orange-50 text-orange-700'
               : 'border-orange-400/20 bg-orange-400/10 text-orange-100'

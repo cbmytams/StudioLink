@@ -72,6 +72,28 @@ function getConfirmPasswordError(password: string, confirmPassword: string): str
   return undefined;
 }
 
+function parseInvitationType(value: string | null): 'studio' | 'pro' | null {
+  if (value === 'studio' || value === 'pro') return value;
+  return null;
+}
+
+function getPasswordStrength(value: string): {
+  label: string;
+  className: string;
+} {
+  if (!value) return { label: 'Entrez un mot de passe sécurisé', className: 'text-white/50' };
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (/[A-Z]/.test(value)) score += 1;
+  if (/[0-9]/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+  if (score <= 1) return { label: 'Sécurité faible', className: 'text-red-300' };
+  if (score <= 2) return { label: 'Sécurité moyenne', className: 'text-amber-200' };
+  if (score <= 3) return { label: 'Sécurité correcte', className: 'text-emerald-200' };
+  return { label: 'Sécurité forte', className: 'text-emerald-100' };
+}
+
 function firstNameFromEmail(value: string) {
   const localPart = value.split('@')[0] ?? '';
   const cleaned = localPart.replace(/[._-]+/g, ' ').trim();
@@ -105,11 +127,14 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const explicitMode = params.get('mode');
+    const queryCode = params.get('code');
+    const queryType = parseInvitationType(params.get('type'));
+    const queryEmail = params.get('email');
     const isRegisterPath = location.pathname === '/register';
     const nextInvitationContext = getInvitationContext({
-      routeCode: routeState?.code ?? null,
-      routeType: routeState?.type ?? null,
-      routeEmail: routeState?.email ?? null,
+      routeCode: routeState?.code ?? queryCode ?? null,
+      routeType: routeState?.type ?? queryType ?? null,
+      routeEmail: routeState?.email ?? queryEmail ?? null,
       storageCode: sessionStorage.getItem('invitationCode'),
       storageType: sessionStorage.getItem('invitationType'),
       storageEmail: sessionStorage.getItem('invitationEmail'),
@@ -203,7 +228,9 @@ export default function LoginPage() {
 
   const isSignIn = mode === 'signin';
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-  const captchaRequired = Boolean(turnstileSiteKey);
+  const isLocalRuntime = typeof window !== 'undefined'
+    && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const captchaRequired = Boolean(turnstileSiteKey) && !isLocalRuntime;
 
   if (step === 'confirm-email') {
     return (
@@ -432,6 +459,7 @@ export default function LoginPage() {
     || Boolean(getEmailError(email))
     || Boolean(getPasswordError(password))
     || (mode === 'signup' && Boolean(getConfirmPasswordError(password, confirmPassword)));
+  const passwordStrength = mode === 'signup' ? getPasswordStrength(password) : null;
 
   return (
     <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
@@ -444,7 +472,7 @@ export default function LoginPage() {
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-10 flex flex-col items-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_40px_rgba(249,115,22,0.3)] border border-white/20">
-            <span className="text-2xl font-black text-white tracking-tighter shadow-sm">SL</span>
+            <span className="text-2xl font-bold text-white tracking-tighter shadow-sm">SL</span>
           </div>
           <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
           <p className="text-sm text-white/70">
@@ -480,10 +508,24 @@ export default function LoginPage() {
         ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {mode === 'signup' ? (
+            <div className="space-y-1.5">
+              <TextInput
+                id="invitation-code"
+                label="Code d'invitation"
+                value={invitationContext?.code ?? ''}
+                readOnly
+                disabled
+                placeholder="Code d'invitation requis"
+              />
+            </div>
+          ) : null}
+
           <div className="space-y-1.5">
             <TextInput
               id="login-email"
               type="email"
+              autoComplete="email"
               label="Adresse email"
               required
               error={fieldErrors.email}
@@ -502,6 +544,7 @@ export default function LoginPage() {
             <TextInput
               id="login-password"
               type="password"
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               label="Mot de passe"
               required
               error={fieldErrors.password}
@@ -521,6 +564,11 @@ export default function LoginPage() {
               placeholder="Mot de passe"
             />
             <p className="px-1 text-xs text-white/45">Minimum 6 caractères.</p>
+            {passwordStrength ? (
+              <p className={`px-1 text-xs ${passwordStrength.className}`}>
+                {passwordStrength.label}
+              </p>
+            ) : null}
           </div>
 
           {isSignIn ? (
@@ -540,6 +588,7 @@ export default function LoginPage() {
               <TextInput
                 id="login-confirm-password"
                 type="password"
+                autoComplete="new-password"
                 label="Confirmer le mot de passe"
                 required
                 error={fieldErrors.confirmPassword}
@@ -579,8 +628,8 @@ export default function LoginPage() {
               {sessionExpiredMessage}
             </p>
           ) : null}
-          {error ? <p className="text-red-400 text-sm text-center mt-2">{error}</p> : null}
-          {turnstileSiteKey ? (
+          {error ? <p className="mt-2 text-center text-sm text-red-400" aria-live="polite">{error}</p> : null}
+          {captchaRequired ? (
             <div className="flex justify-center pt-1">
               <Turnstile
                 siteKey={turnstileSiteKey}
@@ -594,14 +643,11 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={submitDisabled}
+            loading={loading}
+            loadingLabel={isSignIn ? 'Connexion...' : 'Création...'}
             className="w-full bg-orange-500 text-white hover:bg-orange-600"
           >
-            {loading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block mr-2" />
-                {isSignIn ? 'Connexion...' : 'Création...'}
-              </>
-            ) : isSignIn ? (
+            {isSignIn ? (
               'Se connecter →'
             ) : (
               'Créer mon compte →'
@@ -612,41 +658,56 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-6 flex min-h-[44px] w-full items-center justify-center text-center text-sm font-light text-white/50 transition-colors hover:text-white"
+          className="mt-6 flex min-h-[44px] w-full items-center justify-center text-center text-sm font-medium text-white/50 transition-colors hover:text-white"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
 
         {!isSignIn ? (
-          <p className="mt-3 text-center text-xs text-white/55">
-            En vous inscrivant, vous acceptez nos{' '}
-            <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
-              Conditions d&apos;utilisation
-            </Link>{' '}
-            et notre{' '}
-            <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
-              Politique de confidentialité
-            </Link>
-            {' '}ainsi que nos{' '}
-            <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
-              Mentions legales
-            </Link>
-            .
-          </p>
+          <div className="mt-3 text-center text-xs text-white/55">
+            <p>En vous inscrivant, vous acceptez :</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <Link
+                to="/legal/terms"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              >
+                Conditions d&apos;utilisation
+              </Link>
+              <Link
+                to="/legal/privacy"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              >
+                Confidentialité
+              </Link>
+              <Link
+                to="/legal/mentions"
+                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              >
+                Mentions legales
+              </Link>
+            </div>
+          </div>
         ) : (
-          <p className="mt-3 text-center text-xs text-white/50">
-            <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-white/50">
+            <Link
+              to="/legal/mentions"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            >
               Mentions legales
             </Link>
-            {' '}·{' '}
-            <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+            <Link
+              to="/legal/privacy"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            >
               Confidentialité
-            </Link>{' '}
-            ·{' '}
-            <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+            </Link>
+            <Link
+              to="/legal/terms"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            >
               Conditions d&apos;utilisation
             </Link>
-          </p>
+          </div>
         )}
       </GlassCard>
     </div>

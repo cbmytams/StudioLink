@@ -435,7 +435,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Décris votre univers, vos spécialités et le type de projets que vous aimez accompagner."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                 </div>
               </section>
@@ -460,7 +460,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Parle de ton parcours, tes spécialités, tes références et du type de missions qui te correspondent."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                   {fieldErrors.bio ? <p className="mt-2 px-1 text-xs text-red-400">{fieldErrors.bio}</p> : null}
                 </div>

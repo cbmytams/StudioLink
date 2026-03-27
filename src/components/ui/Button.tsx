@@ -9,6 +9,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
   onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
+  loading?: boolean;
+  loadingLabel?: string;
   type?: "button" | "submit" | "reset";
 }
 
@@ -18,13 +20,19 @@ export function Button({
   variant = "primary", 
   size = "md",
   type = 'button',
+  loading = false,
+  loadingLabel,
+  disabled = false,
   ...props 
 }: ButtonProps) {
+  const isDisabled = disabled || loading;
+
   return (
     <button
       type={type}
+      disabled={isDisabled}
       className={cn(
-        "inline-flex items-center justify-center font-medium transition-all active:scale-95 min-h-[44px]",
+        "inline-flex min-h-[44px] items-center justify-center font-medium transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40",
         // Variants
         variant === "primary" && "glass-btn-accent",
         variant === "secondary" && "glass-btn-primary",
@@ -40,7 +48,12 @@ export function Button({
       )}
       {...props}
     >
-      {children}
+      {loading ? (
+        <span className="inline-flex items-center gap-2">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <span>{loadingLabel ?? (typeof children === "string" ? children : "Chargement...")}</span>
+        </span>
+      ) : children}
     </button>
   );
 }
