@@ -66,33 +66,33 @@ async function getExistingMonitors() {
 }
 
 async function createMonitor(config) {
-  try {
-    await formPost('newMonitor', {
-      api_key: apiKey,
-      format: 'json',
-      type: '1',
-      friendly_name: config.friendly_name,
-      url: config.url,
-      interval: String(config.interval),
-    });
-    console.log(`created: ${config.friendly_name}`);
-    return;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (message.toLowerCase().includes('interval')) {
+  const intervals = [config.interval, 60, 300];
+
+  for (const interval of intervals) {
+    try {
       await formPost('newMonitor', {
         api_key: apiKey,
         format: 'json',
         type: '1',
         friendly_name: config.friendly_name,
         url: config.url,
-        interval: '30',
+        interval: String(interval),
       });
-      console.log(`created (fallback interval 30): ${config.friendly_name}`);
+      if (interval === config.interval) {
+        console.log(`created: ${config.friendly_name}`);
+      } else {
+        console.log(`created (fallback interval ${interval}): ${config.friendly_name}`);
+      }
       return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.toLowerCase().includes('interval')) {
+        throw error;
+      }
     }
-    throw error;
   }
+
+  throw new Error(`Unable to create monitor ${config.friendly_name}: interval rejected`);
 }
 
 async function main() {
