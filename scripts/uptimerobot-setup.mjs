@@ -43,6 +43,10 @@ async function formPost(path, body) {
     body: new URLSearchParams(body).toString(),
   });
 
+  if (response.status === 429) {
+    throw new Error('rate_limited');
+  }
+
   if (!response.ok) {
     throw new Error(`${path} failed with HTTP ${response.status}`);
   }
@@ -69,25 +73,31 @@ async function createMonitor(config) {
   const intervals = [config.interval, 60, 300];
 
   for (const interval of intervals) {
-    try {
-      await formPost('newMonitor', {
-        api_key: apiKey,
-        format: 'json',
-        type: '1',
-        friendly_name: config.friendly_name,
-        url: config.url,
-        interval: String(interval),
-      });
-      if (interval === config.interval) {
-        console.log(`created: ${config.friendly_name}`);
-      } else {
-        console.log(`created (fallback interval ${interval}): ${config.friendly_name}`);
-      }
-      return;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.toLowerCase().includes('interval')) {
-        throw error;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        await formPost('newMonitor', {
+          api_key: apiKey,
+          format: 'json',
+          type: '1',
+          friendly_name: config.friendly_name,
+          url: config.url,
+          interval: String(interval),
+        });
+        if (interval === config.interval) {
+          console.log(`created: ${config.friendly_name}`);
+        } else {
+          console.log(`created (fallback interval ${interval}): ${config.friendly_name}`);
+        }
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (message === 'rate_limited' && attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+          continue;
+        }
+        if (!message.toLowerCase().includes('interval')) {
+          throw error;
+        }
       }
     }
   }
