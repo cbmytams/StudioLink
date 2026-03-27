@@ -36,7 +36,7 @@ const monitors = [
   },
 ];
 
-async function formPost(path, body) {
+async function formPost(path, body, attempt = 0) {
   const response = await fetch(`${API_URL}/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -44,6 +44,10 @@ async function formPost(path, body) {
   });
 
   if (response.status === 429) {
+    if (attempt < 5) {
+      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+      return formPost(path, body, attempt + 1);
+    }
     throw new Error('rate_limited');
   }
 
