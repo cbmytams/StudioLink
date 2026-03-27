@@ -1,78 +1,125 @@
-/**
- * Setup UptimeRobot monitors for StudioLink Paris
- *
- * Usage:
- *   UPTIMEROBOT_API_KEY=your_key npm run uptimerobot:setup
- */
+const API_URL = 'https://api.uptimerobot.com/v2';
+const apiKey = process.env.UPTIMEROBOT_API_KEY;
 
-const API_KEY = process.env.UPTIMEROBOT_API_KEY;
-
-if (!API_KEY) {
-  console.error('❌ UPTIMEROBOT_API_KEY is required.');
-  console.error('Usage: UPTIMEROBOT_API_KEY=your_key npm run uptimerobot:setup');
+if (!apiKey) {
+  console.error('UPTIMEROBOT_API_KEY is required');
   process.exit(1);
 }
 
-const BASE = 'https://api.uptimerobot.com/v2';
-
 const monitors = [
   {
-    friendly_name: 'StudioLink — Homepage',
+    friendly_name: 'StudioLink - Home',
     url: 'https://studiolink-paris.vercel.app',
-    type: 1,
-    interval: 300,
+    interval: 30,
   },
   {
-    friendly_name: 'StudioLink — API Health',
-    url: 'https://studiolink-paris.vercel.app/api/health',
-    type: 1,
-    interval: 60,
-  },
-  {
-    friendly_name: 'StudioLink — App Health',
-    url: 'https://studiolink-paris.vercel.app/health',
-    type: 1,
-    interval: 300,
-  },
-  {
-    friendly_name: 'StudioLink — Login page',
+    friendly_name: 'StudioLink - Login',
     url: 'https://studiolink-paris.vercel.app/login',
-    type: 1,
-    interval: 300,
+    interval: 30,
   },
   {
-    friendly_name: 'Supabase — REST API',
+    friendly_name: 'StudioLink - Supabase REST',
     url: 'https://isoshywrmnvxjbnhgcqc.supabase.co/rest/v1/',
-    type: 1,
-    interval: 300,
+    interval: 30,
+  },
+  {
+    friendly_name: 'StudioLink - API Health',
+    url: 'https://studiolink-paris.vercel.app/api/health',
+    interval: 30,
+  },
+  {
+    friendly_name: 'StudioLink - Health',
+    url: 'https://studiolink-paris.vercel.app/health',
+    interval: 30,
   },
 ];
 
-async function createMonitor(monitor) {
-  const res = await fetch(`${BASE}/newMonitor`, {
+async function formPost(path, body, attempt = 0) {
+  const response = await fetch(`${API_URL}/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      api_key: API_KEY,
-      format: 'json',
-      friendly_name: monitor.friendly_name,
-      url: monitor.url,
-      type: String(monitor.type),
-      interval: String(monitor.interval),
-    }),
+    body: new URLSearchParams(body).toString(),
   });
-  const data = await res.json();
-  if (data.stat === 'ok') {
-    console.log(`✅ ${monitor.friendly_name} — created (id: ${data.monitor.id})`);
-  } else {
-    console.error(`❌ ${monitor.friendly_name} — ${data.error?.message || JSON.stringify(data)}`);
+
+  if (response.status === 429) {
+    if (attempt < 12) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      return formPost(path, body, attempt + 1);
+    }
+    throw new Error('rate_limited');
+  }
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with HTTP ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (payload.stat !== 'ok') {
+    throw new Error(`${path} failed: ${payload.error?.message ?? 'unknown error'}`);
+  }
+
+  return payload;
+}
+
+async function getExistingMonitors() {
+  const payload = await formPost('getMonitors', {
+    api_key: apiKey,
+    format: 'json',
+    logs: '0',
+  });
+
+  return new Set((payload.monitors ?? []).map((monitor) => monitor.friendly_name));
+}
+
+async function createMonitor(config) {
+  const intervals = [config.interval, 60, 300];
+
+  for (const interval of intervals) {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        await formPost('newMonitor', {
+          api_key: apiKey,
+          format: 'json',
+          type: '1',
+          friendly_name: config.friendly_name,
+          url: config.url,
+          interval: String(interval),
+        });
+        if (interval === config.interval) {
+          console.log(`created: ${config.friendly_name}`);
+        } else {
+          console.log(`created (fallback interval ${interval}): ${config.friendly_name}`);
+        }
+        return;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (message === 'rate_limited' && attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+          continue;
+        }
+        if (!message.toLowerCase().includes('interval')) {
+          throw error;
+        }
+      }
+    }
+  }
+
+  throw new Error(`Unable to create monitor ${config.friendly_name}: interval rejected`);
+}
+
+async function main() {
+  const existing = await getExistingMonitors();
+
+  for (const monitor of monitors) {
+    if (existing.has(monitor.friendly_name)) {
+      console.log(`exists: ${monitor.friendly_name}`);
+      continue;
+    }
+    await createMonitor(monitor);
   }
 }
 
-console.log(`Creating ${monitors.length} monitors...\n`);
-
-for (const monitor of monitors) {
-  await createMonitor(monitor);
-}
-
-console.log('\n✅ Done.');
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});
