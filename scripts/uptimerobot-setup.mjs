@@ -44,8 +44,8 @@ async function formPost(path, body, attempt = 0) {
   });
 
   if (response.status === 429) {
-    if (attempt < 5) {
-      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+    if (attempt < 12) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       return formPost(path, body, attempt + 1);
     }
     throw new Error('rate_limited');
