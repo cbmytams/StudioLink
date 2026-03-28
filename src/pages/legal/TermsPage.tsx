@@ -28,7 +28,7 @@ export default function TermsPage() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Sommaire</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <a href="#terms-1" className="hover:underline">1. Objet</a>
-            <a href="#terms-2" className="hover:underline">2. Definitions</a>
+            <a href="#terms-2" className="hover:underline">2. Définitions</a>
             <a href="#terms-3" className="hover:underline">3. Inscription</a>
             <a href="#terms-4" className="hover:underline">4. Obligations du Studio</a>
             <a href="#terms-5" className="hover:underline">5. Obligations du Pro</a>
@@ -44,7 +44,7 @@ export default function TermsPage() {
           <h2 id="terms-1" className="scroll-mt-24 text-lg font-semibold text-white">1. Objet</h2>
           <p>StudioLink permet la mise en relation entre studios et professionnels creatifs.</p>
 
-          <h2 id="terms-2" className="scroll-mt-24 text-lg font-semibold text-white">2. Definitions</h2>
+          <h2 id="terms-2" className="scroll-mt-24 text-lg font-semibold text-white">2. Définitions</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>Studio : structure publiant des missions.</li>
             <li>Pro : professionnel candidatant aux missions.</li>
@@ -97,10 +97,10 @@ export default function TermsPage() {
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
           <Link className="underline underline-offset-2 hover:text-white" to="/legal/privacy">
-            Politique de confidentialite
+            Politique de confidentialité
           </Link>
           <Link className="underline underline-offset-2 hover:text-white" to="/">
-            Retour a l'accueil
+            Retour à l'accueil
           </Link>
         </div>
       </main>
