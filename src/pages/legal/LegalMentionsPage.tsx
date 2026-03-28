@@ -7,8 +7,8 @@ export default function LegalMentionsPage() {
   return (
     <div className="app-shell min-h-[100dvh] px-4 py-8">
       <SEO
-        title="Mentions legales"
-        description="Mentions legales de StudioLink Paris."
+        title="Mentions légales"
+        description="Mentions légales de StudioLink Paris."
         url="/legal/mentions"
       />
       <main className="mx-auto w-full max-w-4xl space-y-6">
@@ -20,8 +20,8 @@ export default function LegalMentionsPage() {
           ← Retour
         </button>
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold text-white">Mentions legales</h1>
-          <p className="text-sm text-white/60">Derniere mise a jour : 26 mars 2026</p>
+          <h1 className="text-3xl font-semibold text-white">Mentions légales</h1>
+          <p className="text-sm text-white/60">Dernière mise à jour : 26 mars 2026</p>
         </header>
 
         <nav className="app-card p-4 text-sm text-white/75">
@@ -74,13 +74,13 @@ export default function LegalMentionsPage() {
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
           <Link className="underline underline-offset-2 hover:text-white" to="/legal/privacy">
-            Politique de confidentialite
+            Politique de confidentialité
           </Link>
           <Link className="underline underline-offset-2 hover:text-white" to="/legal/terms">
             Conditions d&apos;utilisation
           </Link>
           <Link className="underline underline-offset-2 hover:text-white" to="/">
-            Retour a l&apos;accueil
+            Retour à l&apos;accueil
           </Link>
         </div>
       </main>
