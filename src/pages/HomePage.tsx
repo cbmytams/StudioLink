@@ -202,13 +202,13 @@ export default function HomePage() {
         <p>© 2026 StudioLink. Tous droits réservés.</p>
         <div className="mt-2 flex justify-center gap-4 text-white/55">
           <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
-            Mentions legales
+            Mentions légales
           </Link>
           <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
             Conditions d&apos;utilisation
           </Link>
           <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
-            Politique de confidentialite
+            Politique de confidentialité
           </Link>
         </div>
       </footer>
