@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/auth';
 import { getRatingForSession, submitRating } from '@/lib/ratings/ratingService';
@@ -10,6 +10,7 @@ interface RatingModalProps {
   sessionId: string;
   rateeId: string;
   rateeDisplayName: string;
+  onSubmitted?: () => void;
   onClose: () => void;
 }
 
@@ -18,6 +19,7 @@ export function RatingModal({
   sessionId,
   rateeId,
   rateeDisplayName,
+  onSubmitted,
   onClose,
 }: RatingModalProps) {
   const { session, refreshProfile } = useAuth();
@@ -30,6 +32,12 @@ export function RatingModal({
   const [comment, setComment] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    closeButtonRef.current?.focus();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !userId) return;
@@ -81,6 +89,7 @@ export function RatingModal({
       });
       setSubmitted(true);
       await refreshProfile();
+      onSubmitted?.();
       showToast({
         title: 'Note envoyée',
         description: `Votre avis pour ${rateeDisplayName} a été enregistré.`,
@@ -113,6 +122,7 @@ export function RatingModal({
             <h2 className="mt-1 text-xl font-semibold text-gray-900">Noter {rateeDisplayName}</h2>
           </div>
           <button
+            ref={closeButtonRef}
             type="button"
             aria-label="Fermer la fenêtre de notation"
             onClick={onClose}
