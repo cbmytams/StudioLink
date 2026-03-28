@@ -39,7 +39,7 @@ export function CookieBanner() {
   };
 
   return (
-    <div className="fixed bottom-20 left-2 right-2 z-[120] md:bottom-6 md:left-auto md:right-6 md:max-w-md">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-2 right-2 z-[120] md:bottom-6 md:left-auto md:right-6 md:max-w-md">
       <div className="rounded-2xl border border-white/15 bg-[#0f0f1d]/95 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
         <p className="text-sm text-white/80">
           StudioLink utilise des cookies analytiques pour ameliorer votre experience.
@@ -48,14 +48,14 @@ export function CookieBanner() {
           <button
             type="button"
             onClick={handleReject}
-            className="min-h-[44px] rounded-xl border border-white/20 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10"
+            className="min-h-[44px] rounded-xl border border-white/20 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
           >
             Tout refuser
           </button>
           <button
             type="button"
             onClick={handleAccept}
-            className="min-h-[44px] rounded-xl bg-orange-500 px-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="min-h-[44px] rounded-xl bg-orange-500 px-3 text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
           >
             Accepter
           </button>

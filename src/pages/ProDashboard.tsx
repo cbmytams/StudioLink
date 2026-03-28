@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MiniLineChart } from '@/components/shared/MiniLineChart';
+import { SkeletonList } from '@/components/shared/SkeletonCard';
 import { StatCard } from '@/components/shared/StatCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/lib/supabase/auth';
@@ -43,14 +44,14 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 bg-white rounded-2xl border border-white/50 px-4 py-3 w-full text-left hover:bg-orange-50 transition-colors"
+      className="flex min-h-[44px] w-full items-center gap-2 rounded-2xl border border-white/50 bg-white px-4 py-3 text-left transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
     >
       <span className="text-xl">{icon}</span>
       <div>
         <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-xs text-gray-400">{description}</p>
+        <p className="text-xs text-gray-500">{description}</p>
       </div>
-      <span className="ml-auto text-gray-300">›</span>
+      <span className="ml-auto text-gray-500">›</span>
     </button>
   );
 }
@@ -73,11 +74,19 @@ export default function ProDashboard() {
 
   if (loading && !dashboard) {
     return (
-      <div className="app-shell">
-        <div className="app-container flex min-h-[100dvh] items-center justify-center">
-          <div className="flex items-center gap-3 text-white/60">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
-            Chargement du dashboard pro…
+      <div className="app-shell min-h-[100dvh]">
+        <div className="app-container space-y-6 pt-6">
+          <div className="app-card p-5">
+            <div className="h-6 w-56 animate-pulse rounded bg-white/10" />
+            <div className="mt-3 h-4 w-72 animate-pulse rounded bg-white/10" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="app-card h-28 animate-pulse rounded-2xl bg-white/5" />
+            ))}
+          </div>
+          <div className="app-card p-5">
+            <SkeletonList count={3} />
           </div>
         </div>
       </div>
@@ -195,7 +204,7 @@ export default function ProDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/pro/applications')}
-                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200"
+                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Tout voir
               </button>
@@ -236,7 +245,7 @@ export default function ProDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/missions/${application.mission_id}`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Voir la mission
                       </button>
@@ -245,7 +254,7 @@ export default function ProDashboard() {
                           id={`btn-open-chat-${application.session_id}`}
                           type="button"
                           onClick={() => navigate(`/chat/${application.session_id}`)}
-                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15"
+                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                         >
                           Ouvrir le chat
                         </button>

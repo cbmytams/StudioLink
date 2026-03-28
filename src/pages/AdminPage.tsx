@@ -392,7 +392,7 @@ export default function AdminPage() {
                   key={type}
                   type="button"
                   onClick={() => setNewType(type)}
-                  className={`rounded-xl px-3 py-2 text-sm transition-colors ${
+                  className={`min-h-[44px] rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 ${
                     newType === type
                       ? 'bg-orange-500 text-white'
                       : 'bg-white/80 text-black/70 hover:bg-white'
@@ -440,16 +440,11 @@ export default function AdminPage() {
           <Button
             onClick={() => void handleCreate()}
             disabled={creating}
+            loading={creating}
+            loadingLabel="Génération..."
             className="bg-orange-500 text-white hover:bg-orange-600"
           >
-            {creating ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block mr-2" />
-                Génération...
-              </>
-            ) : (
-              'Generer des codes'
-            )}
+            Generer des codes
           </Button>
 
           {error ? <p className="text-red-400 text-sm mt-3">{error}</p> : null}
@@ -503,7 +498,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => void handleCopy(invitation.code)}
-                        className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-orange-600 transition-colors hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         {copySuccess === invitation.code ? '✓ Copié !' : 'Copier le lien'}
                       </button>
@@ -511,7 +506,7 @@ export default function AdminPage() {
                         type="button"
                         disabled={deletingInvitationId === invitation.id || invitation.used}
                         onClick={() => void handleDeactivate(invitation.id)}
-                        className="text-sm text-amber-600 hover:text-amber-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-amber-600 transition-colors hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingInvitationId === invitation.id ? 'Desactivation…' : 'Desactiver'}
                       </button>
@@ -519,7 +514,7 @@ export default function AdminPage() {
                         type="button"
                         disabled={deletingInvitationId === invitation.id}
                         onClick={() => void handleDelete(invitation.id)}
-                        className="text-sm text-red-500 hover:text-red-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-red-500 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingInvitationId === invitation.id ? 'Suppression…' : 'Supprimer'}
                       </button>

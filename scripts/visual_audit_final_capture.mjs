@@ -2,130 +2,262 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
 
-const base = process.env.BASE_URL ?? 'http://127.0.0.1:4175';
-const password = process.env.TEST_PASSWORD ?? 'StudioLink!123';
-const studioEmail = process.env.STUDIO_EMAIL ?? 'phase0.studio.mn5xe7w4@example.com';
-const proEmail = process.env.PRO_EMAIL ?? 'phase0.pro.mn5xe7w4@example.com';
+const base = process.env.BASE_URL ?? 'http://127.0.0.1:3000';
+const password = process.env.TEST_PASSWORD ?? '';
+const studioEmail = process.env.STUDIO_EMAIL ?? '';
+const proEmail = process.env.PRO_EMAIL ?? '';
 const proProfileId = process.env.PRO_PROFILE_ID ?? 'a7329e97-aec6-48f2-b8fc-2a9ec7ad24fe';
 const studioProfileId = process.env.STUDIO_PROFILE_ID ?? 'b5c04e01-fda0-4d47-a568-4a98d3a5a6d0';
 const out = path.join(process.cwd(), 'output', 'visual-audit-final');
+const screenshotDir = path.join(out, 'screenshots');
 
-fs.mkdirSync(out, { recursive: true });
+fs.mkdirSync(screenshotDir, { recursive: true });
 
-async function login(page, email, expectedPath) {
+async function dismissCookieBanner(page) {
+  const reject = page.getByRole('button', { name: /tout refuser/i });
+  if (await reject.count()) {
+    await reject.first().click().catch(() => undefined);
+    await page.waitForTimeout(200);
+  }
+}
+
+async function login(page, email) {
+  if (!email || !password) {
+    throw new Error('AUTH_SKIPPED_MISSING_CREDENTIALS');
+  }
+
   await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' });
+  await dismissCookieBanner(page);
   await page.locator('#login-email').fill(email);
   await page.locator('#login-password').fill(password);
   await page.getByRole('button', { name: /se connecter/i }).click();
-  await page.waitForURL(`**${expectedPath}`, { timeout: 20000 });
+  await page.waitForFunction(
+    (allowedPaths) => allowedPaths.some((path) => window.location.pathname.startsWith(path)),
+    ['/dashboard', '/onboarding', '/studio/dashboard', '/pro/dashboard'],
+    { timeout: 20000 },
+  );
 }
 
-async function capture(page, name) {
+async function capture(page, viewportName, name) {
+  await page.addStyleTag({
+    content: `
+      [data-testid="timestamp"],
+      .animate-pulse {
+        visibility: hidden !important;
+      }
+    `,
+  }).catch(() => undefined);
   await page.waitForTimeout(900);
-  const screenshotPath = path.join(out, `${name}.png`);
+  const screenshotPath = path.join(screenshotDir, `${viewportName}-${name}.png`);
+  const hasHorizontalScroll = await page.evaluate(() => document.body.scrollWidth > window.innerWidth);
   await page.screenshot({ path: screenshotPath, fullPage: true });
   return {
+    viewport: viewportName,
     name,
     url: page.url(),
     title: await page.title(),
+    hasHorizontalScroll,
     screenshotPath,
   };
 }
 
+async function collectSmallTargets(page) {
+  return page.evaluate(() => {
+    const interactive = document.querySelectorAll('button, a, input, textarea, select, [role="button"]');
+    const small = [];
+    interactive.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      const styles = window.getComputedStyle(el);
+      if (styles.display === 'none' || styles.visibility === 'hidden') return;
+      if (rect.height < 44 || rect.width < 44) {
+        small.push(
+          `${el.tagName} "${
+            el.textContent?.trim().slice(0, 30)
+            || el.getAttribute('aria-label')
+            || el.getAttribute('type')
+            || 'n/a'
+          }" — ${Math.round(rect.width)}x${Math.round(rect.height)}px`,
+        );
+      }
+    });
+    return small;
+  });
+}
+
+async function capturePublicRoutes(page, viewportName, report) {
+  const routes = [
+    ['home', '/'],
+    ['login', '/login'],
+    ['register', '/register'],
+    ['privacy', '/legal/privacy'],
+    ['terms', '/legal/terms'],
+    ['mentions', '/legal/mentions'],
+    ['health', '/health'],
+    ['404', '/n-importe-quelle-route-inexistante'],
+  ];
+
+  for (const [name, route] of routes) {
+    await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+    report.captures.push(await capture(page, viewportName, name));
+  }
+
+  await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' });
+  report.touchTargets.push({
+    viewport: viewportName,
+    route: '/login',
+    smallTargets: await collectSmallTargets(page),
+  });
+}
+
+async function captureProRoutes(page, viewportName, report) {
+  const routes = [
+    ['pro-dashboard', '/dashboard'],
+    ['missions-feed', '/missions'],
+    ['applications', '/applications'],
+    ['chat-list', '/chat'],
+    ['settings', '/settings'],
+    ['notifications', '/notifications'],
+  ];
+
+  for (const [name, route] of routes) {
+    await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+    report.captures.push(await capture(page, viewportName, name));
+  }
+
+  await page.goto(`${base}/missions`, { waitUntil: 'domcontentloaded' });
+  const missionCard = page.locator('.mission-card').first();
+  if (await missionCard.count()) {
+    await missionCard.click();
+    await page.waitForTimeout(900);
+    report.captures.push(await capture(page, viewportName, 'mission-detail'));
+  }
+}
+
+async function captureStudioRoutes(page, viewportName, report) {
+  const routes = [
+    ['studio-dashboard', '/dashboard'],
+    ['studio-missions', '/studio/missions'],
+    ['studio-chat', '/chat'],
+    ['studio-settings', '/settings'],
+  ];
+
+  for (const [name, route] of routes) {
+    await page.goto(`${base}${route}`, { waitUntil: 'domcontentloaded' });
+    report.captures.push(await capture(page, viewportName, name));
+  }
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: true });
-  const desktopStudio = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
-  const desktopPro = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
-  const desktopPublic = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
-  const mobilePro = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true });
-  const mobilePublic = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true });
+  const report = {
+    base,
+    generatedAt: new Date().toISOString(),
+    captures: [],
+    touchTargets: [],
+    errors: [],
+    warnings: [],
+    auth: {
+      enabled: Boolean(password && studioEmail && proEmail),
+      missing: [
+        !password ? 'TEST_PASSWORD' : null,
+        !studioEmail ? 'STUDIO_EMAIL' : null,
+        !proEmail ? 'PRO_EMAIL' : null,
+      ].filter(Boolean),
+    },
+  };
 
-  const studioPage = await desktopStudio.newPage();
-  const proPage = await desktopPro.newPage();
-  const publicPage = await desktopPublic.newPage();
-  const mobileProPage = await mobilePro.newPage();
-  const mobilePublicPage = await mobilePublic.newPage();
-
-  const report = [];
+  const viewports = [
+    { name: 'desktop', width: 1280, height: 800, isMobile: false, auth: true },
+    { name: 'iPhoneSE', width: 375, height: 667, isMobile: true, auth: true },
+    { name: 'iPhone14Pro', width: 393, height: 852, isMobile: true, auth: true },
+  ];
 
   try {
-    await login(studioPage, studioEmail, '/studio/dashboard');
-    await login(proPage, proEmail, '/pro/dashboard');
-    await login(mobileProPage, proEmail, '/pro/dashboard');
+    for (const viewport of viewports) {
+      const publicContext = await browser.newContext({
+        viewport: { width: viewport.width, height: viewport.height },
+        isMobile: viewport.isMobile,
+      });
+      await publicContext.addInitScript(() => {
+        window.localStorage.setItem('cookie_consent', 'accepted');
+      });
+      const publicPage = await publicContext.newPage();
+      await capturePublicRoutes(publicPage, viewport.name, report);
+      await publicPage.goto(`${base}/pros/${proProfileId}`, { waitUntil: 'domcontentloaded' });
+      report.captures.push(await capture(publicPage, viewport.name, 'pro-public-profile'));
+      await publicPage.goto(`${base}/studios/${studioProfileId}`, { waitUntil: 'domcontentloaded' });
+      report.captures.push(await capture(publicPage, viewport.name, 'studio-public-profile'));
+      await publicContext.close();
 
-    await publicPage.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(publicPage, 'landing'));
-    await publicPage.goto(`${base}/register`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(publicPage, 'register'));
-    await publicPage.goto(`${base}/forgot-password`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(publicPage, 'forgot-password'));
+      if (viewport.auth) {
+        const proContext = await browser.newContext({
+          viewport: { width: viewport.width, height: viewport.height },
+          isMobile: viewport.isMobile,
+        });
+        const studioContext = await browser.newContext({
+          viewport: { width: viewport.width, height: viewport.height },
+          isMobile: viewport.isMobile,
+        });
+        await proContext.addInitScript(() => {
+          window.localStorage.setItem('cookie_consent', 'accepted');
+        });
+        await studioContext.addInitScript(() => {
+          window.localStorage.setItem('cookie_consent', 'accepted');
+        });
 
-    await studioPage.goto(`${base}/dashboard`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(studioPage, 'studio-dashboard'));
-    await proPage.goto(`${base}/dashboard`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(proPage, 'pro-dashboard'));
+        const proPage = await proContext.newPage();
+        const studioPage = await studioContext.newPage();
 
-    await proPage.goto(`${base}/missions`, { waitUntil: 'domcontentloaded' });
-    await proPage.locator('.mission-card').first().waitFor({ state: 'visible', timeout: 15000 });
-    report.push(await capture(proPage, 'missions-feed'));
-    await proPage.locator('.mission-card').first().click();
-    await proPage.waitForTimeout(900);
-    report.push(await capture(proPage, 'mission-detail'));
+        if (!report.auth.enabled) {
+          report.warnings.push({
+            viewport: viewport.name,
+            role: 'auth',
+            message: `Captures authentifiees ignorees (variables manquantes: ${report.auth.missing.join(', ')})`,
+          });
+        } else {
+          try {
+            await login(proPage, proEmail);
+            await captureProRoutes(proPage, viewport.name, report);
+          } catch (error) {
+            report.errors.push({
+              viewport: viewport.name,
+              role: 'pro',
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
 
-    await studioPage.goto(`${base}/missions/new`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(studioPage, 'mission-create'));
-    await studioPage.goto(`${base}/studio/missions`, { waitUntil: 'domcontentloaded' });
-    await studioPage.getByRole('button', { name: /voir les candidatures/i }).first().click();
-    await studioPage.waitForTimeout(900);
-    report.push(await capture(studioPage, 'mission-manage'));
+          try {
+            await login(studioPage, studioEmail);
+            await captureStudioRoutes(studioPage, viewport.name, report);
+          } catch (error) {
+            report.errors.push({
+              viewport: viewport.name,
+              role: 'studio',
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+        }
 
-    await proPage.goto(`${base}/applications`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(proPage, 'applications'));
-
-    await proPage.goto(`${base}/chat`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(proPage, 'chat-list'));
-    const firstChat = proPage.locator('button').filter({ hasText: /Studio Phase 0|Phase 8 Pro|Studio/i }).first();
-    if (await firstChat.count()) {
-      await firstChat.click();
-      await proPage.waitForTimeout(900);
+        await proContext.close();
+        await studioContext.close();
+      }
     }
-    report.push(await capture(proPage, 'chat-session'));
-
-    await proPage.goto(`${base}/notifications`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(proPage, 'notifications-page'));
-    await proPage.goto(`${base}/dashboard`, { waitUntil: 'domcontentloaded' });
-    await proPage.locator('#btn-notification-bell').click();
-    await proPage.locator('#notification-panel').waitFor({ state: 'visible', timeout: 10000 });
-    report.push(await capture(proPage, 'notification-bell'));
-
-    await proPage.goto(`${base}/settings`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(proPage, 'settings'));
-
-    await publicPage.goto(`${base}/pros/${proProfileId}`, { waitUntil: 'domcontentloaded' });
-    await publicPage.waitForTimeout(900);
-    report.push(await capture(publicPage, 'pro-public-profile'));
-    await publicPage.goto(`${base}/studios/${studioProfileId}`, { waitUntil: 'domcontentloaded' });
-    await publicPage.waitForTimeout(900);
-    report.push(await capture(publicPage, 'studio-public-profile'));
-    await publicPage.goto(`${base}/n-importe-quelle-route-inexistante`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(publicPage, '404'));
-
-    await mobileProPage.goto(`${base}/missions`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(mobileProPage, 'missions-feed-mobile'));
-    await mobileProPage.locator('.mission-card').first().click();
-    await mobileProPage.waitForTimeout(900);
-    report.push(await capture(mobileProPage, 'mission-detail-mobile'));
-    await mobileProPage.goto(`${base}/notifications`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(mobileProPage, 'notifications-mobile'));
-    await mobileProPage.goto(`${base}/settings`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(mobileProPage, 'settings-mobile'));
-    await mobilePublicPage.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
-    report.push(await capture(mobilePublicPage, 'landing-mobile'));
   } finally {
     await browser.close();
   }
 
   fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify(report, null, 2));
+  const overflowCount = report.captures.filter((entry) => entry.hasHorizontalScroll).length;
+  const touchViolations = report.touchTargets.reduce((acc, entry) => acc + entry.smallTargets.length, 0);
+  const summary = {
+    captures: report.captures.length,
+    overflowCount,
+    touchViolations,
+    errors: report.errors.length,
+    warnings: report.warnings.length,
+    authEnabled: report.auth.enabled,
+  };
+  fs.writeFileSync(path.join(out, 'summary.json'), JSON.stringify(summary, null, 2));
   console.log(JSON.stringify(report, null, 2));
 }
 

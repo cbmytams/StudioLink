@@ -7,3 +7,15 @@ dist/
 *.log
 .DS_Store
 .vercel
+build/
+out/
+coverage/
+coverage.tmp/
+.nyc_output/
+*.swp
+*.swo
+.turbo/
+.vercel/
+.netlify/
+*.timestamp-*
+*.tsbuildinfo

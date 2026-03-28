@@ -45,6 +45,10 @@ type EditableProfile = {
 } | null;
 
 type PersistValue = string | number | boolean | string[] | null;
+type PersistedOnboardingState = {
+  step: number;
+  draft: Partial<OnboardingDraft>;
+};
 
 async function tryProfileUpsert(payload: Database['public']['Tables']['profiles']['Insert']) {
   const { error } = await supabase
@@ -57,6 +61,10 @@ function getStepFromDraft(draft: OnboardingDraft): number {
   if (!draft.role) return 1;
   if (!draft.displayName.trim()) return 2;
   return 3;
+}
+
+function getDraftStorageKey(userId: string): string {
+  return `studiolink:onboarding:draft:${userId}`;
 }
 
 export default function Onboarding() {
@@ -107,12 +115,51 @@ export default function Onboarding() {
 
     if (hydratedUserId === user.id) return;
 
-    const nextDraft = createInitialOnboardingDraft(profileData, invitationContext?.type ?? null);
+    const fallbackDraft = createInitialOnboardingDraft(profileData, invitationContext?.type ?? null);
+    let nextDraft = fallbackDraft;
+    let nextStep = getStepFromDraft(fallbackDraft);
+
+    try {
+      const rawDraft = sessionStorage.getItem(getDraftStorageKey(user.id));
+      if (rawDraft) {
+        const persisted = JSON.parse(rawDraft) as PersistedOnboardingState;
+        const persistedDraft = persisted?.draft ?? {};
+        nextDraft = {
+          ...fallbackDraft,
+          ...persistedDraft,
+          skills: normalizeSkills(persistedDraft.skills ?? fallbackDraft.skills),
+          skillInput: '',
+        };
+        const persistedStep = Number(persisted?.step);
+        if (Number.isFinite(persistedStep)) {
+          nextStep = Math.min(4, Math.max(1, persistedStep));
+        }
+      }
+    } catch {
+      // Draft corrompu: on repart de la version profil.
+    }
+
     setDraft(nextDraft);
-    setStep(getStepFromDraft(nextDraft));
+    setStep(nextStep);
     setFieldErrors({});
     setHydratedUserId(user.id);
   }, [hydratedUserId, invitationContext?.type, navigate, profileData, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const payload: PersistedOnboardingState = {
+        step,
+        draft: {
+          ...draft,
+          skillInput: '',
+        },
+      };
+      sessionStorage.setItem(getDraftStorageKey(user.id), JSON.stringify(payload));
+    } catch {
+      // Storage indisponible: non bloquant.
+    }
+  }, [draft, step, user]);
 
   const setDraftField = <K extends keyof OnboardingDraft>(key: K, value: OnboardingDraft[K]) => {
     setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
@@ -248,6 +295,7 @@ export default function Onboarding() {
       sessionStorage.removeItem('invitationCode');
       sessionStorage.removeItem('invitationType');
       sessionStorage.removeItem('invitationEmail');
+      sessionStorage.removeItem(getDraftStorageKey(user.id));
 
       await refreshProfile().catch(() => undefined);
       trackOnboardingCompleted(draft.role || 'unknown', 4);
@@ -435,7 +483,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Décris votre univers, vos spécialités et le type de projets que vous aimez accompagner."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                 </div>
               </section>
@@ -460,7 +508,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Parle de ton parcours, tes spécialités, tes références et du type de missions qui te correspondent."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none"
+                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                   {fieldErrors.bio ? <p className="mt-2 px-1 text-xs text-red-400">{fieldErrors.bio}</p> : null}
                 </div>

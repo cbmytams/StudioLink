@@ -236,6 +236,14 @@ export default function MissionForm() {
     if (!category.trim()) nextErrors.category = 'La catégorie est requise.';
     if (!location.trim()) nextErrors.location = 'Le lieu est requis.';
     if (!missionDate) nextErrors.date = 'La date est requise.';
+    if (missionDate) {
+      const selectedDate = new Date(`${missionDate}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (!Number.isNaN(selectedDate.getTime()) && selectedDate < today) {
+        nextErrors.date = 'La date ne peut pas être passée.';
+      }
+    }
 
     if (!dailyRate.trim()) {
       nextErrors.daily_rate = 'Le tarif journalier est requis.';

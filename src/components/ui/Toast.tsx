@@ -128,7 +128,7 @@ export function Toaster() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.18 }}
-          className={`fixed bottom-24 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+          className={`fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-1/2 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             active.variant === 'destructive'
               ? 'border-red-200 bg-red-50 text-red-700'
               : 'border-orange-200 bg-white/95 text-stone-800'

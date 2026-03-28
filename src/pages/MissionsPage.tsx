@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { MissionCard } from '@/components/search/MissionCard';
 import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ErrorMessage } from '@/components/shared/ErrorMessage';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { useSearch } from '@/hooks/useSearch';
 import {
   parseFiltersFromURL,
@@ -115,17 +117,21 @@ export default function MissionsPage() {
 
         <section className="app-card p-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <label htmlFor="search-input-missions" className="sr-only">Recherche mission</label>
             <input
               id="search-input-missions"
               type="search"
+              aria-label="Recherche mission"
               value={filters.query ?? ''}
               onChange={(event) => setFilter('query', event.target.value)}
               placeholder="Recherche : mix rock, mastering, Paris..."
               className="glass-input xl:col-span-2"
             />
 
+            <label htmlFor="filter-genre" className="sr-only">Filtre genre</label>
             <select
               id="filter-genre"
+              aria-label="Filtre genre"
               value={filters.genre ?? ''}
               onChange={(event) => setFilter('genre', event.target.value)}
               className="glass-input"
@@ -138,9 +144,11 @@ export default function MissionsPage() {
               ))}
             </select>
 
+            <label htmlFor="filter-location" className="sr-only">Filtre localisation</label>
             <input
               id="filter-location"
               type="text"
+              aria-label="Filtre localisation"
               value={filters.location ?? ''}
               onChange={(event) => setFilter('location', event.target.value)}
               placeholder="Localisation"
@@ -148,18 +156,22 @@ export default function MissionsPage() {
             />
 
             <div className="grid grid-cols-2 gap-3">
+              <label htmlFor="filter-budget-min" className="sr-only">Budget minimum</label>
               <input
                 id="filter-budget-min"
                 type="number"
+                aria-label="Budget minimum"
                 inputMode="numeric"
                 value={filters.budgetMin ?? ''}
                 onChange={(event) => setFilter('budgetMin', event.target.value === '' ? undefined : Number(event.target.value))}
                 placeholder="Budget min"
                 className="glass-input"
               />
+              <label htmlFor="filter-budget-max" className="sr-only">Budget maximum</label>
               <input
                 id="filter-budget-max"
                 type="number"
+                aria-label="Budget maximum"
                 inputMode="numeric"
                 value={filters.budgetMax ?? ''}
                 onChange={(event) => setFilter('budgetMax', event.target.value === '' ? undefined : Number(event.target.value))}
@@ -188,15 +200,18 @@ export default function MissionsPage() {
         {loading ? (
           <div id="missions-grid" className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="app-card h-64 animate-pulse" />
+              <SkeletonCard key={index} lines={4} />
             ))}
           </div>
         ) : null}
 
         {!loading && error ? (
-          <div className="mt-6 rounded-3xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-            {error}
-          </div>
+          <ErrorMessage
+            title="Impossible de charger les missions"
+            message={error}
+            onRetry={resetFilters}
+            className="mt-6 app-card"
+          />
         ) : null}
 
         {!loading && !error && results.length === 0 ? (

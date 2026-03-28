@@ -35,6 +35,10 @@ export function ReviewModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    window.requestAnimationFrame(() => {
+      const cancelButton = document.getElementById('btn-review-cancel') as HTMLButtonElement | null;
+      cancelButton?.focus();
+    });
     setRating(0);
     setComment('');
     setCheckError(null);
@@ -84,7 +88,7 @@ export function ReviewModal({
         {alreadyReviewed ? <p className="text-xs text-stone-500">Vous avez déjà laissé un avis pour cette mission.</p> : null}
 
         <div className="flex gap-2">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>
+          <Button id="btn-review-cancel" variant="ghost" className="flex-1" onClick={onClose}>
             Annuler
           </Button>
           <Button

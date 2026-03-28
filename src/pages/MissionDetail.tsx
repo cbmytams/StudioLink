@@ -8,6 +8,7 @@ import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 import { normalizeApplicationStatus } from '@/lib/applications/phase2Compat';
 import { ApplyModal } from '@/components/ApplyModal';
+import { ErrorMessage } from '@/components/shared/ErrorMessage';
 import { Avatar } from '@/components/ui/Avatar';
 import type { MissionFileRecord } from '@/types/backend';
 import type { Database } from '@/types/supabase';
@@ -341,7 +342,7 @@ export default function MissionDetail() {
             <button
               type="button"
               onClick={() => navigate('/pro/missions')}
-              className="text-orange-300 text-sm hover:underline mt-2 block mx-auto"
+              className="mx-auto mt-2 inline-flex min-h-[44px] items-center text-sm text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
               Retour aux missions
             </button>
@@ -367,15 +368,18 @@ export default function MissionDetail() {
           <button
             type="button"
             onClick={() => navigate('/pro/missions')}
-            className="mb-6 inline-flex min-h-[44px] items-center gap-2 px-1 text-sm text-white/60 hover:text-white"
+            className="mb-6 inline-flex min-h-[44px] items-center gap-2 px-1 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
           >
             <span>←</span> Retour aux missions
           </button>
 
         {error ? (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 mb-4">
-            <p className="text-sm text-red-200">{error}</p>
-          </div>
+          <ErrorMessage
+            title="Impossible de charger cette mission"
+            message={error}
+            onRetry={() => window.location.reload()}
+            className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/5"
+          />
         ) : null}
 
         <section className="app-card p-5">
@@ -404,7 +408,7 @@ export default function MissionDetail() {
                 <button
                   type="button"
                   onClick={() => navigate(`/studio/public/${mission.studio?.id}`)}
-                  className="inline-flex min-h-[44px] items-center text-xs text-orange-300 hover:underline"
+                  className="inline-flex min-h-[44px] items-center text-xs text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Voir le profil du studio →
                 </button>
@@ -473,7 +477,7 @@ export default function MissionDetail() {
                       onClick={() => {
                         void handleDownloadReference(file);
                       }}
-                      className="inline-flex min-h-[44px] shrink-0 items-center px-2 text-xs font-medium text-orange-300 hover:underline"
+                      className="inline-flex min-h-[44px] shrink-0 items-center px-2 text-xs font-medium text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                     >
                       Télécharger
                     </button>
@@ -503,7 +507,7 @@ export default function MissionDetail() {
                 id="btn-apply"
                 type="button"
                 onClick={handleOpenApplyModal}
-                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-3 rounded-2xl transition-colors"
+                className="min-h-[48px] w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 Candidater
               </button>
