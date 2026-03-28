@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -20,6 +20,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
   const { session } = useAuth();
   const { showToast } = useToast();
   const [coverLetter, setCoverLetter] = useState('');
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const throttle = useRateLimit(1500);
   const {
     execute: executeSubmit,
@@ -47,6 +48,8 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
 
   useEffect(() => {
     if (!isOpen) return undefined;
+
+    closeButtonRef.current?.focus();
 
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -86,6 +89,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/5 bg-white/90 px-5 py-4 backdrop-blur-sm">
           <h3 id="apply-modal-title" className="text-lg font-semibold text-stone-900">Postuler à la mission</h3>
           <button
+            ref={closeButtonRef}
             type="button"
             aria-label="Fermer"
             onClick={onClose}
