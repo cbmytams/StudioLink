@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { StarRating } from '@/components/ui/StarRating';
@@ -32,7 +32,6 @@ export function ReviewModal({
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [checkError, setCheckError] = useState<string | null>(null);
   const createReview = useCreateReview(session?.user?.id);
-  const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
