@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { StarRating } from '@/components/ui/StarRating';
@@ -32,11 +32,13 @@ export function ReviewModal({
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [checkError, setCheckError] = useState<string | null>(null);
   const createReview = useCreateReview(session?.user?.id);
-  const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    cancelButtonRef.current?.focus();
+    window.requestAnimationFrame(() => {
+      const cancelButton = document.getElementById('btn-review-cancel') as HTMLButtonElement | null;
+      cancelButton?.focus();
+    });
     setRating(0);
     setComment('');
     setCheckError(null);
@@ -86,8 +88,7 @@ export function ReviewModal({
         {alreadyReviewed ? <p className="text-xs text-stone-500">Vous avez déjà laissé un avis pour cette mission.</p> : null}
 
         <div className="flex gap-2">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>
-            <span ref={null} />
+          <Button id="btn-review-cancel" variant="ghost" className="flex-1" onClick={onClose}>
             Annuler
           </Button>
           <Button
