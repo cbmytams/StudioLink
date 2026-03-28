@@ -13,6 +13,7 @@ import {
   formatApplicationInsertError,
   normalizeApplicationStatus,
 } from '@/lib/applications/phase2Compat';
+import { normalizeMissionStatus } from '@/lib/missions/phase1Compat';
 
 function ensureClient() {
   if (!supabase) {
@@ -53,6 +54,12 @@ type MissionEmailRow = {
   id: string;
   title: string | null;
   studio_id: string;
+};
+
+type MissionGuardRow = {
+  id: string;
+  studio_id: string;
+  status: string | null;
 };
 
 type EmailProfileRow = {
@@ -229,6 +236,27 @@ export const applicationService = {
 
   async createApplication(input: CreateApplicationInput, proId: string): Promise<ApplicationRecord> {
     const client = ensureClient();
+    const { data: missionData, error: missionError } = await client
+      .from('missions')
+      .select('id, studio_id, status')
+      .eq('id', input.mission_id)
+      .maybeSingle();
+
+    if (missionError) throw missionError;
+
+    const mission = missionData as MissionGuardRow | null;
+    if (!mission) {
+      throw new Error('Mission introuvable.');
+    }
+
+    if (mission.studio_id === proId) {
+      throw new Error("Vous ne pouvez pas candidater à votre propre mission.");
+    }
+
+    if (normalizeMissionStatus(mission.status ?? null) !== 'open') {
+      throw new Error("Cette mission n'accepte plus de candidatures.");
+    }
+
     const payload = buildApplicationWritePayload({
       missionId: input.mission_id,
       proId,
