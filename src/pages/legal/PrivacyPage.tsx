@@ -7,8 +7,8 @@ export default function PrivacyPage() {
   return (
     <div className="app-shell min-h-[100dvh] px-4 py-8">
       <SEO
-        title="Politique de confidentialite"
-        description="Politique de confidentialite RGPD de StudioLink Paris."
+        title="Politique de confidentialité"
+        description="Politique de confidentialité RGPD de StudioLink Paris."
         url="/legal/privacy"
       />
       <main className="mx-auto w-full max-w-4xl space-y-6">
@@ -20,23 +20,23 @@ export default function PrivacyPage() {
           ← Retour
         </button>
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold text-white">Politique de confidentialite</h1>
-          <p className="text-sm text-white/60">Derniere mise a jour : 26 mars 2026</p>
+          <h1 className="text-3xl font-semibold text-white">Politique de confidentialité</h1>
+          <p className="text-sm text-white/60">Dernière mise à jour : 26 mars 2026</p>
         </header>
 
         <nav className="app-card p-4 text-sm text-white/75">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Sommaire</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <a href="#privacy-1" className="hover:underline">1. Qui sommes-nous</a>
-            <a href="#privacy-2" className="hover:underline">2. Donnees collectees</a>
-            <a href="#privacy-3" className="hover:underline">3. Finalites</a>
-            <a href="#privacy-4" className="hover:underline">4. Base legale</a>
+            <a href="#privacy-2" className="hover:underline">2. Données collectées</a>
+            <a href="#privacy-3" className="hover:underline">3. Finalités</a>
+            <a href="#privacy-4" className="hover:underline">4. Base légale</a>
             <a href="#privacy-5" className="hover:underline">5. Sous-traitants</a>
-            <a href="#privacy-6" className="hover:underline">6. Duree de conservation</a>
+            <a href="#privacy-6" className="hover:underline">6. Durée de conservation</a>
             <a href="#privacy-7" className="hover:underline">7. Vos droits</a>
             <a href="#privacy-8" className="hover:underline">8. Suppression de compte</a>
             <a href="#privacy-9" className="hover:underline">9. Cookies</a>
-            <a href="#privacy-10" className="hover:underline">10. Date de mise a jour</a>
+            <a href="#privacy-10" className="hover:underline">10. Date de mise à jour</a>
           </div>
         </nav>
 
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
             independants (ci-apres « StudioLink »).
           </p>
 
-          <h2 id="privacy-2" className="scroll-mt-24 text-lg font-semibold text-white">2. Donnees collectees</h2>
+          <h2 id="privacy-2" className="scroll-mt-24 text-lg font-semibold text-white">2. Données collectées</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>Compte : email, nom affiche, photo de profil, role (studio/pro).</li>
             <li>Profil pro : competences, tarif, bio, localisation.</li>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
             <li>Technique : adresse IP, user-agent, cookies de session.</li>
           </ul>
 
-          <h2 id="privacy-3" className="scroll-mt-24 text-lg font-semibold text-white">3. Finalites</h2>
+          <h2 id="privacy-3" className="scroll-mt-24 text-lg font-semibold text-white">3. Finalités</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>Mise en relation studios/professionnels.</li>
             <li>Authentification et gestion du compte.</li>
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             <li>Amelioration continue du service.</li>
           </ul>
 
-          <h2 id="privacy-4" className="scroll-mt-24 text-lg font-semibold text-white">4. Base legale</h2>
+          <h2 id="privacy-4" className="scroll-mt-24 text-lg font-semibold text-white">4. Base légale</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>Execution du contrat : creation et usage du compte.</li>
             <li>Consentement : cookies analytiques et mesure d’usage.</li>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
             <li>Resend (USA/EU) : emails transactionnels (ajout phase 4).</li>
           </ul>
 
-          <h2 id="privacy-6" className="scroll-mt-24 text-lg font-semibold text-white">6. Duree de conservation</h2>
+          <h2 id="privacy-6" className="scroll-mt-24 text-lg font-semibold text-white">6. Durée de conservation</h2>
           <p>Les donnees sont conservees pendant la duree de vie du compte puis jusqu’a 2 ans apres la derniere connexion.</p>
 
           <h2 id="privacy-7" className="scroll-mt-24 text-lg font-semibold text-white">7. Vos droits</h2>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
             <li>Cookies analytiques : soumis a consentement explicite.</li>
           </ul>
 
-          <h2 id="privacy-10" className="scroll-mt-24 text-lg font-semibold text-white">10. Date de mise a jour</h2>
+          <h2 id="privacy-10" className="scroll-mt-24 text-lg font-semibold text-white">10. Date de mise à jour</h2>
           <p>26 mars 2026.</p>
         </section>
 
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
             Consulter les conditions d'utilisation
           </Link>
           <Link className="underline underline-offset-2 hover:text-white" to="/">
-            Retour a l'accueil
+            Retour à l'accueil
           </Link>
         </div>
       </main>
