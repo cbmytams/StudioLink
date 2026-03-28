@@ -8,8 +8,7 @@ type LazyImageProps = {
 export function LazyImage({ src, alt, className, fallback }: LazyImageProps) {
   return (
     <img
-      src={src}
-      alt={alt}
+      src={src} alt={alt}
       className={className}
       loading="lazy"
       decoding="async"
