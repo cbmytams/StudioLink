@@ -82,8 +82,7 @@ export function AvatarUpload({
       >
         {currentUrl ? (
           <img
-            src={currentUrl}
-            alt="Avatar"
+            src={currentUrl} alt="Avatar"
             className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"
