@@ -19,6 +19,7 @@ import { handleAuthError } from '@/lib/auth/handleAuthError';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { getRatingForSession } from '@/lib/ratings/ratingService';
 
 type CounterpartyProfile = PublicProfileRecord;
 
@@ -81,6 +82,8 @@ function isSessionMessage(message: DisplayMessage): boolean {
   return Boolean(message.file_url) || Boolean(message.content);
 }
 
+const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const { conversationId: chatId } = useParams<{ conversationId: string }>();
@@ -112,6 +115,7 @@ export default function ChatPage() {
   const [deliveryRefreshKey, setDeliveryRefreshKey] = useState(0);
   const [completingSession, setCompletingSession] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [hasSubmittedRating, setHasSubmittedRating] = useState(false);
   const { isOnline } = useNetworkStatus();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -138,6 +142,7 @@ export default function ChatPage() {
     return sessionData.studio_id === userId ? sessionData.pro : sessionData.studio;
   }, [sessionData, userId]);
   const canCompleteSession = mode === 'session' && isStudioUser && sessionData?.status === 'confirmed';
+  const canPromptRating = mode === 'session' && sessionData?.status === 'completed' && Boolean(otherParticipant) && !hasSubmittedRating;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -257,6 +262,7 @@ export default function ChatPage() {
         setConversation(null);
         setCounterparty(nextCounterparty);
         setMessages(sessionMessages);
+        setHasSubmittedRating(false);
         await chatService.markMessagesAsRead(chatId);
       } catch {
         try {
@@ -329,6 +335,33 @@ export default function ChatPage() {
       void supabase.removeChannel(channel);
     };
   }, [chatId, isOnline, mode, userId]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRatingState = async () => {
+      if (mode !== 'session' || !chatId || !userId || sessionData?.status !== 'completed') {
+        if (!active) return;
+        setHasSubmittedRating(false);
+        return;
+      }
+
+      try {
+        const existingRating = await getRatingForSession(chatId, userId);
+        if (!active) return;
+        setHasSubmittedRating(Boolean(existingRating));
+      } catch {
+        if (!active) return;
+        setHasSubmittedRating(false);
+      }
+    };
+
+    void loadRatingState();
+
+    return () => {
+      active = false;
+    };
+  }, [chatId, mode, sessionData?.status, userId]);
 
   const sendMessage = async () => {
     if (!userId || !chatId || sending) return;
@@ -426,6 +459,16 @@ export default function ChatPage() {
     event.target.value = '';
 
     if (!file || !userId) return;
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+      const message = 'Fichier trop volumineux (10 Mo maximum).';
+      setError(message);
+      showToast({
+        title: 'Pièce jointe refusée',
+        description: message,
+        variant: 'destructive',
+      });
+      return;
+    }
     if (mode === 'session' && (!chatId || !sessionData?.mission_id)) {
       setError('Session introuvable pour joindre un fichier.');
       return;
@@ -493,6 +536,7 @@ export default function ChatPage() {
           : previous
       ));
       setShowRatingModal(true);
+      setHasSubmittedRating(false);
       showToast({
         title: 'Session terminée',
         description: 'Vous pouvez maintenant laisser une note.',
@@ -586,15 +630,29 @@ export default function ChatPage() {
           </div>
 
           {canCompleteSession ? (
-              <button
-                id="btn-complete-session"
-                type="button"
+            <button
+              id="btn-complete-session"
+              type="button"
               disabled={completingSession}
               onClick={() => void handleCompleteSession()}
               className="ml-auto min-h-[44px] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               {completingSession ? '...' : 'Terminer et noter'}
             </button>
+          ) : canPromptRating ? (
+            <button
+              id="btn-open-rating"
+              type="button"
+              onClick={() => setShowRatingModal(true)}
+              className="ml-auto min-h-[44px] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            >
+              Noter la session
+            </button>
+          ) : null}
+          {mode === 'session' && sessionData?.status === 'completed' && hasSubmittedRating ? (
+            <span className="ml-auto inline-flex rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+              Note envoyée
+            </span>
           ) : null}
         </div>
       </header>
@@ -813,6 +871,7 @@ export default function ChatPage() {
           sessionId={chatId}
           rateeId={otherParticipant.id}
           rateeDisplayName={getPublicProfileDisplayName(otherParticipant)}
+          onSubmitted={() => setHasSubmittedRating(true)}
           onClose={() => setShowRatingModal(false)}
         />
       ) : null}
