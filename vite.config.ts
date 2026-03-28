@@ -43,6 +43,7 @@ export default defineConfig(({mode}) => {
         '**/.{idea,git,cache,output,temp}/**',
         '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,playwright}.config.*',
         'tests/visual/**',
+        'tests/mobile-final.spec.ts',
       ],
     },
     build: {
