@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   const handleResetPassword = async () => {
     if (!user?.email) return;
@@ -76,6 +77,10 @@ export default function SettingsPage() {
       setError('Veuillez saisir votre mot de passe pour confirmer.');
       return;
     }
+    if (deleteConfirmation.trim().toUpperCase() !== 'SUPPRIMER') {
+      setError('Veuillez taper SUPPRIMER pour confirmer la suppression.');
+      return;
+    }
 
     setLoadingAction('delete');
     setError(null);
@@ -105,8 +110,9 @@ export default function SettingsPage() {
       await signOut().catch(() => undefined);
       setIsDeleteModalOpen(false);
       setDeletePassword('');
+      setDeleteConfirmation('');
       showToast({ title: 'Compte supprimé', variant: 'default' });
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     } catch (deleteError) {
       const message = toUserFacingErrorMessage(deleteError, 'Suppression impossible.');
       setError(message);
@@ -221,6 +227,7 @@ export default function SettingsPage() {
                   disabled={loadingAction !== null}
                   onClick={() => {
                     setDeletePassword('');
+                    setDeleteConfirmation('');
                     setError(null);
                     setIsDeleteModalOpen(true);
                   }}
@@ -241,7 +248,7 @@ export default function SettingsPage() {
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161622] p-5 shadow-xl">
             <h2 className="text-lg font-semibold text-white">Confirmer la suppression du compte</h2>
             <p className="mt-2 text-sm text-white/65">
-              Cette action est irreversible. Saisissez votre mot de passe pour confirmer.
+              Cette action est irréversible. Saisissez votre mot de passe puis tapez SUPPRIMER pour confirmer.
             </p>
             <label htmlFor="delete-password" className="mt-4 block text-xs uppercase tracking-[0.18em] text-white/45">
               Mot de passe
@@ -255,6 +262,17 @@ export default function SettingsPage() {
               className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
               placeholder="Votre mot de passe"
             />
+            <label htmlFor="delete-confirmation" className="mt-4 block text-xs uppercase tracking-[0.18em] text-white/45">
+              Confirmation
+            </label>
+            <input
+              id="delete-confirmation"
+              type="text"
+              value={deleteConfirmation}
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm uppercase tracking-[0.08em] text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
+              placeholder="Tapez SUPPRIMER"
+            />
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
@@ -262,6 +280,7 @@ export default function SettingsPage() {
                   if (loadingAction === 'delete') return;
                   setIsDeleteModalOpen(false);
                   setDeletePassword('');
+                  setDeleteConfirmation('');
                 }}
                 className="min-h-[44px] flex-1 rounded-xl border border-white/20 px-3 text-sm text-white/80 transition hover:bg-white/10"
               >
@@ -269,7 +288,11 @@ export default function SettingsPage() {
               </button>
               <button
                 type="button"
-                disabled={loadingAction === 'delete' || !deletePassword.trim()}
+                disabled={
+                  loadingAction === 'delete'
+                  || !deletePassword.trim()
+                  || deleteConfirmation.trim().toUpperCase() !== 'SUPPRIMER'
+                }
                 onClick={() => void handleDeleteAccount()}
                 className="min-h-[44px] flex-1 rounded-xl bg-red-500 px-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
               >
