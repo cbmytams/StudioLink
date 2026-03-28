@@ -465,7 +465,7 @@ export default function LoginPage() {
     <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
       <SEO
         title={isSignIn ? 'Connexion' : 'Inscription'}
-        description={isSignIn ? 'Connectez-vous a votre compte StudioLink.' : 'Creez votre compte StudioLink avec invitation.'}
+        description={isSignIn ? 'Connectez-vous à votre compte StudioLink.' : 'Créez votre compte StudioLink avec invitation.'}
         noIndex
         url={isSignIn ? '/login' : '/register'}
       />
@@ -683,7 +683,7 @@ export default function LoginPage() {
                 to="/legal/mentions"
                 className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
-                Mentions legales
+                Mentions légales
               </Link>
             </div>
           </div>
@@ -693,7 +693,7 @@ export default function LoginPage() {
               to="/legal/mentions"
               className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
-              Mentions legales
+              Mentions légales
             </Link>
             <Link
               to="/legal/privacy"
