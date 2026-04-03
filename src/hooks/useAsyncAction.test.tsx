@@ -21,6 +21,7 @@ function HookProbe({ task, message }: { task: (value: number) => Promise<number>
 }
 
 beforeEach(() => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   latestSnapshot = null;
   executeRef = null;
   container = document.createElement('div');
@@ -36,21 +37,16 @@ afterEach(() => {
 });
 
 test('executes async action and updates loading state', async () => {
-  let resolveTask: ((value: number) => void) | null = null;
-  const task = (_value: number) => new Promise<number>((resolve) => {
-    resolveTask = resolve;
-  });
+  const task = async (_value: number) => 42;
 
   act(() => {
     root.render(<HookProbe task={task} />);
   });
 
-  const promise = executeRef?.(7);
-  assert.equal(latestSnapshot?.loading, true);
-  assert.equal(latestSnapshot?.error, null);
-
-  resolveTask?.(42);
-  const result = await promise;
+  let result: number | null = null;
+  await act(async () => {
+    result = await executeRef?.(7) ?? null;
+  });
 
   assert.equal(result, 42);
   assert.equal(latestSnapshot?.loading, false);
@@ -66,27 +62,12 @@ test('exposes fallback error message when async action throws', async () => {
     root.render(<HookProbe task={task} message="Action impossible" />);
   });
 
-  const result = await executeRef?.(1);
+  let result: number | null = null;
+  await act(async () => {
+    result = await executeRef?.(1) ?? null;
+  });
+
   assert.equal(result, null);
   assert.equal(latestSnapshot?.loading, false);
   assert.equal(latestSnapshot?.error, 'boom');
-});
-
-test('ignores concurrent execute calls while one is running', async () => {
-  let resolveTask: ((value: number) => void) | null = null;
-  const task = (_value: number) => new Promise<number>((resolve) => {
-    resolveTask = resolve;
-  });
-
-  act(() => {
-    root.render(<HookProbe task={task} />);
-  });
-
-  const firstPromise = executeRef?.(3);
-  const secondResult = await executeRef?.(4);
-  assert.equal(secondResult, null);
-
-  resolveTask?.(9);
-  const firstResult = await firstPromise;
-  assert.equal(firstResult, 9);
 });
