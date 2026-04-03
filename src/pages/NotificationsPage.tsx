@@ -74,14 +74,14 @@ export default function NotificationsPage() {
       </Helmet>
 
       <div className="mx-auto w-full max-w-3xl px-4 pt-6 pb-24 md:pt-8">
-        <header className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-white/10 bg-[#0A0B10]/92 py-3 backdrop-blur-xl">
+        <header className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-white/10 bg-[var(--color-bg)]/92 py-3 backdrop-blur-xl">
           <h1 className="app-title">Notifications</h1>
           <button
             type="button"
             id="btn-mark-all-read"
             onClick={() => void markAllReadMutation.mutateAsync()}
             disabled={markAllReadMutation.isPending || totalUnread === 0}
-            className="min-h-[44px] text-sm font-medium text-orange-600 disabled:opacity-50"
+            className="min-h-[var(--size-touch)] text-sm font-medium text-orange-600 disabled:opacity-50"
           >
             Tout marquer comme lu
           </button>
@@ -131,7 +131,7 @@ export default function NotificationsPage() {
           <div className="space-y-3">
             {Object.entries(groupedNotifications).map(([groupLabel, items]: [string, NotificationRecord[]]) => (
               <section key={groupLabel}>
-                <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/35">
+                <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/35">
                   {groupLabel}
                 </p>
                 <div className="space-y-3">

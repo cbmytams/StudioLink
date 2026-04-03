@@ -29,7 +29,9 @@ try {
     : new Error('Erreur de démarrage liée à la configuration runtime.');
 }
 
-if (!startupError && !disableAnalytics && sentryDsn) {
+function initSentry() {
+  if (startupError || disableAnalytics || !sentryDsn) return;
+
   Sentry.init({
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
@@ -53,17 +55,20 @@ if (!startupError && !disableAnalytics && sentryDsn) {
   });
 }
 
-if (typeof window !== 'undefined') {
-  const consent = window.localStorage.getItem('cookie_consent');
-  if (consent !== 'accepted') {
-    // PostHog reste opt-out jusqu'au consentement explicite.
+function initAnalytics() {
+  if (typeof window !== 'undefined') {
+    const consent = window.localStorage.getItem('cookie_consent');
+    if (consent !== 'accepted') {
+      // PostHog reste opt-out jusqu'au consentement explicite.
+    }
+    if (disableAnalytics) {
+      console.debug('[RuntimeFlags] Analytics désactivés en runtime.');
+    }
   }
-  if (disableAnalytics) {
-    console.debug('[RuntimeFlags] Analytics désactivés en runtime.');
-  }
-}
 
-if (!startupError && !disableAnalytics) {
+  if (startupError || disableAnalytics) return;
+
+  initSentry();
   initPostHog();
   injectAnalytics();
   injectSpeedInsights();
@@ -73,9 +78,9 @@ function RuntimeConfigErrorScreen({ error }: { error: Error }) {
   const activeFlags = getActiveTestFlags();
   const activeFlagsLabel = activeFlags.length > 0 ? activeFlags.join(', ') : 'none';
   return (
-    <main className="app-shell flex min-h-[100dvh] items-center justify-center px-4 py-10">
-      <section className="w-full max-w-2xl rounded-[2rem] border border-red-300/25 bg-[#190d0d]/90 p-8 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-red-200/80">Runtime guard</p>
+    <main className="app-shell flex min-h-[var(--size-full-dvh)] items-center justify-center px-4 py-10">
+      <section className="w-full max-w-2xl rounded-[var(--radius-xl)] border border-red-300/25 bg-[var(--color-surface-danger)]/90 p-8 text-white shadow-[var(--shadow-screen)]">
+        <p className="text-xs font-semibold uppercase tracking-[var(--tracking-widecaps)] text-red-200/80">Runtime guard</p>
         <h1 className="mt-3 text-2xl font-semibold text-red-100">Mode test bloqué en production</h1>
         <p className="mt-3 text-sm leading-6 text-red-100/90">
           {error.message}
@@ -107,6 +112,21 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+if (!startupError && !disableAnalytics && typeof window !== 'undefined') {
+  const requestIdle = (
+    window as Window & { requestIdleCallback?: (callback: IdleRequestCallback) => number }
+  ).requestIdleCallback;
+  if (typeof requestIdle === 'function') {
+    requestIdle(() => {
+      initAnalytics();
+    });
+  } else {
+    window.setTimeout(() => {
+      initAnalytics();
+    }, 1000);
+  }
+}
 
 if (!startupError && import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

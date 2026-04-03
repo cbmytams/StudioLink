@@ -192,8 +192,9 @@ export default function MissionForm() {
         const files = await getMissionFiles(activeMissionId);
         if (!active) return;
         setReferenceFiles(files);
-      } catch {
+      } catch (loadFilesError) {
         if (!active) return;
+        console.error('[MissionForm] loadFiles failed:', loadFilesError);
         setReferenceFiles([]);
       } finally {
         if (active) setLoadingFiles(false);
@@ -390,7 +391,7 @@ export default function MissionForm() {
   };
 
   return (
-    <div className="app-shell min-h-[100dvh] pb-28">
+    <div className="app-shell min-h-[var(--size-full-dvh)] pb-28">
       <Helmet>
         <title>{isEdit ? 'Modifier la mission — StudioLink' : 'Nouvelle mission — StudioLink'}</title>
         <meta
@@ -404,7 +405,7 @@ export default function MissionForm() {
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
+          className="mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← {isEdit ? 'Retour aux missions' : 'Retour au dashboard'}
         </button>
@@ -418,7 +419,7 @@ export default function MissionForm() {
             <div className="h-10 rounded-xl bg-stone-200" />
           </div>
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-6 xl:grid-cols-[var(--layout-side-panel)]">
             <form id="mission-form" onSubmit={handleSubmit} className="app-card p-5 space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-4">
                 <div>
@@ -430,7 +431,7 @@ export default function MissionForm() {
                   </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">Statut</p>
+                  <p className="text-[var(--text-2xs-plus)] uppercase tracking-[var(--tracking-caps)] text-white/40">Statut</p>
                   <p className="mt-1 text-base font-semibold text-white">{statusLabel}</p>
                 </div>
               </div>
@@ -446,7 +447,7 @@ export default function MissionForm() {
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Ex: Mixage EP rap 5 titres"
-                  className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
                 {fieldErrors.title ? <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p> : null}
               </div>
@@ -462,10 +463,10 @@ export default function MissionForm() {
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="Décrivez le projet, le contexte, les livrables attendus et votre timeline."
-                  className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
                 {fieldErrors.description ? <p className="text-xs text-red-500 mt-1">{fieldErrors.description}</p> : null}
-                <p className="mt-1 text-right text-[11px] text-gray-400">{description.length}/2000</p>
+                <p className="mt-1 text-right text-[var(--text-2xs-plus)] text-gray-400">{description.length}/2000</p>
               </div>
 
               <FileUpload
@@ -491,7 +492,7 @@ export default function MissionForm() {
                     id="mission-category"
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   >
                     <option value="">Choisir une catégorie</option>
                     {CATEGORIES.map((entry) => (
@@ -510,7 +511,7 @@ export default function MissionForm() {
                     type="text"
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                   {fieldErrors.location ? <p className="text-xs text-red-500 mt-1">{fieldErrors.location}</p> : null}
                 </div>
@@ -526,7 +527,7 @@ export default function MissionForm() {
                   value={city}
                   onChange={(event) => setCity(event.target.value)}
                   placeholder="Optionnel, sinon la ville reprend le lieu"
-                  className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
               </div>
 
@@ -540,7 +541,7 @@ export default function MissionForm() {
                     type="date"
                     value={missionDate}
                     onChange={(event) => setMissionDate(event.target.value)}
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                   {fieldErrors.date ? <p className="text-xs text-red-500 mt-1">{fieldErrors.date}</p> : null}
                 </div>
@@ -553,13 +554,13 @@ export default function MissionForm() {
                     type="date"
                     value={endDate}
                     onChange={(event) => setEndDate(event.target.value)}
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                   {fieldErrors.end_date ? <p className="text-xs text-red-500 mt-1">{fieldErrors.end_date}</p> : null}
                 </div>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+              <div className="grid gap-4 lg:grid-cols-[var(--layout-form-split)]">
                 <div>
                   <label htmlFor="mission-rate" className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                     Tarif journalier (€) *
@@ -571,7 +572,7 @@ export default function MissionForm() {
                     value={dailyRate}
                     onChange={(event) => setDailyRate(event.target.value)}
                     placeholder="ex: 500"
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                   {fieldErrors.daily_rate ? <p className="text-xs text-red-500 mt-1">{fieldErrors.daily_rate}</p> : null}
                 </div>
@@ -584,7 +585,7 @@ export default function MissionForm() {
                     id="mission-status"
                     value={status}
                     onChange={(event) => setStatus(event.target.value as FormStatus)}
-                    className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   >
                     <option value="open">Ouverte</option>
                     <option value="closed">Fermée</option>
@@ -606,7 +607,7 @@ export default function MissionForm() {
                   onKeyDown={onSkillInputKeyDown}
                   onBlur={addSkill}
                   placeholder={skillsRequired.length >= 10 ? 'Maximum 10 compétences atteint' : 'Ajouter une compétence (Entrée ou ,)'}
-                  className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-stone-100 disabled:text-stone-400"
+                  className="min-h-[var(--size-touch)] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:bg-stone-100 disabled:text-stone-400"
                 />
                 {skillsRequired.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -619,7 +620,7 @@ export default function MissionForm() {
                         <button
                           type="button"
                           onClick={() => removeSkill(skill)}
-                          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-orange-500 hover:text-orange-700"
+                          className="inline-flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center text-orange-500 hover:text-orange-700"
                           aria-label={`Retirer ${skill}`}
                         >
                           ×
@@ -634,7 +635,7 @@ export default function MissionForm() {
             <aside className="hidden xl:block">
               <div className="sticky top-8 space-y-4">
                 <section className="app-card p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Checklist mission</p>
+                  <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Checklist mission</p>
                   <div className="mt-4 space-y-3 text-sm text-white/70">
                     <div className="flex items-center justify-between gap-3">
                       <span>Titre et brief</span>
@@ -658,7 +659,7 @@ export default function MissionForm() {
                 </section>
 
                 <section className="app-card p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Actions</p>
+                  <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Actions</p>
                   {error ? (
                     <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
                       {error}
@@ -699,7 +700,7 @@ export default function MissionForm() {
       </div>
 
       <div
-        className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-black/5 bg-[#f4ece4] p-4 pb-safe xl:hidden"
+        className="fixed bottom-[var(--safe-offset-nav)] left-0 right-0 z-40 border-t border-black/5 bg-[var(--color-surface-soft)] p-4 pb-safe xl:hidden"
         style={mobileFooterStyle}
       >
         <div className="mx-auto flex max-w-3xl items-center gap-3 md:px-0">

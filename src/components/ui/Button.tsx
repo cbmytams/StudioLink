@@ -32,7 +32,7 @@ export function Button({
       type={type}
       disabled={isDisabled}
       className={cn(
-        "inline-flex min-h-[44px] items-center justify-center font-medium transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40",
+        "inline-flex min-h-[var(--size-touch)] items-center justify-center font-medium transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40",
         // Variants
         variant === "primary" && "glass-btn-accent",
         variant === "secondary" && "glass-btn-primary",

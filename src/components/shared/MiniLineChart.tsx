@@ -26,7 +26,7 @@ function slugifyLabel(value: string): string {
 export function MiniLineChart({
   data,
   label,
-  color = '#fb923c',
+  color = 'var(--color-primary-highlight)',
   id,
 }: MiniLineChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<HoveredPoint | null>(null);
@@ -63,13 +63,13 @@ export function MiniLineChart({
           <p className="text-xs text-white/45">30 derniers jours</p>
         </div>
         {hoveredPoint ? (
-          <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] text-white/70">
+          <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[var(--text-2xs-plus)] text-white/70">
             {hoveredPoint.count} candidature{hoveredPoint.count > 1 ? 's' : ''} le {formatShortDate(hoveredPoint.day)}
           </div>
         ) : null}
       </div>
 
-      <svg viewBox={`0 0 ${geometry.width} ${geometry.height}`} className="h-[220px] w-full overflow-visible">
+      <svg viewBox={`0 0 ${geometry.width} ${geometry.height}`} className="h-[var(--size-chart-height)] w-full overflow-visible">
         {Array.from({ length: 4 }).map((_, index) => {
           const y = 24 + ((220 - 24 - 32) * index) / 3;
           return (
@@ -79,7 +79,7 @@ export function MiniLineChart({
               y1={y}
               x2={geometry.width - 18}
               y2={y}
-              stroke="rgba(255,255,255,0.08)"
+              stroke="var(--color-divider)"
               strokeDasharray="4 6"
             />
           );
@@ -111,7 +111,7 @@ export function MiniLineChart({
                 x={point.x}
                 y={geometry.height - 8}
                 textAnchor="middle"
-                className={cn('fill-white/35 text-[10px]')}
+                className={cn('fill-white/35 text-[var(--text-2xs)]')}
               >
                 {formatShortDate(point.day)}
               </text>

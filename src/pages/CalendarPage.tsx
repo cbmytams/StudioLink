@@ -5,11 +5,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Clock, Folder, MapPin, MessageCircle, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { useMissions } from '@/hooks/useMissions';
 import { useMyApplications } from '@/hooks/useApplications';
 import { useProProfile } from '@/hooks/useProfile';
-import { missionService } from '@/services/missionService';
-import { applicationService } from '@/services/applicationService';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -94,8 +93,8 @@ function deriveDurationHours(duration: string | null): number {
 }
 
 function deriveSlotDurationHours(slot: AvailabilitySlot) {
-  const [startHour, startMinute] = slot.start.split(':').map(Number);
-  const [endHour, endMinute] = slot.end.split(':').map(Number);
+  const [startHour = 0, startMinute = 0] = slot.start.split(':').map(Number);
+  const [endHour = 0, endMinute = 0] = slot.end.split(':').map(Number);
   const totalStart = (startHour * 60) + startMinute;
   const totalEnd = (endHour * 60) + endMinute;
   const diff = Math.max(60, totalEnd - totalStart);
@@ -142,7 +141,7 @@ function getDayLabel(date: Date): AvailabilitySlot['day'] {
     'vendredi',
     'samedi',
   ];
-  return labels[date.getDay()];
+  return labels[date.getDay()] ?? 'lundi';
 }
 
 export default function CalendarPage() {
@@ -194,8 +193,13 @@ export default function CalendarPage() {
     queryKey: ['calendar', 'pro-missions', selectedMissionIds.join(',')],
     queryFn: async () => {
       if (selectedMissionIds.length === 0) return [] as MissionRecord[];
-      const rows = await Promise.all(selectedMissionIds.map((missionId) => missionService.getMissionById(missionId)));
-      return rows;
+      const { data, error } = await supabase
+        .from('missions')
+        .select('*')
+        .in('id', selectedMissionIds);
+
+      if (error) throw error;
+      return (data ?? []) as MissionRecord[];
     },
     enabled: userType === 'pro' && selectedMissionIds.length > 0,
   });
@@ -213,14 +217,24 @@ export default function CalendarPage() {
   } = useQuery({
     queryKey: ['calendar', 'selected-pro-by-mission', studioMissionIds.join(',')],
     queryFn: async () => {
+      if (studioMissionIds.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from('applications')
+        .select('mission_id, pro_id')
+        .in('mission_id', studioMissionIds)
+        .eq('status', 'accepted');
+
+      if (error) throw error;
+
       const map: Record<string, string> = {};
-      await Promise.all(
-        studioMissionIds.map(async (missionId) => {
-          const applications = await applicationService.getMissionApplications(missionId);
-          const selected = applications.find((application) => application.status === 'accepted');
-          if (selected) map[missionId] = selected.pro_id;
-        }),
-      );
+      (data ?? []).forEach((row) => {
+        const missionId = (row as { mission_id: string }).mission_id;
+        const proId = (row as { pro_id: string }).pro_id;
+        if (!map[missionId]) {
+          map[missionId] = proId;
+        }
+      });
       return map;
     },
     enabled: userType === 'studio' && studioMissionIds.length > 0,
@@ -425,7 +439,7 @@ export default function CalendarPage() {
         <title>Calendrier — StudioLink</title>
         <meta name="description" content="Votre planning de sessions et missions sur StudioLink." />
       </Helmet>
-      <header className="sticky top-0 z-30 flex flex-col gap-6 bg-[#f4ece4]/90 px-4 py-6 backdrop-blur-md">
+      <header className="sticky top-0 z-30 flex flex-col gap-6 bg-[var(--color-surface-soft)]/90 px-4 py-6 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-semibold tracking-tight">Calendrier</h1>
           <div className="flex items-center rounded-full border border-white/50 bg-white/40 p-1">
@@ -433,7 +447,7 @@ export default function CalendarPage() {
               type="button"
               onClick={() => setView('week')}
               className={cn(
-                'flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-all',
+                'flex min-h-[var(--size-touch)] items-center rounded-full px-4 text-xs font-medium transition-all',
                 view === 'week' ? 'bg-white text-black shadow-sm' : 'text-black/60 hover:text-black',
               )}
             >
@@ -443,7 +457,7 @@ export default function CalendarPage() {
               type="button"
               onClick={() => setView('month')}
               className={cn(
-                'flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-all',
+                'flex min-h-[var(--size-touch)] items-center rounded-full px-4 text-xs font-medium transition-all',
                 view === 'month' ? 'bg-white text-black shadow-sm' : 'text-black/60 hover:text-black',
               )}
             >
@@ -454,18 +468,20 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between">
           <button
             type="button"
+            aria-label="Mois précédent"
             onClick={handlePrev}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/5"
+            className="flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center rounded-full transition-colors hover:bg-black/5"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={24} aria-hidden="true" />
           </button>
           <span className="text-lg font-medium capitalize">{formatMonthYear(currentDate)}</span>
           <button
             type="button"
+            aria-label="Mois suivant"
             onClick={handleNext}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/5"
+            className="flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center rounded-full transition-colors hover:bg-black/5"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={24} aria-hidden="true" />
           </button>
         </div>
       </header>
@@ -480,7 +496,7 @@ export default function CalendarPage() {
             <button
               type="button"
               onClick={() => navigate(profileType === 'studio' ? '/studio/dashboard' : '/pro/feed')}
-              className="min-h-[44px] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+              className="min-h-[var(--size-touch)] rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
             >
               Trouver des missions
             </button>
@@ -540,7 +556,7 @@ export default function CalendarPage() {
                             <div key={hour} className="h-16 border-t border-black/5" />
                           ))}
                           {daySessions.map((session) => {
-                            const [hourPart, minutePart] = session.timeStart.split(':').map(Number);
+                            const [hourPart = 8, minutePart = 0] = session.timeStart.split(':').map(Number);
                             const topOffset = ((hourPart - 8) * 64) + ((minutePart / 60) * 64);
                             const height = Math.max(48, session.durationHours * 64);
                             return (
@@ -550,13 +566,13 @@ export default function CalendarPage() {
                                 aria-label={`Ouvrir la session de ${session.artistName}`}
                                 onClick={() => setSelectedSession(session)}
                                 className={cn(
-                                  'absolute left-1 right-1 overflow-hidden rounded-lg p-2 text-left shadow-sm transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300',
+                                  'absolute left-1 right-1 overflow-hidden rounded-lg p-2 text-left shadow-sm transition-transform hover:scale-[var(--scale-hover-subtle)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300',
                                   getServiceColor(session.serviceType),
                                 )}
                                 style={{ top: `${topOffset}px`, height: `${height}px` }}
                               >
                                 <div className="truncate text-xs font-bold">{session.artistName}</div>
-                                <div className="truncate text-[10px] opacity-90 capitalize">{session.serviceType}</div>
+                                <div className="truncate text-[var(--text-2xs)] opacity-90 capitalize">{session.serviceType}</div>
                               </button>
                             );
                           })}
@@ -632,9 +648,9 @@ export default function CalendarPage() {
 
       <BottomSheet isOpen={isDaySheetOpen} onClose={() => setIsDaySheetOpen(false)}>
         <div className="flex flex-col gap-4 p-4 pb-8">
-          {selectedDaySessions.length > 0 ? (
+          {selectedDaySessions.length > 0 && selectedDaySessions[0] ? (
             <h2 className="px-2 text-xl font-semibold">
-              {selectedDaySessions[0].date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {selectedDaySessions[0]?.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </h2>
           ) : null}
           <div className="flex flex-col gap-4">

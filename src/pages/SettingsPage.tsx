@@ -124,7 +124,11 @@ export default function SettingsPage() {
         throw new Error(String(data.error));
       }
 
-      await signOut().catch(() => undefined);
+      try {
+        await signOut();
+      } catch (signOutError) {
+        console.error('[SettingsPage] signOut after delete failed:', signOutError);
+      }
       setIsDeleteModalOpen(false);
       setDeletePassword('');
       setDeleteConfirmation('');

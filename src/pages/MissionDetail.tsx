@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SEO } from '@/components/SEO';
+import NotFound from '@/pages/NotFound';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { useToast } from '@/components/ui/Toast';
@@ -321,7 +322,7 @@ export default function MissionDetail() {
 
   if (loading) {
     return (
-      <div className="app-shell min-h-[100dvh] pb-28">
+      <div className="app-shell min-h-[var(--size-full-dvh)] pb-28">
         <div className="animate-pulse space-y-4 pt-6 px-4 max-w-2xl mx-auto">
           <div className="h-7 bg-white/10 rounded w-3/4" />
           <div className="flex items-center gap-3 mt-2">
@@ -338,21 +339,10 @@ export default function MissionDetail() {
 
   if (notFound || !mission) {
     return (
-      <div className="app-shell min-h-[100dvh] pb-28">
-        <div className="app-container-compact">
-          <div className="text-center py-16">
-            <p className="text-4xl mb-3">📋</p>
-            <p className="text-white/60 text-sm">Cette mission n&apos;existe pas ou n&apos;est plus disponible.</p>
-            <button
-              type="button"
-              onClick={() => navigate('/pro/missions')}
-              className="mx-auto mt-2 inline-flex min-h-[44px] items-center text-sm text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
-            >
-              Retour aux missions
-            </button>
-          </div>
-        </div>
-      </div>
+      <NotFound
+        title="Mission introuvable"
+        description="Cette mission n'existe pas ou a été supprimée."
+      />
     );
   }
 
@@ -362,7 +352,7 @@ export default function MissionDetail() {
   const studioName = getPublicProfileDisplayName(mission?.studio);
 
   return (
-    <div className="app-shell min-h-[100dvh] pb-28">
+    <div className="app-shell min-h-[var(--size-full-dvh)] pb-28">
       <SEO
         title={mission.title}
         description={mission.description ? mission.description.slice(0, 160) : 'Detail mission StudioLink'}
@@ -372,7 +362,7 @@ export default function MissionDetail() {
           <button
             type="button"
             onClick={() => navigate('/pro/missions')}
-            className="mb-6 inline-flex min-h-[44px] items-center gap-2 px-1 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            className="mb-6 inline-flex min-h-[var(--size-touch)] items-center gap-2 px-1 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
           >
             <span>←</span> Retour aux missions
           </button>
@@ -412,7 +402,7 @@ export default function MissionDetail() {
                 <button
                   type="button"
                   onClick={() => navigate(`/studio/public/${mission.studio?.id}`)}
-                  className="inline-flex min-h-[44px] items-center text-xs text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                  className="inline-flex min-h-[var(--size-touch)] items-center text-xs text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Voir le profil du studio →
                 </button>
@@ -481,7 +471,7 @@ export default function MissionDetail() {
                       onClick={() => {
                         void handleDownloadReference(file);
                       }}
-                      className="inline-flex min-h-[44px] shrink-0 items-center px-2 text-xs font-medium text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                      className="inline-flex min-h-[var(--size-touch)] shrink-0 items-center px-2 text-xs font-medium text-orange-300 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                     >
                       Télécharger
                     </button>
@@ -501,7 +491,7 @@ export default function MissionDetail() {
       </div>
 
       <div
-        className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-white/10 bg-[#0A0B10]/90 p-4 pb-safe backdrop-blur-md md:static md:mt-6 md:border-t-0 md:bg-transparent md:p-0"
+        className="fixed bottom-[var(--safe-offset-nav)] left-0 right-0 z-40 border-t border-white/10 bg-[var(--color-bg)]/90 p-4 pb-safe backdrop-blur-md md:static md:mt-6 md:border-t-0 md:bg-transparent md:p-0"
         style={mobileFooterStyle}
       >
         <div className="mx-auto max-w-2xl md:px-0">
@@ -511,7 +501,7 @@ export default function MissionDetail() {
                 id="btn-apply"
                 type="button"
                 onClick={handleOpenApplyModal}
-                className="min-h-[48px] w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
+                className="min-h-[var(--size-touch-lg)] w-full rounded-2xl bg-orange-500 py-3 font-semibold text-white transition-colors hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 Candidater
               </button>

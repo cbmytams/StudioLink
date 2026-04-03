@@ -58,7 +58,7 @@ export function BottomSheet({ isOpen, onClose, title, headerAction, children, cl
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-[var(--color-surface-soft)]/75 backdrop-blur-sm"
+            className="fixed inset-0 z-overlay bg-[var(--color-surface-soft)]/75 backdrop-blur-sm"
             style={mobileOverlayStyle}
           />
           <FocusTrap>
@@ -73,7 +73,7 @@ export function BottomSheet({ isOpen, onClose, title, headerAction, children, cl
               aria-labelledby={title ? titleId : undefined}
               tabIndex={-1}
               className={cn(
-                "fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-soft)] rounded-t-3xl shadow-2xl overflow-y-auto flex flex-col",
+                "fixed bottom-0 left-0 right-0 z-modal bg-[var(--color-surface-soft)] rounded-t-3xl shadow-2xl overflow-y-auto flex flex-col",
                 fullHeight ? "h-[var(--size-sheet-max-dvh)]" : "max-h-[var(--size-sheet-max-dvh)]",
                 className
               )}

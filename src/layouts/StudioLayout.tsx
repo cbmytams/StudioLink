@@ -10,17 +10,27 @@ export default function StudioLayout({ children }: { children?: React.ReactNode 
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   return (
-    <div className="relative min-h-[100dvh] pb-24 md:pb-0">
-      {isMobile ? <GlobalSearchBar userType="studio" /> : null}
-      <DesktopNav userType="studio" />
+    <div className="relative min-h-[var(--size-full-dvh)] pb-24 md:pb-0">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-toast focus:rounded focus:bg-white focus:p-2 focus:text-black"
+      >
+        Aller au contenu principal
+      </a>
 
-      <div className="fixed right-4 top-4 z-50 md:right-6 md:top-6">
-        <NotificationBell userType="studio" />
-      </div>
+      <header>
+        {isMobile ? <GlobalSearchBar userType="studio" /> : null}
+        <DesktopNav userType="studio" />
+        <div className="fixed right-4 top-4 z-toast md:right-6 md:top-6">
+          <NotificationBell userType="studio" />
+        </div>
+      </header>
 
-      <div className="md:pl-[304px] md:pr-6 lg:pr-8">
+      <main id="main-content" tabIndex={-1} className="md:pl-[var(--layout-sidebar-offset)] md:pr-6 lg:pr-8">
         {children || <Outlet />}
-      </div>
+      </main>
+
+      <footer className="sr-only">Pied de page StudioLink</footer>
       
       {isMobile ? <BottomNav userType="studio" /> : null}
     </div>

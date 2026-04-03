@@ -277,7 +277,7 @@ export default function ProApplications() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
+          className="mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Mes candidatures
         </button>
@@ -288,7 +288,7 @@ export default function ProApplications() {
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-                  className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                  className={`inline-flex min-h-[var(--size-touch)] shrink-0 items-center justify-center rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                 activeFilter === filter.value
                   ? 'bg-orange-500 text-white'
                   : 'border border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
@@ -337,7 +337,7 @@ export default function ProApplications() {
             <button
               type="button"
               onClick={() => navigate('/pro/feed')}
-              className="mt-3 inline-flex min-h-[44px] items-center justify-center px-2 text-sm text-orange-300 hover:underline"
+              className="mt-3 inline-flex min-h-[var(--size-touch)] items-center justify-center px-2 text-sm text-orange-300 hover:underline"
             >
               Voir les offres disponibles
             </button>
@@ -408,7 +408,7 @@ export default function ProApplications() {
                         void handleWithdraw(application.id);
                       }}
                       disabled={withdrawingId === application.id}
-                      className={`mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium ${
+                      className={`mt-3 inline-flex min-h-[var(--size-touch)] items-center px-2 text-xs font-medium ${
                         withdrawingId === application.id
                           ? 'text-white/45'
                           : 'text-orange-300 hover:underline'
@@ -425,7 +425,7 @@ export default function ProApplications() {
                         event.stopPropagation();
                         void handleOpenChat(application.mission_id, sessionId);
                       }}
-                      className="mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-orange-300 hover:underline"
+                      className="mt-3 inline-flex min-h-[var(--size-touch)] items-center px-2 text-xs font-medium text-orange-300 hover:underline"
                     >
                       Ouvrir le chat
                     </button>

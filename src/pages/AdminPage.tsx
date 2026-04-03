@@ -392,7 +392,7 @@ export default function AdminPage() {
                   key={type}
                   type="button"
                   onClick={() => setNewType(type)}
-                  className={`min-h-[44px] rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 ${
+                  className={`min-h-[var(--size-touch)] rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 ${
                     newType === type
                       ? 'bg-orange-500 text-white'
                       : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -475,7 +475,7 @@ export default function AdminPage() {
                     : '0/1';
 
                 return (
-                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto_auto] gap-3 items-center">
+                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[var(--layout-admin-grid)] gap-3 items-center">
                     <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
                       invitation.type === 'studio'
                         ? 'bg-cyan-100 text-cyan-700 border border-cyan-200'
@@ -498,7 +498,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => void handleCopy(invitation.code)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-orange-600 transition-colors hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-orange-600 transition-colors hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         {copySuccess === invitation.code ? '✓ Copié !' : 'Copier le lien'}
                       </button>
@@ -506,7 +506,7 @@ export default function AdminPage() {
                         type="button"
                         disabled={deletingInvitationId === invitation.id || invitation.used}
                         onClick={() => void handleDeactivate(invitation.id)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-amber-600 transition-colors hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-amber-600 transition-colors hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingInvitationId === invitation.id ? 'Désactivation…' : 'Désactiver'}
                       </button>
@@ -514,7 +514,7 @@ export default function AdminPage() {
                         type="button"
                         disabled={deletingInvitationId === invitation.id}
                         onClick={() => void handleDelete(invitation.id)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-red-500 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-red-500 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingInvitationId === invitation.id ? 'Suppression…' : 'Supprimer'}
                       </button>

@@ -140,12 +140,14 @@
 
   /* — Z-index (couches) — */
   --z-base: 0;
+  --z-above: 10;
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-overlay: 300;
   --z-modal: 400;
   --z-toast: 500;
   --z-cookie-banner: 9999;
+  --z-tooltip: 700;
 
   /* Tokens de dimensions pour remplacer les arbitraires */
   --size-touch: 44px;
@@ -171,6 +173,7 @@
   --safe-offset-compact: calc(env(safe-area-inset-bottom) + 0.75rem);
   --safe-offset-default: calc(env(safe-area-inset-bottom) + 1rem);
   --safe-offset-expanded: calc(env(safe-area-inset-bottom) + 1.5rem);
+  --bottom-nav-height: 64px;
 
   --hero-min-height: calc(100dvh - 84px);
   --section-y-fluid: clamp(2rem, 5vw, 4rem);
@@ -280,10 +283,6 @@
   --animate-fade-in: fade-in var(--transition-base) ease-out;
 }
 
-:root {
-  --cookie-banner-offset: 0px;
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -303,17 +302,8 @@
     background: var(--color-bg);
     color: var(--color-text);
     padding-bottom: 0;
-    transition: padding-bottom var(--transition-interactive) ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  body.cookie-banner-visible .app-shell {
-    padding-bottom: var(--cookie-banner-offset, 0px);
-  }
-
-  body.cookie-banner-visible .auth-shell {
-    padding-bottom: max(var(--cookie-banner-offset, 0px), var(--size-auth-cookie-offset));
   }
 }
 

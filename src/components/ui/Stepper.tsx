@@ -35,12 +35,12 @@ export function Stepper({
         aria-label="Diminuer la valeur"
         onClick={handleDecrease}
         disabled={value <= min}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
+        className="min-h-[var(--size-touch)] min-w-[var(--size-touch)] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
       >
         <Minus size={16} />
       </button>
       
-      <span className="min-w-[4rem] text-center font-medium text-sm">
+      <span className="min-w-[var(--stepper-min-width)] text-center font-medium text-sm">
         {formatValue(value)}
       </span>
 
@@ -49,7 +49,7 @@ export function Stepper({
         aria-label="Augmenter la valeur"
         onClick={handleIncrease}
         disabled={value >= max}
-        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
+        className="min-h-[var(--size-touch)] min-w-[var(--size-touch)] flex items-center justify-center rounded-full hover:bg-white/60 disabled:opacity-40 disabled:hover:bg-transparent transition-colors text-black"
       >
         <Plus size={16} />
       </button>

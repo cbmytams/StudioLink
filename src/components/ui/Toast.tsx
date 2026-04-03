@@ -78,7 +78,7 @@ export function Toast({ message, type = 'success', onClose, duration = 3000 }: L
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`fixed bottom-24 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-lg ${tone}`}
+        className={`fixed bottom-24 left-1/2 z-50 max-w-[var(--toast-max-width)] -translate-x-1/2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-lg ${tone}`}
         onClick={onClose}
       >
         {message}
@@ -120,26 +120,30 @@ export function Toaster() {
   }, [active, hideToast]);
 
   return (
-    <AnimatePresence>
-      {active ? (
-        <motion.div
-          key={active.id}
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 16 }}
-          transition={{ duration: 0.18 }}
-          className={`fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-1/2 z-[100] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
-            active.variant === 'destructive'
-              ? 'border-red-200 bg-red-50 text-red-700'
-              : 'border-orange-200 bg-white/95 text-stone-800'
-          }`}
-          onClick={hideToast}
-        >
-          <p className="font-semibold">{active.title}</p>
-          {active.description ? <p className="mt-1 text-xs text-stone-500">{active.description}</p> : null}
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    <div aria-live="polite" aria-atomic="true">
+      <AnimatePresence>
+        {active ? (
+          <motion.div
+            key={active.id}
+            role={active.variant === 'destructive' ? 'alert' : 'status'}
+            aria-live={active.variant === 'destructive' ? 'assertive' : 'polite'}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.18 }}
+            className={`fixed bottom-[var(--toast-safe-offset)] left-1/2 z-dropdown w-[var(--toast-mobile-width)] max-w-md -translate-x-1/2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
+              active.variant === 'destructive'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-orange-200 bg-white/95 text-stone-800'
+            }`}
+            onClick={hideToast}
+          >
+            <p className="font-semibold">{active.title}</p>
+            {active.description ? <p className="mt-1 text-xs text-stone-500">{active.description}</p> : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
   );
 }
 

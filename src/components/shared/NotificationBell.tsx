@@ -6,14 +6,8 @@ import type { NotificationRecord } from '@/types/backend';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import {
-  getNotifications,
-  markAllAsRead,
-  markAsRead,
-  subscribeToNotifications,
-} from '@/lib/notifications/notificationService';
+import { useMarkAllRead, useMarkAsRead, useNotifications } from '@/hooks/useNotifications';
 import { getNotificationTarget } from '@/lib/notifications/notificationUtils';
-import { supabase } from '@/lib/supabase/client';
 
 interface NotificationBellProps {
   userType: 'studio' | 'pro';
@@ -34,65 +28,20 @@ function formatRelativeTime(dateIso: string): string {
   return `il y a ${Math.max(1, Math.floor(diff / day))} j`;
 }
 
-function upsertNotification(
-  previous: NotificationRecord[],
-  incoming: NotificationRecord,
-): NotificationRecord[] {
-  const exists = previous.some((item) => item.id === incoming.id);
-  const next = exists
-    ? previous.map((item) => (item.id === incoming.id ? { ...item, ...incoming } : item))
-    : [incoming, ...previous];
-
-  return next.sort(
-    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
-  );
-}
-
 export function NotificationBell(_props: NotificationBellProps) {
   const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id ?? null;
   const isMobile = useMediaQuery('(max-width: 767px)');
+  const notificationsQuery = useNotifications(userId ?? undefined);
+  const markAsReadMutation = useMarkAsRead();
+  const markAllReadMutation = useMarkAllRead(userId ?? undefined);
 
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const panelRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!userId) {
-      setNotifications([]);
-      setLoading(false);
-      return;
-    }
-
-    let active = true;
-
-    const load = async () => {
-      try {
-        const rows = await getNotifications(userId);
-        if (!active) return;
-        setNotifications(rows);
-      } catch {
-        if (!active) return;
-        setNotifications([]);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void load();
-
-    const channel = subscribeToNotifications(userId, (incoming) => {
-      setNotifications((previous) => upsertNotification(previous, incoming));
-    });
-
-    return () => {
-      active = false;
-      void supabase.removeChannel(channel);
-    };
-  }, [userId]);
+  const notifications = notificationsQuery.data ?? [];
+  const loading = notificationsQuery.isLoading;
+  const busy = markAsReadMutation.isPending || markAllReadMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -117,16 +66,11 @@ export function NotificationBell(_props: NotificationBellProps) {
   const handleNotificationClick = async (notification: NotificationRecord) => {
     if (busy) return;
 
-    setBusy(true);
     try {
       if (!notification.read) {
-        await markAsRead(notification.id);
-        setNotifications((previous) => previous.map((item) => (
-          item.id === notification.id ? { ...item, read: true } : item
-        )));
+        await markAsReadMutation.mutateAsync(notification.id);
       }
     } finally {
-      setBusy(false);
       setOpen(false);
       navigate(getNotificationTarget(notification));
     }
@@ -135,13 +79,7 @@ export function NotificationBell(_props: NotificationBellProps) {
   const handleMarkAllRead = async () => {
     if (!userId || unreadCount === 0 || busy) return;
 
-    setBusy(true);
-    try {
-      await markAllAsRead(userId);
-      setNotifications((previous) => previous.map((item) => ({ ...item, read: true })));
-    } finally {
-      setBusy(false);
-    }
+    await markAllReadMutation.mutateAsync();
   };
 
   const panelContent = (
@@ -156,13 +94,13 @@ export function NotificationBell(_props: NotificationBellProps) {
           type="button"
           disabled={unreadCount === 0 || busy}
           onClick={() => void handleMarkAllRead()}
-          className="min-h-[44px] px-2 text-xs font-medium text-orange-600 transition hover:text-orange-700 disabled:opacity-50"
+          className="min-h-[var(--size-touch)] px-2 text-xs font-medium text-orange-600 transition hover:text-orange-700 disabled:opacity-50"
         >
           Tout marquer lu
         </button>
       </div>
 
-      <div className={`${isMobile ? 'min-h-0 flex-1 space-y-2 overflow-y-auto pr-1' : 'max-h-[420px] space-y-2 overflow-y-auto pr-1'}`}>
+      <div className={`${isMobile ? 'min-h-0 flex-1 space-y-2 overflow-y-auto pr-1' : 'max-h-[var(--size-notification-panel-height)] space-y-2 overflow-y-auto pr-1'}`}>
         {!loading && notifications.length === 0 ? (
           <div id="notification-empty">
             <EmptyState
@@ -187,7 +125,7 @@ export function NotificationBell(_props: NotificationBellProps) {
             key={notification.id}
             type="button"
             onClick={() => void handleNotificationClick(notification)}
-            className={`notification-item block min-h-[56px] w-full rounded-2xl border px-3 py-3 text-left transition ${
+            className={`notification-item block min-h-[var(--size-notification-item-min-height)] w-full rounded-2xl border px-3 py-3 text-left transition ${
               notification.read
                 ? 'border-white/60 bg-white/80 hover:bg-white'
                 : 'notification-item--unread border-orange-100 bg-orange-50/80 hover:bg-orange-50'
@@ -206,7 +144,7 @@ export function NotificationBell(_props: NotificationBellProps) {
                 <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-orange-500" />
               ) : null}
             </div>
-            <p className="mt-2 text-[11px] uppercase tracking-wide text-gray-400">
+            <p className="mt-2 text-[var(--text-2xs-plus)] uppercase tracking-wide text-gray-400">
               {formatRelativeTime(notification.created_at)}
             </p>
           </button>
@@ -221,7 +159,7 @@ export function NotificationBell(_props: NotificationBellProps) {
             setOpen(false);
             navigate('/notifications');
           }}
-          className="min-h-[48px] w-full rounded-2xl border border-white/60 bg-white/80 px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-white"
+          className="min-h-[var(--size-touch-lg)] w-full rounded-2xl border border-white/60 bg-white/80 px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-white"
         >
           Voir toutes les notifications
         </button>
@@ -234,15 +172,17 @@ export function NotificationBell(_props: NotificationBellProps) {
       <button
         id="btn-notification-bell"
         type="button"
-        aria-label={open ? 'Fermer les notifications' : 'Ouvrir les notifications'}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} non lues)` : ''}`}
+        aria-expanded={open}
+        aria-controls="notification-panel"
         onClick={() => setOpen((previous) => !previous)}
-        className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/50 bg-white/60 shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+        className="relative flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center rounded-full border border-white/50 bg-white/60 shadow-sm transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
       >
         <Bell size={20} className="text-black/70" />
         {unreadCount > 0 ? (
           <span
             id="notification-badge"
-            className="absolute -right-1 -top-1 min-w-[18px] rounded-full border-2 border-[#f4ece4] bg-orange-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white"
+            className="absolute -right-1 -top-1 min-w-[var(--size-badge)] rounded-full border-2 border-[var(--color-surface-soft)] bg-orange-500 px-1 text-center text-[var(--text-2xs)] font-bold leading-[var(--size-badge)] text-white"
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
@@ -256,7 +196,13 @@ export function NotificationBell(_props: NotificationBellProps) {
           title="Notifications"
           fullHeight
         >
-          <div id="notification-panel" className="flex h-full flex-col overflow-hidden">
+          <div
+            id="notification-panel"
+            role="region"
+            aria-label="Panneau de notifications"
+            hidden={!open}
+            className="flex h-full flex-col overflow-hidden"
+          >
             {panelContent}
           </div>
         </BottomSheet>
@@ -265,7 +211,10 @@ export function NotificationBell(_props: NotificationBellProps) {
       {open && !isMobile ? (
         <div
           id="notification-panel"
-          className="absolute right-0 top-14 z-50 w-[320px] overflow-hidden rounded-3xl border border-white/60 bg-[#fffaf6]/95 p-3 shadow-[0_18px_48px_rgba(26,26,26,0.12)] backdrop-blur-md"
+          role="region"
+          aria-label="Panneau de notifications"
+          hidden={!open}
+          className="absolute right-0 top-14 z-dropdown w-[var(--layout-side-panel-width)] overflow-hidden rounded-3xl border border-white/60 bg-[var(--color-surface-soft-elevated)]/95 p-3 shadow-[var(--shadow-overlay)] backdrop-blur-md"
         >
           {panelContent}
         </div>

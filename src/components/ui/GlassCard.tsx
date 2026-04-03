@@ -21,7 +21,7 @@ export function GlassCard({
       className={cn(
         "glass-card",
         radius === "normal" && "rounded-2xl",
-        radius === "large" && "rounded-[2.5rem]",
+        radius === "large" && "rounded-[var(--radius-2xl)]",
         radius === "full" && "rounded-full",
         className
       )}

@@ -53,7 +53,7 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[44px] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+      className="flex min-h-[var(--size-touch)] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
     >
       <span className="text-xl">{icon}</span>
       <div>
@@ -100,7 +100,7 @@ export default function StudioDashboard() {
 
   if (loading && !dashboard) {
     return (
-      <div className="app-shell min-h-[100dvh]">
+      <div className="app-shell min-h-[var(--size-full-dvh)]">
         <div className="app-container-wide space-y-6 pt-6">
           <div className="app-card p-5">
             <div className="h-6 w-56 animate-pulse rounded bg-white/10" />
@@ -120,7 +120,7 @@ export default function StudioDashboard() {
   }
 
   return (
-    <div id="dashboard-studio" className="app-shell">
+    <section id="dashboard-studio" aria-label="Tableau de bord studio" className="app-shell">
       <SEO
         title="Dashboard Studio"
         description="Vos statistiques et votre activite recente cote studio."
@@ -135,7 +135,7 @@ export default function StudioDashboard() {
               src={dashboardProfile?.avatar_url}
               name={companyName}
               size="lg"
-              className="border border-white/20 bg-gradient-to-br from-orange-500 to-orange-400 text-white shadow-[0_4px_20px_rgba(249,115,22,0.35)]"
+              className="border border-white/20 bg-gradient-to-br from-orange-500 to-orange-400 text-white shadow-[var(--shadow-primary-card)]"
             />
             <div>
               <h1 className="app-title">Bonjour, {companyName} 👋</h1>
@@ -217,12 +217,12 @@ export default function StudioDashboard() {
           />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <section className="grid gap-6 xl:grid-cols-[var(--layout-dashboard-split)]">
           <div id="chart-applications-over-time" className="app-card p-5">
             <MiniLineChart
               data={chartData}
               label="Candidatures reçues"
-              color="#fb923c"
+              color="var(--color-primary-highlight)"
               id="mini-line-chart-applications"
             />
           </div>
@@ -236,7 +236,7 @@ export default function StudioDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/studio/missions')}
-                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                className="inline-flex min-h-[var(--size-touch)] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Tout voir
               </button>
@@ -260,7 +260,7 @@ export default function StudioDashboard() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate font-semibold text-white">{mission.title}</p>
-                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${missionStatusClass(mission.status)}`}>
+                          <span className={`rounded-full border px-2.5 py-1 text-[var(--text-2xs-plus)] font-semibold ${missionStatusClass(mission.status)}`}>
                             {missionStatusLabel(mission.status)}
                           </span>
                         </div>
@@ -277,7 +277,7 @@ export default function StudioDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/applications`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                        className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Voir les candidatures
                       </button>
@@ -287,7 +287,7 @@ export default function StudioDashboard() {
                           type="button"
                           disabled={openingMissionId === mission.id}
                           onClick={() => void openChatForMission(mission.id, mission.session_id)}
-                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {openingMissionId === mission.id ? (
                             <span className="inline-flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function StudioDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/studio/missions/${mission.id}/edit`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                        className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Modifier
                       </button>
@@ -318,7 +318,7 @@ export default function StudioDashboard() {
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/40">Note moyenne</p>
+              <p className="text-xs font-semibold uppercase tracking-[var(--tracking-widecaps)] text-white/40">Note moyenne</p>
               <div className="mt-3 flex items-center gap-3">
                 <p className="text-4xl font-bold tracking-tight text-white">
                   {ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}
@@ -338,6 +338,6 @@ export default function StudioDashboard() {
           </div>
         </section>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { disableAnalytics } from '@/config/runtimeFlags';
 import { posthog } from '@/lib/analytics/posthog';
 
@@ -15,21 +15,10 @@ function readConsent(): CookieConsent {
 }
 
 export function CookieBanner() {
-  const location = useLocation();
   const [consent, setConsent] = useState<CookieConsent>(() => readConsent());
-  const isPublicRoute = [
-    '/',
-    '/login',
-    '/register',
-    '/legal/privacy',
-    '/legal/terms',
-    '/legal/mentions',
-    '/health',
-  ].includes(location.pathname);
-
-  if (disableAnalytics) return null;
 
   useEffect(() => {
+    if (disableAnalytics) return;
     if (consent === 'accepted') {
       posthog.opt_in_capturing();
     } else if (consent === 'rejected') {
@@ -37,7 +26,7 @@ export function CookieBanner() {
     }
   }, [consent]);
 
-  if (consent !== 'unknown') return null;
+  if (disableAnalytics || consent !== 'unknown') return null;
 
   const handleAccept = () => {
     window.localStorage.setItem(CONSENT_KEY, 'accepted');
@@ -53,13 +42,9 @@ export function CookieBanner() {
 
   return (
     <div
-      className={`fixed left-3 right-3 z-[120] mx-auto max-w-[22rem] md:left-auto md:right-6 md:max-w-md ${
-        isPublicRoute
-          ? 'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] md:bottom-6'
-          : 'bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] md:bottom-6'
-      }`}
+      className="fixed inset-x-0 bottom-[var(--bottom-nav-height,64px)] z-cookie-banner px-3 pb-[var(--safe-offset-compact)] md:inset-x-auto md:right-6 md:bottom-6 md:px-0 md:pb-0"
     >
-      <div className="rounded-2xl border border-white/15 bg-[#0f0f1d]/95 p-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+      <div className="mx-auto w-full max-w-[var(--size-cookie-banner-width)] rounded-2xl border border-white/15 bg-[var(--color-surface)]/95 p-3.5 shadow-[var(--shadow-banner)] backdrop-blur-xl md:max-w-md">
         <p className="text-sm text-white/80">
           StudioLink utilise des cookies analytiques pour améliorer votre expérience.
         </p>
@@ -67,20 +52,20 @@ export function CookieBanner() {
           <button
             type="button"
             onClick={handleReject}
-            className="min-h-[44px] rounded-xl border border-white/20 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+            className="min-h-[var(--size-touch)] rounded-xl border border-white/20 px-3 text-sm font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
           >
             Tout refuser
           </button>
           <button
             type="button"
             onClick={handleAccept}
-            className="min-h-[44px] rounded-xl bg-orange-500 px-3 text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
+            className="min-h-[var(--size-touch)] rounded-xl bg-orange-500 px-3 text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
           >
             Accepter
           </button>
           <Link
             to="/legal/privacy"
-            className="ml-auto inline-flex min-h-[44px] items-center text-xs text-white/65 underline underline-offset-2 hover:text-white"
+            className="ml-auto inline-flex min-h-[var(--size-touch)] items-center text-xs text-white/65 underline underline-offset-2 hover:text-white"
           >
             En savoir plus
           </Link>

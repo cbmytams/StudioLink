@@ -216,7 +216,7 @@ export default function ConversationList() {
         <button
           type="button"
           onClick={() => navigate(fallbackRoute)}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
+          className="mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Retour
         </button>
@@ -253,7 +253,7 @@ export default function ConversationList() {
         ) : null}
 
         {!loading && !error && hasConversations ? (
-          <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+          <div className="grid gap-6 xl:grid-cols-[var(--layout-conversation-columns)]">
             <div className="app-list">
               {conversations.map((conversation) => {
                 const contactName = getPublicProfileDisplayName(conversation.contact);
@@ -276,7 +276,7 @@ export default function ConversationList() {
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate font-semibold text-white">{contactName}</p>
                           {conversation.status ? (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            <span className={`rounded-full px-2 py-0.5 text-[var(--text-2xs)] font-semibold ${
                               conversation.status === 'completed'
                                 ? 'bg-stone-100 text-stone-600'
                                 : 'bg-green-500/15 text-green-200'
@@ -296,7 +296,7 @@ export default function ConversationList() {
                       <div className="flex flex-col items-end gap-2">
                         <span className="text-xs text-white/35">{formatRelativeTime(conversation.last_message_at)}</span>
                         {conversation.unreadCount > 0 ? (
-                          <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          <span className="flex h-6 min-w-[var(--size-badge-counter)] items-center justify-center rounded-full bg-red-500 px-1 text-[var(--text-2xs)] font-bold text-white">
                             {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
                           </span>
                         ) : null}
@@ -310,14 +310,14 @@ export default function ConversationList() {
             <aside className="hidden xl:block">
               <div className="sticky top-8 space-y-4">
                 <section className="app-card p-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Boîte de réception</p>
+                  <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Boîte de réception</p>
                   <h2 className="mt-3 text-2xl font-semibold text-white">Toutes vos sessions en un coup d’œil</h2>
                   <p className="mt-3 text-sm leading-6 text-white/60">
                     Chaque ligne remonte la mission, le dernier échange et les messages non lus. Sur mobile, ouvrez une conversation plein écran.
                   </p>
                 </section>
                 <section className="app-card p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Synthèse</p>
+                  <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Synthèse</p>
                   <div className="mt-4 space-y-3 text-sm text-white/70">
                     <div className="flex items-center justify-between">
                       <span>Conversations</span>

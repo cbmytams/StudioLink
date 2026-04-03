@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode, useEffect } from 'react';
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Route,
   Routes,
@@ -17,6 +18,7 @@ import {
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -130,6 +132,40 @@ function RoleDashboardPage() {
   return <ProDashboardPage />;
 }
 
+function ChatErrorFallback() {
+  return (
+    <div className="app-shell flex min-h-[var(--size-full-dvh)] flex-col items-center justify-center px-4 text-center">
+      <div className="max-w-md rounded-[var(--radius-xl)] border border-white/15 bg-white/6 p-8 shadow-[var(--shadow-soft)]">
+        <p className="text-5xl">⚠️</p>
+        <h2 className="mt-4 text-xl font-semibold text-white">Une erreur est survenue dans le chat.</h2>
+        <Link
+          to="/missions"
+          className="mt-6 inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+        >
+          Retour aux missions
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function MissionsErrorFallback() {
+  return (
+    <div className="app-shell flex min-h-[var(--size-full-dvh)] flex-col items-center justify-center px-4 text-center">
+      <div className="max-w-md rounded-[var(--radius-xl)] border border-white/15 bg-white/6 p-8 shadow-[var(--shadow-soft)]">
+        <p className="text-5xl">⚠️</p>
+        <h2 className="mt-4 text-xl font-semibold text-white">Une erreur est survenue sur les missions.</h2>
+        <Link
+          to="/dashboard"
+          className="mt-6 inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+        >
+          Retour au dashboard
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { session } = useAuth();
   const { identify } = useAnalytics();
@@ -209,7 +245,9 @@ export default function App() {
             element={(
               <ProtectedRoute>
                 <RoleLayout>
-                  <ChatPage />
+                  <ErrorBoundary fallback={<ChatErrorFallback />}>
+                    <ChatPage />
+                  </ErrorBoundary>
                 </RoleLayout>
               </ProtectedRoute>
             )}
@@ -349,7 +387,9 @@ export default function App() {
             element={(
               <ProtectedRoute requiredType="pro">
                 <ProLayout>
-                  <MissionsPage />
+                  <ErrorBoundary fallback={<MissionsErrorFallback />}>
+                    <MissionsPage />
+                  </ErrorBoundary>
                 </ProLayout>
               </ProtectedRoute>
             )}
@@ -410,6 +450,7 @@ export default function App() {
           />
           <Route path="/health" element={<HealthCheckPage />} />
           <Route path="/dev/mailbox" element={<DevMailboxPage />} />
+          <Route path="/404" element={<NotFound />} />
 
           <Route element={<ProtectedRoute requiredType="studio"><StudioLayout /></ProtectedRoute>}>
             <Route path="/studio/dashboard" element={<StudioDashboardPage />} />
@@ -428,7 +469,14 @@ export default function App() {
 
           <Route element={<ProtectedRoute requiredType="pro"><ProLayout /></ProtectedRoute>}>
             <Route path="/pro/feed" element={<MissionsPage />} />
-            <Route path="/pro/missions" element={<ProMissionsPage />} />
+            <Route
+              path="/pro/missions"
+              element={(
+                <ErrorBoundary fallback={<MissionsErrorFallback />}>
+                  <ProMissionsPage />
+                </ErrorBoundary>
+              )}
+            />
             <Route path="/pro/dashboard" element={<ProDashboardPage />} />
             <Route path="/pro/applications" element={<ProApplicationsPage />} />
             <Route path="/pro/conversations" element={<ConversationListPage />} />

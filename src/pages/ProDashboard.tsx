@@ -44,7 +44,7 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[44px] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+      className="flex min-h-[var(--size-touch)] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
     >
       <span className="text-xl">{icon}</span>
       <div>
@@ -74,7 +74,7 @@ export default function ProDashboard() {
 
   if (loading && !dashboard) {
     return (
-      <div className="app-shell min-h-[100dvh]">
+      <div className="app-shell min-h-[var(--size-full-dvh)]">
         <div className="app-container space-y-6 pt-6">
           <div className="app-card p-5">
             <div className="h-6 w-56 animate-pulse rounded bg-white/10" />
@@ -94,7 +94,7 @@ export default function ProDashboard() {
   }
 
   return (
-    <div id="dashboard-pro" className="app-shell">
+    <section id="dashboard-pro" aria-label="Tableau de bord pro" className="app-shell">
       <SEO
         title="Mon dashboard"
         description="Vos statistiques et votre activite recente cote pro."
@@ -185,12 +185,12 @@ export default function ProDashboard() {
           />
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <section className="grid gap-6 xl:grid-cols-[var(--layout-dashboard-split)]">
           <div id="chart-applications-over-time" className="app-card p-5">
             <MiniLineChart
               data={chartData}
               label="Mes candidatures"
-              color="#38bdf8"
+              color="var(--color-sky-400)"
               id="mini-line-chart-applications"
             />
           </div>
@@ -204,7 +204,7 @@ export default function ProDashboard() {
               <button
                 type="button"
                 onClick={() => navigate('/pro/applications')}
-                className="inline-flex min-h-[44px] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[0.18em] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                className="inline-flex min-h-[var(--size-touch)] items-center justify-center px-2 text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-orange-300 transition hover:text-orange-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Tout voir
               </button>
@@ -228,7 +228,7 @@ export default function ProDashboard() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate font-semibold text-white">{application.mission_title}</p>
-                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${applicationStatusClass(application.status)}`}>
+                          <span className={`rounded-full border px-2.5 py-1 text-[var(--text-2xs-plus)] font-semibold ${applicationStatusClass(application.status)}`}>
                             {applicationStatusLabel(application.status)}
                           </span>
                         </div>
@@ -245,7 +245,7 @@ export default function ProDashboard() {
                       <button
                         type="button"
                         onClick={() => navigate(`/missions/${application.mission_id}`)}
-                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                        className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-sm text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         Voir la mission
                       </button>
@@ -254,7 +254,7 @@ export default function ProDashboard() {
                           id={`btn-open-chat-${application.session_id}`}
                           type="button"
                           onClick={() => navigate(`/chat/${application.session_id}`)}
-                          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                          className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-sm font-medium text-orange-200 transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                         >
                           Ouvrir le chat
                         </button>
@@ -273,7 +273,7 @@ export default function ProDashboard() {
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/40">Note moyenne</p>
+              <p className="text-xs font-semibold uppercase tracking-[var(--tracking-widecaps)] text-white/40">Note moyenne</p>
               <div className="mt-3 flex items-center gap-3">
                 <p className="text-4xl font-bold tracking-tight text-white">
                   {ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}
@@ -291,6 +291,6 @@ export default function ProDashboard() {
           </div>
         </section>
       </div>
-    </div>
+    </section>
   );
 }

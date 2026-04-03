@@ -26,7 +26,7 @@ export default function DevMailboxPage() {
 
   if (!mockEmail) {
     return (
-      <main className="app-shell mx-auto flex min-h-[100dvh] max-w-3xl flex-col justify-center gap-4 p-6">
+      <main className="app-shell mx-auto flex min-h-[var(--size-full-dvh)] max-w-3xl flex-col justify-center gap-4 p-6">
         <h1 className="text-2xl font-semibold text-white">Mailbox mock inactive</h1>
         <p className="text-sm text-white/70">
           Active `VITE_MOCK_EMAIL=true` (ou `VITE_APP_MODE=TEST`) pour utiliser cette page.
@@ -39,10 +39,10 @@ export default function DevMailboxPage() {
   }
 
   return (
-    <main className="app-shell mx-auto min-h-[100dvh] max-w-5xl p-6">
+    <main className="app-shell mx-auto min-h-[var(--size-full-dvh)] max-w-5xl p-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-white/45">Mode test</p>
+          <p className="text-xs uppercase tracking-[var(--tracking-widecaps)] text-white/45">Mode test</p>
           <h1 className="text-2xl font-semibold text-white">Mailbox mock</h1>
         </div>
         <div className="flex gap-2">

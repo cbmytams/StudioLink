@@ -40,7 +40,7 @@ export function StatCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-[var(--tracking-widecaps)] text-white/45">{label}</p>
           <div className="mt-3 flex items-end gap-2">
             <p className="stat-card__value text-3xl font-bold tracking-tight text-white">{value}</p>
             {unit ? <span className="pb-1 text-sm font-medium text-white/50">{unit}</span> : null}
@@ -56,7 +56,7 @@ export function StatCard({
       {trend ? (
         <div
           className={cn(
-            'stat-card__trend mt-4 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
+            'stat-card__trend mt-4 inline-flex rounded-full border px-2.5 py-1 text-[var(--text-2xs-plus)] font-semibold uppercase tracking-[var(--tracking-caps)]',
             trendUp && 'stat-card__trend--up border-emerald-400/20 bg-emerald-400/10 text-emerald-200',
             trendDown && 'stat-card__trend--down border-red-400/20 bg-red-400/10 text-red-200',
             !trendUp && !trendDown && 'border-white/10 bg-white/6 text-white/55',

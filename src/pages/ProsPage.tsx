@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ProCard } from '@/components/search/ProCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageMeta } from '@/components/shared/PageMeta';
@@ -17,7 +16,6 @@ const INITIAL_FILTERS: ProFilters = {
 };
 
 export default function ProsPage() {
-  const navigate = useNavigate();
   const runSearch = useCallback((filters: ProFilters) => searchPros(filters), []);
   const {
     results,
@@ -48,6 +46,7 @@ export default function ProsPage() {
 
         <section className="app-card p-5">
           <div className="grid gap-3 md:grid-cols-3">
+            <label htmlFor="search-input-pros" className="sr-only">Rechercher un professionnel</label>
             <input
               id="search-input-pros"
               type="search"
@@ -56,6 +55,7 @@ export default function ProsPage() {
               placeholder="Recherche : mixage, mastering, Paris..."
               className="glass-input md:col-span-2"
             />
+            <label htmlFor="filter-pro-location" className="sr-only">Filtrer par localisation</label>
             <input
               id="filter-pro-location"
               type="text"
@@ -67,6 +67,7 @@ export default function ProsPage() {
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <label htmlFor="filter-pro-skill" className="sr-only">Filtrer par compétence</label>
             <input
               id="filter-pro-skill"
               type="text"
@@ -117,7 +118,7 @@ export default function ProsPage() {
               <div key={profile.id}>
                 <ProCard
                   profile={profile}
-                  onOpen={(profileId) => navigate(`/pro/public/${profileId}`)}
+                  to={`/pro/public/${profile.id}`}
                 />
               </div>
             ))}

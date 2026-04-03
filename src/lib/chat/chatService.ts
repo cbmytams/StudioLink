@@ -384,10 +384,14 @@ export const chatService = {
       .from('messages')
       .select('id, session_id, sender_id, content, file_url, file_name, file_type, is_read, read, read_at, created_at')
       .eq('session_id', sessionId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (error) throw error;
-    return ((data as MessageRow[] | null) ?? []).map(normalizeChatMessageRow);
+    return ((data as MessageRow[] | null) ?? [])
+      .slice()
+      .reverse()
+      .map(normalizeChatMessageRow);
   },
 
   async sendMessage(

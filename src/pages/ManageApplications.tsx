@@ -308,7 +308,7 @@ export default function ManageApplications() {
   if (loading) {
     return (
       <div className="app-shell">
-        <div className="app-container flex min-h-[100dvh] items-center justify-center">
+        <div className="app-container flex min-h-[var(--size-full-dvh)] items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -325,7 +325,7 @@ export default function ManageApplications() {
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
+          className="mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Mes missions
         </button>
@@ -398,7 +398,7 @@ export default function ManageApplications() {
                       <button
                         type="button"
                         onClick={() => navigate(`/pro/public/${application.pro_id}`)}
-                        className="mt-0.5 inline-flex min-h-[44px] items-center text-xs text-orange-300 hover:underline"
+                        className="mt-0.5 inline-flex min-h-[var(--size-touch)] items-center text-xs text-orange-300 hover:underline"
                       >
                         Voir le profil complet →
                       </button>
@@ -446,7 +446,7 @@ export default function ManageApplications() {
                       type="button"
                       onClick={() => void handleAccept(application)}
                       disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-xl bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isCurrentAction ? (
                         <>
@@ -462,7 +462,7 @@ export default function ManageApplications() {
                       type="button"
                       onClick={() => void handleReject(application.id)}
                       disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-red-300/30 bg-red-500/10 px-4 text-sm font-medium text-red-100 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-xl border border-red-300/30 bg-red-500/10 px-4 text-sm font-medium text-red-100 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Refuser ✗
                     </button>

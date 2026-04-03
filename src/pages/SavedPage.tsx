@@ -224,7 +224,7 @@ export default function SavedPage() {
                     <button
                       type="button"
                       onClick={() => void handleRemove(mission.id)}
-                      className="min-h-[44px] rounded-lg border border-orange-200 bg-orange-50 px-4 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                      className="min-h-[var(--size-touch)] rounded-lg border border-orange-200 bg-orange-50 px-4 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
                     >
                       Retirer
                     </button>

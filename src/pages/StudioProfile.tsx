@@ -345,7 +345,11 @@ export default function StudioProfile() {
         ) : (
           <section className="app-card-soft p-4 space-y-4">
             <div>
+              <label htmlFor="studio-company-name" className="mb-1 block text-xs font-medium text-black/70">
+                Nom du studio
+              </label>
               <input
+                id="studio-company-name"
                 value={companyName}
                 onChange={(event) => {
                   setCompanyName(event.target.value);
@@ -363,7 +367,11 @@ export default function StudioProfile() {
             </div>
 
             <div>
+              <label htmlFor="studio-website" className="mb-1 block text-xs font-medium text-black/70">
+                Site web
+              </label>
               <input
+                id="studio-website"
                 value={website}
                 onChange={(event) => {
                   setWebsite(event.target.value);

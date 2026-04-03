@@ -328,7 +328,7 @@ export default function Onboarding() {
   ];
 
   return (
-    <div className="app-shell min-h-[100dvh] px-4 pb-32 pt-6 md:py-12">
+    <div className="app-shell min-h-[var(--size-full-dvh)] px-4 pb-32 pt-6 md:py-12">
       <PageMeta
         title="Créer mon profil"
         description="Configurez votre profil StudioLink en quelques étapes."
@@ -339,7 +339,7 @@ export default function Onboarding() {
         <GlassCard className="p-6 md:p-8">
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.24em] text-white/45">
+              <p className="text-xs font-medium uppercase tracking-[var(--tracking-widecaps)] text-white/45">
                 Configuration du profil
               </p>
               <h1 className="mt-2 text-3xl font-semibold text-white">Bienvenue sur StudioLink</h1>
@@ -377,9 +377,9 @@ export default function Onboarding() {
                     type="button"
                     disabled={Boolean(lockedRole && lockedRole !== 'studio')}
                     onClick={() => setDraftField('role', 'studio')}
-                    className={`rounded-[2rem] border p-5 text-left transition-all ${
+                    className={`rounded-[var(--radius-xl)] border p-5 text-left transition-all ${
                       draft.role === 'studio'
-                        ? 'border-orange-400 bg-orange-500/15 shadow-[0_0_0_1px_rgba(251,146,60,0.35)]'
+                        ? 'border-orange-400 bg-orange-500/15 shadow-[var(--shadow-primary-outline)]'
                         : 'border-white/15 bg-white/5 hover:bg-white/10'
                     } ${
                       lockedRole && lockedRole !== 'studio' ? 'cursor-not-allowed opacity-45' : ''
@@ -397,9 +397,9 @@ export default function Onboarding() {
                     type="button"
                     disabled={Boolean(lockedRole && lockedRole !== 'pro')}
                     onClick={() => setDraftField('role', 'pro')}
-                    className={`rounded-[2rem] border p-5 text-left transition-all ${
+                    className={`rounded-[var(--radius-xl)] border p-5 text-left transition-all ${
                       draft.role === 'pro'
-                        ? 'border-orange-400 bg-orange-500/15 shadow-[0_0_0_1px_rgba(251,146,60,0.35)]'
+                        ? 'border-orange-400 bg-orange-500/15 shadow-[var(--shadow-primary-outline)]'
                         : 'border-white/15 bg-white/5 hover:bg-white/10'
                     } ${
                       lockedRole && lockedRole !== 'pro' ? 'cursor-not-allowed opacity-45' : ''
@@ -492,7 +492,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Décris votre univers, vos spécialités et le type de projets que vous aimez accompagner."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
+                    className="w-full rounded-[var(--radius-pill)] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                 </div>
               </section>
@@ -517,7 +517,7 @@ export default function Onboarding() {
                     value={draft.bio}
                     onChange={(event) => setDraftField('bio', event.target.value)}
                     placeholder="Parle de ton parcours, tes spécialités, tes références et du type de missions qui te correspondent."
-                    className="w-full rounded-[1.75rem] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
+                    className="w-full rounded-[var(--radius-pill)] border border-white/15 bg-white/5 px-5 py-4 text-base md:text-sm text-white placeholder:text-white/35 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300/40"
                   />
                   {fieldErrors.bio ? <p className="mt-2 px-1 text-xs text-red-400">{fieldErrors.bio}</p> : null}
                 </div>
@@ -542,7 +542,7 @@ export default function Onboarding() {
                       <button
                         type="button"
                         onClick={addSkill}
-                        className="min-h-[44px] rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-400"
+                        className="min-h-[var(--size-touch)] rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-400"
                       >
                         Ajouter
                       </button>
@@ -555,7 +555,7 @@ export default function Onboarding() {
                           key={skill}
                           type="button"
                           onClick={() => removeSkill(skill)}
-                          className="min-h-[44px] rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm text-orange-100"
+                          className="min-h-[var(--size-touch)] rounded-full border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-sm text-orange-100"
                         >
                           {skill} ×
                         </button>
@@ -589,25 +589,25 @@ export default function Onboarding() {
 
                 <div className="grid gap-3 md:grid-cols-2">
                   {summaryItems.map((item) => (
-                    <div key={item.label} className="rounded-[1.5rem] border border-white/15 bg-white/5 p-4">
-                      <p className="text-xs uppercase tracking-[0.24em] text-white/40">{item.label}</p>
+                    <div key={item.label} className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[var(--tracking-widecaps)] text-white/40">{item.label}</p>
                       <p className="mt-2 text-sm text-white">{item.value}</p>
                     </div>
                   ))}
                   {draft.role === 'studio' ? (
-                    <div className="rounded-[1.5rem] border border-white/15 bg-white/5 p-4">
-                      <p className="text-xs uppercase tracking-[0.24em] text-white/40">Nom du studio</p>
+                    <div className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[var(--tracking-widecaps)] text-white/40">Nom du studio</p>
                       <p className="mt-2 text-sm text-white">{draft.companyName || draft.displayName}</p>
                     </div>
                   ) : null}
                   {draft.role === 'pro' ? (
                     <>
-                      <div className="rounded-[1.5rem] border border-white/15 bg-white/5 p-4">
-                        <p className="text-xs uppercase tracking-[0.24em] text-white/40">Compétences</p>
+                      <div className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-4">
+                        <p className="text-xs uppercase tracking-[var(--tracking-widecaps)] text-white/40">Compétences</p>
                         <p className="mt-2 text-sm text-white">{draft.skills.join(', ') || 'Aucune'}</p>
                       </div>
-                      <div className="rounded-[1.5rem] border border-white/15 bg-white/5 p-4">
-                        <p className="text-xs uppercase tracking-[0.24em] text-white/40">Tarif journalier</p>
+                      <div className="rounded-[var(--radius-card)] border border-white/15 bg-white/5 p-4">
+                        <p className="text-xs uppercase tracking-[var(--tracking-widecaps)] text-white/40">Tarif journalier</p>
                         <p className="mt-2 text-sm text-white">{draft.dailyRate ? `${draft.dailyRate} €/j` : 'Non renseigné'}</p>
                       </div>
                     </>
@@ -663,7 +663,7 @@ export default function Onboarding() {
       </div>
 
       <div
-        className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#0A0B10]/92 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur-xl sm:hidden"
+        className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[var(--color-bg)]/92 px-4 pb-[var(--safe-offset-default)] pt-3 backdrop-blur-xl sm:hidden"
         style={mobileFooterStyle}
       >
         <div className="mx-auto flex max-w-3xl items-center gap-3">
@@ -684,7 +684,7 @@ export default function Onboarding() {
               type="button"
               onClick={goToNextStep}
               disabled={saving || nextButtonDisabled}
-              className="flex-[1.3]"
+              className="flex-[var(--layout-flex-emphasis)]"
             >
               Suivant
             </Button>
@@ -696,7 +696,7 @@ export default function Onboarding() {
                 void handleCompleteOnboarding();
               }}
               disabled={saving}
-              className="flex-[1.3]"
+              className="flex-[var(--layout-flex-emphasis)]"
             >
               {saving ? 'Validation…' : 'Accéder à mon dashboard'}
             </Button>
