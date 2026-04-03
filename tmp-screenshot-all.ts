@@ -16,27 +16,27 @@ const publicPages = [
 
     const desktop = await browser.newPage()
     await desktop.setViewportSize({ width: 1280, height: 800 })
-    await desktop.goto(BASE + path, { waitUntil: 'load', timeout: 60000 })
-    await desktop.waitForTimeout(1200)
+    await desktop.goto(BASE + path, { waitUntil: 'load', timeout: 30000 })
+    await desktop.waitForTimeout(700)
     await desktop.screenshot({
-      path: `/tmp/studiolink-visual-audit/desktop/${pageName || 'home'}.png`,
+      path: `/tmp/studiolink-visual-audit/desktop/${pageName}.png`,
       fullPage: true
     })
     await desktop.close()
 
     const mobile = await browser.newPage()
     await mobile.setViewportSize({ width: 375, height: 812 })
-    await mobile.goto(BASE + path, { waitUntil: 'load', timeout: 60000 })
-    await mobile.waitForTimeout(1200)
+    await mobile.goto(BASE + path, { waitUntil: 'load', timeout: 30000 })
+    await mobile.waitForTimeout(700)
     await mobile.screenshot({
-      path: `/tmp/studiolink-visual-audit/mobile/${pageName || 'home'}.png`,
+      path: `/tmp/studiolink-visual-audit/mobile/${pageName}.png`,
       fullPage: true
     })
     await mobile.close()
 
-    console.log(`✅ Screenshot ${path}`)
+    console.log(`Screenshot ${path}`)
   }
 
   await browser.close()
-  console.log('\n📸 Tous les screenshots pris dans /tmp/studiolink-visual-audit/')
+  console.log('Captures terminées: /tmp/studiolink-visual-audit/')
 })()

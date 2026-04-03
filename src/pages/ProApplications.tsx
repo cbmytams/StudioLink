@@ -54,15 +54,15 @@ const FILTERS: Array<{ label: string; value: FilterValue }> = [
 const STATUS_CONFIG: Record<Application['status'], { label: string; className: string }> = {
   pending: {
     label: 'En attente',
-    className: 'bg-yellow-50 text-yellow-600 border border-yellow-200',
+    className: 'border border-amber-300/30 bg-amber-400/15 text-amber-100',
   },
   accepted: {
     label: 'Acceptée',
-    className: 'bg-green-50 text-green-600 border border-green-200',
+    className: 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-100',
   },
   rejected: {
     label: 'Refusée',
-    className: 'bg-red-50 text-red-500 border border-red-200',
+    className: 'border border-rose-300/30 bg-rose-400/15 text-rose-100',
   },
 };
 
@@ -277,7 +277,7 @@ export default function ProApplications() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-black"
+          className="mb-4 inline-flex min-h-[44px] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Mes candidatures
         </button>
@@ -291,7 +291,7 @@ export default function ProApplications() {
                   className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                 activeFilter === filter.value
                   ? 'bg-orange-500 text-white'
-                  : 'border border-gray-200 bg-white text-gray-500 hover:bg-orange-50'
+                  : 'border border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
               }`}
             >
               {filter.label}
@@ -311,33 +311,33 @@ export default function ProApplications() {
                 className="rounded-2xl border border-white/50 bg-white p-4 animate-pulse"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-stone-200" />
+                  <div className="h-8 w-8 rounded-full bg-white/10" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 w-28 rounded bg-stone-200" />
-                    <div className="h-3 w-40 rounded bg-stone-200" />
+                    <div className="h-3 w-28 rounded bg-white/10" />
+                    <div className="h-3 w-40 rounded bg-white/10" />
                   </div>
-                  <div className="h-5 w-16 rounded-full bg-stone-200" />
+                  <div className="h-5 w-16 rounded-full bg-white/10" />
                 </div>
-                <div className="mt-3 h-3 w-3/4 rounded bg-stone-200" />
+                <div className="mt-3 h-3 w-3/4 rounded bg-white/10" />
               </div>
             ))}
           </div>
         ) : null}
 
         {!loading && error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3">
+            <p className="text-sm text-red-100">{error}</p>
           </div>
         ) : null}
 
         {!loading && !error && !hasApplications ? (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">📋</p>
-            <p className="text-gray-500 text-sm">Tu n&apos;as pas encore postulé à une offre.</p>
+            <p className="text-sm text-white/60">Vous n&apos;avez pas encore postulé à une offre.</p>
             <button
               type="button"
               onClick={() => navigate('/pro/feed')}
-              className="mt-3 inline-flex min-h-[44px] items-center justify-center px-2 text-orange-500 text-sm hover:underline"
+              className="mt-3 inline-flex min-h-[44px] items-center justify-center px-2 text-sm text-orange-300 hover:underline"
             >
               Voir les offres disponibles
             </button>
@@ -346,7 +346,7 @@ export default function ProApplications() {
 
         {!loading && !error && hasApplications && filteredApplications.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">Aucune candidature dans cette catégorie.</p>
+            <p className="text-sm text-white/50">Aucune candidature dans cette catégorie.</p>
           </div>
         ) : null}
 
@@ -364,7 +364,7 @@ export default function ProApplications() {
               return (
                 <div
                   key={application.id}
-                  className="application-card w-full rounded-2xl border border-white/50 bg-white p-4 text-left transition-colors hover:bg-orange-50"
+                  className="application-card app-card-soft w-full rounded-2xl p-4 text-left transition-colors"
                 >
                   <button
                     type="button"
@@ -382,17 +382,17 @@ export default function ProApplications() {
                         src={studioAvatar}
                         name={studioName}
                         size="sm"
-                        className="border border-white/50"
+                        className="border border-white/20 bg-orange-500 text-white"
                       />
-                      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-900">{studioName}</p>
+                      <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white">{studioName}</p>
                       <span className={`application-status-badge rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
                         {status.label}
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-700 truncate">{offerTitle}</p>
+                    <p className="truncate text-sm text-white/80">{offerTitle}</p>
 
-                    <p className="mt-2 text-xs text-gray-400">
+                    <p className="mt-2 text-xs text-white/50">
                       {offerLocation ? `${offerLocation} · ` : ''}
                       {budgetLabel(application.offer)}
                       {' · '}
@@ -410,8 +410,8 @@ export default function ProApplications() {
                       disabled={withdrawingId === application.id}
                       className={`mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium ${
                         withdrawingId === application.id
-                          ? 'text-stone-400'
-                          : 'text-orange-500 hover:underline'
+                          ? 'text-white/45'
+                          : 'text-orange-300 hover:underline'
                       }`}
                     >
                       {withdrawingId === application.id ? 'Retrait...' : 'Retirer'}

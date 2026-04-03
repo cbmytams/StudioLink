@@ -53,7 +53,7 @@ export function CookieBanner() {
 
   return (
     <div
-      className={`fixed left-3 right-3 z-[120] md:left-auto md:right-6 md:max-w-md ${
+      className={`fixed left-3 right-3 z-[120] mx-auto max-w-[22rem] md:left-auto md:right-6 md:max-w-md ${
         isPublicRoute
           ? 'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] md:bottom-6'
           : 'bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] md:bottom-6'

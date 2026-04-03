@@ -39,21 +39,21 @@ export default function NotFound() {
         </p>
         <h1 className="mt-5 text-2xl font-semibold text-white">Page introuvable</h1>
         <p className="mt-3 text-sm leading-6 text-white/60">
-          Le lien est peut-être erroné, expiré ou la page a été déplacée. Tu peux revenir vers ton espace principal.
+          Vous avez peut-être suivi un lien invalide ou la page a été déplacée.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button
             id="btn-back-home"
             onClick={handleBack}
-            className="bg-orange-500 text-white hover:bg-orange-600"
+            className="w-full bg-orange-500 text-white hover:bg-orange-600 sm:w-auto"
           >
-            Retour
+            Retourner à l&apos;accueil
           </Button>
           <button
             id="btn-go-home"
             type="button"
             onClick={() => navigate('/')}
-            className="min-h-[44px] rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/75 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            className="min-h-[44px] w-full rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/75 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 sm:w-auto"
           >
             Accueil
           </button>

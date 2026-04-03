@@ -843,7 +843,7 @@ export default function ChatPage() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
                 onKeyDown={handleInputKeyDown}
-                placeholder="Écrire un message..."
+                placeholder="Écrivez un message..."
                 rows={1}
                 className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
