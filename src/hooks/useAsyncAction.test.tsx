@@ -71,3 +71,22 @@ test('exposes fallback error message when async action throws', async () => {
   assert.equal(latestSnapshot?.loading, false);
   assert.equal(latestSnapshot?.error, 'boom');
 });
+
+test('ignores concurrent execute calls while one is running', async () => {
+  let resolveTask: ((value: number) => void) | null = null;
+  const task = (_value: number) => new Promise<number>((resolve) => {
+    resolveTask = resolve;
+  });
+
+  act(() => {
+    root.render(<HookProbe task={task} />);
+  });
+
+  const firstPromise = executeRef?.(3);
+  const secondResult = await executeRef?.(4);
+  assert.equal(secondResult, null);
+
+  resolveTask?.(9);
+  const firstResult = await firstPromise;
+  assert.equal(firstResult, 9);
+});
