@@ -445,6 +445,7 @@ export default function MissionForm() {
                   maxLength={100}
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Ex: Mixage EP rap 5 titres"
                   className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
                 {fieldErrors.title ? <p className="text-xs text-red-500 mt-1">{fieldErrors.title}</p> : null}
@@ -460,9 +461,11 @@ export default function MissionForm() {
                   maxLength={2000}
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Décrivez le projet, le contexte, les livrables attendus et votre timeline."
                   className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                 />
                 {fieldErrors.description ? <p className="text-xs text-red-500 mt-1">{fieldErrors.description}</p> : null}
+                <p className="mt-1 text-right text-[11px] text-gray-400">{description.length}/2000</p>
               </div>
 
               <FileUpload
@@ -567,6 +570,7 @@ export default function MissionForm() {
                     min={0}
                     value={dailyRate}
                     onChange={(event) => setDailyRate(event.target.value)}
+                    placeholder="ex: 500"
                     className="min-h-[44px] bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-base md:text-sm text-gray-800 w-full focus:outline-none focus:ring-2 focus:ring-orange-300"
                   />
                   {fieldErrors.daily_rate ? <p className="text-xs text-red-500 mt-1">{fieldErrors.daily_rate}</p> : null}
