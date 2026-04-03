@@ -18,6 +18,7 @@ function HookProbe() {
 }
 
 beforeEach(() => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
   latestSnapshot = null;
   container = document.createElement('div');
