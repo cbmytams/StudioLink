@@ -47,8 +47,8 @@ export function GlobalSearchBar({ userType, variant = 'floating' }: GlobalSearch
     >
       <div className={`flex items-center gap-2 ${
         variant === 'sidebar'
-          ? 'rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]'
-          : 'rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]'
+          ? 'rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 backdrop-blur-xl shadow-[var(--shadow-float)]'
+          : 'rounded-full border border-white/10 bg-black/30 px-3 py-2 backdrop-blur-xl shadow-[var(--shadow-float)]'
       }`}>
         <label htmlFor="global-search-input" className="sr-only">
           {userType === 'studio' ? 'Rechercher un pro' : 'Rechercher une mission'}
@@ -59,13 +59,13 @@ export function GlobalSearchBar({ userType, variant = 'floating' }: GlobalSearch
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={userType === 'studio' ? 'Rechercher un pro' : 'Rechercher une mission'}
-          className="min-h-[44px] min-w-0 flex-1 bg-transparent text-base md:text-sm text-white placeholder:text-white/35 outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+          className="min-h-[var(--size-touch)] min-w-0 flex-1 bg-transparent text-base md:text-sm text-white placeholder:text-white/35 outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
         />
         <button
           id="btn-global-search"
           type="submit"
           aria-label="Lancer la recherche globale"
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-orange-500 text-white transition hover:bg-orange-400"
+          className="flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center rounded-full bg-orange-500 text-white transition hover:bg-orange-600"
         >
           <Search size={16} />
         </button>
