@@ -425,7 +425,7 @@ export default function ProApplications() {
                         event.stopPropagation();
                         void handleOpenChat(application.mission_id, sessionId);
                       }}
-                      className="mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-orange-500 hover:underline"
+                      className="mt-3 inline-flex min-h-[44px] items-center px-2 text-xs font-medium text-orange-300 hover:underline"
                     >
                       Ouvrir le chat
                     </button>
