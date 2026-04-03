@@ -86,6 +86,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
         className="flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-3xl border border-white/60 bg-white/95 shadow-[0_18px_42px_rgba(26,26,26,0.12)] sm:max-w-md sm:rounded-2xl"
         onMouseDown={(event) => event.stopPropagation()}
       >
+        <div className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-stone-300 sm:hidden" aria-hidden="true" />
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/5 bg-white/90 px-5 py-4 backdrop-blur-sm">
           <h3 id="apply-modal-title" className="text-lg font-semibold text-stone-900">Postuler à la mission</h3>
           <button
@@ -112,7 +113,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
           <p className="text-right text-xs text-stone-500">{coverLetter.length}/1200</p>
           {error ? <p className="text-xs text-red-500">{error}</p> : null}
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               variant="ghost"
               className="flex-1 border border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
@@ -122,7 +123,7 @@ export function ApplyModal({ isOpen, missionId, onClose, onSubmitted }: ApplyMod
             </Button>
             <Button
               id="btn-submit-apply"
-              className="flex-1"
+              className="w-full flex-1"
               loading={submitting}
               loadingLabel="Envoi..."
               onClick={() => void handleSubmit()}
