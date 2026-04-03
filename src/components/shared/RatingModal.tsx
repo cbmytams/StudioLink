@@ -119,7 +119,8 @@ export function RatingModal({
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Évaluation</p>
-            <h2 className="mt-1 text-xl font-semibold text-gray-900">Noter {rateeDisplayName}</h2>
+            <h2 className="mt-1 text-xl font-semibold text-gray-900">Comment s&apos;est passée la session ?</h2>
+            <p className="mt-1 text-sm text-gray-500">Votre avis sera visible sur le profil de {rateeDisplayName}.</p>
           </div>
           <button
             ref={closeButtonRef}
@@ -140,7 +141,7 @@ export function RatingModal({
           <div id="rating-submitted" className="space-y-4 rounded-2xl border border-green-100 bg-green-50/80 px-4 py-5">
             <div className="text-center">
               <p className="text-3xl">⭐</p>
-              <p className="mt-2 text-sm font-medium text-green-700">Merci pour votre note.</p>
+              <p className="mt-2 text-sm font-medium text-green-700">Merci pour votre avis !</p>
               <p className="mt-1 text-xs text-green-700/80">
                 {rating}/5
                 {comment ? ` · “${comment}”` : ''}
