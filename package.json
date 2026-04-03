@@ -19,7 +19,7 @@
     "uptimerobot:setup": "node scripts/setup-uptimerobot.mjs"
   },
   "dependencies": {
-    "@google/genai": "^1.29.0",
+    "@google/genai": "^1.48.0",
     "@marsidev/react-turnstile": "^1.5.0",
     "@sentry/react": "^10.46.0",
     "@sentry/vite-plugin": "^5.1.1",
