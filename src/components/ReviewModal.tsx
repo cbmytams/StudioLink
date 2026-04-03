@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import FocusTrap from 'focus-trap-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { StarRating } from '@/components/ui/StarRating';
@@ -45,6 +46,15 @@ export function ReviewModal({
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     let active = true;
 
     const checkAlreadyReviewed = async () => {
@@ -70,54 +80,67 @@ export function ReviewModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#f4ece4]/80 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-5 shadow-[0_12px_32px_rgba(26,26,26,0.08)]">
-        <h3 className="text-lg font-semibold">Laisser un avis</h3>
-        <p className="text-sm text-stone-600">Pour {reviewedName}</p>
+    <div
+      className="fixed inset-0 z-modal flex items-center justify-center bg-[var(--color-surface-soft)]/80 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <FocusTrap>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="review-modal-title"
+          className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-white/60 bg-white/85 p-5 shadow-[var(--shadow-overlay-xs)]"
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          <h2 id="review-modal-title" className="text-lg font-semibold">Laisser un avis</h2>
+          <p className="text-sm text-stone-600">Pour {reviewedName}</p>
 
-        <StarRating value={rating} onChange={setRating} />
+          <StarRating value={rating} onChange={setRating} />
 
-        <Textarea
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-          rows={4}
-          placeholder="Votre commentaire (optionnel)"
-        />
+          <Textarea
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
+            rows={4}
+            placeholder="Votre commentaire (optionnel)"
+          />
 
-        {checkError ? <p className="text-xs text-red-500">{checkError}</p> : null}
-        {alreadyReviewed ? <p className="text-xs text-stone-500">Vous avez déjà laissé un avis pour cette mission.</p> : null}
+          {checkError ? <p className="text-xs text-red-500">{checkError}</p> : null}
+          {alreadyReviewed ? <p className="text-xs text-stone-500">Vous avez déjà laissé un avis pour cette mission.</p> : null}
 
-        <div className="flex gap-2">
-          <Button id="btn-review-cancel" variant="ghost" className="flex-1" onClick={onClose}>
-            Annuler
-          </Button>
-          <Button
-            className="flex-1"
-            disabled={rating === 0 || createReview.isPending || alreadyReviewed}
-            onClick={async () => {
-              try {
-                await createReview.mutateAsync({
-                  missionId,
-                  reviewedId,
-                  rating,
-                  comment,
-                });
-                onSubmitted?.();
-                onClose();
-              } catch (error) {
-                const message = toUserFacingErrorMessage(error, 'Impossible d’envoyer cet avis.');
-                showToast({
-                  title: 'Envoi impossible',
-                  description: message,
-                  variant: 'destructive',
-                });
-              }
-            }}
-          >
-            {createReview.isPending ? 'Envoi...' : 'Envoyer'}
-          </Button>
+          <div className="flex gap-2">
+            <Button id="btn-review-cancel" variant="ghost" className="flex-1" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={rating === 0 || createReview.isPending || alreadyReviewed}
+              onClick={async () => {
+                try {
+                  await createReview.mutateAsync({
+                    missionId,
+                    reviewedId,
+                    rating,
+                    comment,
+                  });
+                  onSubmitted?.();
+                  onClose();
+                } catch (error) {
+                  const message = toUserFacingErrorMessage(error, 'Impossible d’envoyer cet avis.');
+                  showToast({
+                    title: 'Envoi impossible',
+                    description: message,
+                    variant: 'destructive',
+                  });
+                }
+              }}
+            >
+              {createReview.isPending ? 'Envoi...' : 'Envoyer'}
+            </Button>
+          </div>
         </div>
-      </div>
+      </FocusTrap>
     </div>
   );
 }

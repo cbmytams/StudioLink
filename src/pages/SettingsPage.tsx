@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import FocusTrap from 'focus-trap-react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
@@ -20,6 +21,22 @@ export default function SettingsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const deletePasswordInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!isDeleteModalOpen) return undefined;
+
+    deletePasswordInputRef.current?.focus();
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && loadingAction !== 'delete') {
+        setIsDeleteModalOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, [isDeleteModalOpen, loadingAction]);
 
   const handleResetPassword = async () => {
     if (!user?.email) return;
@@ -136,7 +153,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="app-muted mb-4 inline-flex min-h-[44px] items-center px-1 text-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+          className="app-muted mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
         >
           ← Retour
         </button>
@@ -152,19 +169,19 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-6 xl:grid-cols-[var(--layout-side-panel)]">
           <div className="space-y-6">
             <section className="app-card p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Compte</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Compte</h2>
               <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/35">Email connecté</p>
+                <p className="text-xs uppercase tracking-[var(--tracking-caps)] text-white/35">Email connecté</p>
                 <p className="mt-2 text-base font-medium text-white">{user?.email ?? 'Email indisponible'}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => navigate(profileRoute)}
-                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                  className="inline-flex min-h-[var(--size-touch)] items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Modifier mon profil
                 </button>
@@ -172,7 +189,7 @@ export default function SettingsPage() {
                   type="button"
                   disabled={loadingAction !== null}
                   onClick={() => void handleResetPassword()}
-                  className="inline-flex min-h-[44px] items-center rounded-2xl border border-orange-300/20 bg-orange-500/10 px-4 py-3 text-sm font-medium text-orange-100 transition hover:bg-orange-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
+                  className="inline-flex min-h-[var(--size-touch)] items-center rounded-2xl border border-orange-300/20 bg-orange-500/10 px-4 py-3 text-sm font-medium text-orange-100 transition hover:bg-orange-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
                 >
                   {loadingAction === 'reset' ? 'Envoi…' : 'Changer mon mot de passe'}
                 </button>
@@ -180,7 +197,7 @@ export default function SettingsPage() {
             </section>
 
             <section className="app-card p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Sécurité</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Sécurité</h2>
               <div className="mt-4 space-y-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
                   <p className="text-sm font-medium text-white">Session</p>
@@ -204,7 +221,7 @@ export default function SettingsPage() {
 
           <aside className="space-y-6">
             <section className="app-card p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Profil</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Profil</h2>
               <p className="mt-3 text-sm text-white/60">
                 Mettez à jour votre avatar, votre bio et vos informations publiques depuis votre fiche profil.
               </p>
@@ -218,7 +235,7 @@ export default function SettingsPage() {
             </section>
 
             <section className="app-card border-red-400/20 bg-red-500/10 p-5">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-red-100/70">Zone sensible</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-red-100/70">Zone sensible</h2>
               <p className="mt-3 text-sm text-red-100/80">
                 La suppression de compte est irréversible. Vos conversations, fichiers et données liées seront définitivement retirés.
               </p>
@@ -244,62 +261,70 @@ export default function SettingsPage() {
       </div>
 
       {isDeleteModalOpen ? (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#161622] p-5 shadow-xl">
-            <h2 className="text-lg font-semibold text-white">Confirmer la suppression du compte</h2>
-            <p className="mt-2 text-sm text-white/65">
-              Cette action est irréversible. Saisissez votre mot de passe puis tapez SUPPRIMER pour confirmer.
-            </p>
-            <label htmlFor="delete-password" className="mt-4 block text-xs uppercase tracking-[0.18em] text-white/45">
-              Mot de passe
-            </label>
-            <input
-              id="delete-password"
-              type="password"
-              autoComplete="current-password"
-              value={deletePassword}
-              onChange={(event) => setDeletePassword(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
-              placeholder="Votre mot de passe"
-            />
-            <label htmlFor="delete-confirmation" className="mt-4 block text-xs uppercase tracking-[0.18em] text-white/45">
-              Confirmation
-            </label>
-            <input
-              id="delete-confirmation"
-              type="text"
-              value={deleteConfirmation}
-              onChange={(event) => setDeleteConfirmation(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm uppercase tracking-[0.08em] text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
-              placeholder="Tapez SUPPRIMER"
-            />
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (loadingAction === 'delete') return;
-                  setIsDeleteModalOpen(false);
-                  setDeletePassword('');
-                  setDeleteConfirmation('');
-                }}
-                className="min-h-[44px] flex-1 rounded-xl border border-white/20 px-3 text-sm text-white/80 transition hover:bg-white/10"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                disabled={
-                  loadingAction === 'delete'
-                  || !deletePassword.trim()
-                  || deleteConfirmation.trim().toUpperCase() !== 'SUPPRIMER'
-                }
-                onClick={() => void handleDeleteAccount()}
-                className="min-h-[44px] flex-1 rounded-xl bg-red-500 px-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
-              >
-                {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer définitivement'}
-              </button>
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <FocusTrap>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-account-modal-title"
+              className="w-full max-w-md rounded-2xl border border-white/10 bg-[var(--color-surface-2)] p-5 shadow-xl"
+            >
+              <h2 id="delete-account-modal-title" className="text-lg font-semibold text-white">Confirmer la suppression du compte</h2>
+              <p className="mt-2 text-sm text-white/65">
+                Cette action est irréversible. Saisissez votre mot de passe puis tapez SUPPRIMER pour confirmer.
+              </p>
+              <label htmlFor="delete-password" className="mt-4 block text-xs uppercase tracking-[var(--tracking-caps)] text-white/45">
+                Mot de passe
+              </label>
+              <input
+                id="delete-password"
+                ref={deletePasswordInputRef}
+                type="password"
+                autoComplete="current-password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
+                placeholder="Votre mot de passe"
+              />
+              <label htmlFor="delete-confirmation" className="mt-4 block text-xs uppercase tracking-[var(--tracking-caps)] text-white/45">
+                Confirmation
+              </label>
+              <input
+                id="delete-confirmation"
+                type="text"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm uppercase tracking-[var(--tracking-tightcaps)] text-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-300"
+                placeholder="Tapez SUPPRIMER"
+              />
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (loadingAction === 'delete') return;
+                    setIsDeleteModalOpen(false);
+                    setDeletePassword('');
+                    setDeleteConfirmation('');
+                  }}
+                  className="min-h-[var(--size-touch)] flex-1 rounded-xl border border-white/20 px-3 text-sm text-white/80 transition hover:bg-white/10"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={
+                    loadingAction === 'delete'
+                    || !deletePassword.trim()
+                    || deleteConfirmation.trim().toUpperCase() !== 'SUPPRIMER'
+                  }
+                  onClick={() => void handleDeleteAccount()}
+                  className="min-h-[var(--size-touch)] flex-1 rounded-xl bg-red-500 px-3 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+                >
+                  {loadingAction === 'delete' ? 'Suppression…' : 'Supprimer définitivement'}
+                </button>
+              </div>
             </div>
-          </div>
+          </FocusTrap>
         </div>
       ) : null}
     </div>
