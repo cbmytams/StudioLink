@@ -1,5 +1,14 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { runtimeFlags } from '@/config/runtimeFlags';
 import { supabase } from '@/lib/supabase/client';
+import {
+  mockGetCurrentSession,
+  mockGetProfile,
+  mockSignInWithPassword,
+  mockSignOut,
+  mockSignUpWithPassword,
+} from '@/lib/testMode/mockSupabase';
+import { consumeInvitationCode as consumeInvitationCodeService } from '@/services/invitationService';
 import type { Profile, UserType } from '@/types/backend';
 import type { Database, Json } from '@/types/supabase';
 
@@ -9,6 +18,9 @@ interface SignUpWithPasswordParams {
   invitationCode: string;
   userType: UserType;
   displayName?: string;
+  invitationEmail?: string | null;
+  captchaToken?: string;
+  emailRedirectTo?: string;
 }
 
 interface CompleteMagicSignupParams {
@@ -61,17 +73,11 @@ async function upsertProfile(userId: string, email: string, userType: UserType, 
   if (error) throw error;
 }
 
-async function consumeInvitationCode(invitationCode: string, userId: string) {
-  const client = assertSupabase();
-  const { error } = await client.rpc('consume_invitation_code', {
-    p_code: invitationCode.trim().toUpperCase(),
-    p_user_id: userId,
-  });
-
-  if (error) throw error;
-}
-
 export async function signInPassword(email: string, password: string, captchaToken?: string) {
+  if (runtimeFlags.mockSupabase) {
+    return mockSignInWithPassword(email, password);
+  }
+
   const client = assertSupabase();
   const { data, error } = await client.auth.signInWithPassword({
     email,
@@ -85,6 +91,8 @@ export async function signInPassword(email: string, password: string, captchaTok
 }
 
 export async function sendMagicLink(email: string, redirectTo: string) {
+  if (runtimeFlags.mockSupabase) return;
+
   const client = assertSupabase();
   const { error } = await client.auth.signInWithOtp({
     email,
@@ -97,6 +105,8 @@ export async function sendMagicLink(email: string, redirectTo: string) {
 }
 
 export async function sendMagicSignupLink(email: string, redirectTo: string) {
+  if (runtimeFlags.mockSupabase) return;
+
   const client = assertSupabase();
   const { error } = await client.auth.signInWithOtp({
     email,
@@ -109,10 +119,29 @@ export async function sendMagicSignupLink(email: string, redirectTo: string) {
 }
 
 export async function signUpWithPassword(params: SignUpWithPasswordParams) {
+  if (runtimeFlags.mockSupabase) {
+    return mockSignUpWithPassword({
+      email: params.email,
+      password: params.password,
+      invitationCode: params.invitationCode,
+      userType: params.userType,
+      displayName: params.displayName,
+    });
+  }
+
   const client = assertSupabase();
   const { data, error } = await client.auth.signUp({
     email: params.email,
     password: params.password,
+    options: {
+      captchaToken: params.captchaToken || undefined,
+      emailRedirectTo: params.emailRedirectTo,
+      data: {
+        invitation_code: params.invitationCode,
+        invitation_type: params.userType,
+        invitation_email: params.invitationEmail ?? null,
+      },
+    },
   });
 
   if (error) throw error;
@@ -125,7 +154,7 @@ export async function signUpWithPassword(params: SignUpWithPasswordParams) {
   }
 
   await upsertProfile(user.id, params.email, params.userType, params.displayName);
-  await consumeInvitationCode(params.invitationCode, user.id);
+  await consumeInvitationCodeService(params.invitationCode, user.id);
   return data;
 }
 
@@ -141,7 +170,7 @@ export async function completeMagicSignup(params: CompleteMagicSignupParams) {
 
   await upsertProfile(user.id, user.email ?? '', params.userType, params.displayName);
   try {
-    await consumeInvitationCode(params.invitationCode, user.id);
+    await consumeInvitationCodeService(params.invitationCode, user.id);
   } catch (consumeError) {
     const message =
       consumeError instanceof Error ? consumeError.message : 'Code invalide, expiré ou déjà utilisé';
@@ -152,12 +181,21 @@ export async function completeMagicSignup(params: CompleteMagicSignupParams) {
 }
 
 export async function signOut() {
+  if (runtimeFlags.mockSupabase) {
+    mockSignOut();
+    return;
+  }
+
   const client = assertSupabase();
   const { error } = await client.auth.signOut({ scope: 'local' });
   if (error) throw error;
 }
 
 export async function getCurrentSession() {
+  if (runtimeFlags.mockSupabase) {
+    return mockGetCurrentSession();
+  }
+
   const client = assertSupabase();
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
@@ -165,8 +203,13 @@ export async function getCurrentSession() {
 }
 
 export async function getCurrentProfile(session: Session | null): Promise<Profile | null> {
-  const client = assertSupabase();
   if (!session?.user) return null;
+
+  if (runtimeFlags.mockSupabase) {
+    return mockGetProfile(session.user.id);
+  }
+
+  const client = assertSupabase();
   const { data, error } = await client
     .from('profiles')
     .select(PROFILE_SELECT_COLUMNS)
@@ -178,6 +221,16 @@ export async function getCurrentProfile(session: Session | null): Promise<Profil
 }
 
 export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
+  if (runtimeFlags.mockSupabase) {
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => undefined,
+        },
+      },
+    };
+  }
+
   const client = assertSupabase();
   return client.auth.onAuthStateChange(callback);
 }

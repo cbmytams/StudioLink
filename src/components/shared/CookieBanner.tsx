@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { disableAnalytics } from '@/config/runtimeFlags';
 import { posthog } from '@/lib/analytics/posthog';
 
 type CookieConsent = 'unknown' | 'accepted' | 'rejected';
@@ -15,6 +16,8 @@ function readConsent(): CookieConsent {
 
 export function CookieBanner() {
   const [consent, setConsent] = useState<CookieConsent>(() => readConsent());
+
+  if (disableAnalytics) return null;
 
   useEffect(() => {
     if (consent === 'accepted') {

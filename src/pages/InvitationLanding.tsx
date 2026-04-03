@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Helmet } from 'react-helmet-async'
+import { getInvitationByCode } from '@/services/invitationService'
 
 type Invitation = {
   id: string
   code: string
   type: 'studio' | 'pro'
-  email: string | null
-  used: boolean
-  expires_at: string | null
-  created_at: string
-}
-
-type InvitationLookup = {
-  id: string
-  code: string
-  invitation_type: 'studio' | 'pro'
   email: string | null
   used: boolean
   expires_at: string | null
@@ -45,18 +35,11 @@ export default function InvitationLanding() {
 
       const normalizedCode = code.trim().toUpperCase()
 
-      const { data, error: fetchError } = await supabase.rpc('get_invitation_by_code', {
-        p_code: normalizedCode,
-      })
-
       if (cancelled) return
 
-      if (fetchError || !data) {
-        setState('invalid')
-        return
-      }
+      const row = await getInvitationByCode(normalizedCode)
+      if (cancelled) return
 
-      const row = (Array.isArray(data) ? data[0] : data) as InvitationLookup | null
       if (!row) {
         setState('invalid')
         return

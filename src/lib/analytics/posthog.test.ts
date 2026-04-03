@@ -60,6 +60,19 @@ test('initPostHog does nothing when key is missing', async () => {
   debugSpy.mockRestore();
 });
 
+test('initPostHog does nothing when analytics are disabled by runtime flag', async () => {
+  vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
+  vi.stubEnv('VITE_DISABLE_ANALYTICS', 'true');
+  const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+
+  const { initPostHog } = await import('./posthog');
+  initPostHog();
+
+  assert.equal(posthogMock.init.mock.calls.length, 0);
+  assert.equal(debugSpy.mock.calls.length, 1);
+  debugSpy.mockRestore();
+});
+
 test('initPostHog configures PostHog and opts out without consent', async () => {
   vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test_key');
   vi.stubEnv('DEV', false);

@@ -8,14 +8,17 @@ import {
   useState,
 } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { runtimeFlags } from '@/config/runtimeFlags';
 import type { Profile } from '@/types/backend';
 import {
+  getCurrentSession,
   getCurrentProfile,
   onAuthStateChange,
   sendMagicLink as sendMagicLinkService,
   signInPassword as signInPasswordService,
   signOut as signOutService,
 } from '@/services/authService';
+import { seedMockSupabaseStorage } from '@/lib/testMode/mockSupabase';
 import { trackUserLoggedOut } from '@/lib/analytics/events';
 import { resetUser } from '@/lib/analytics/posthog';
 import { hasSupabaseConfig } from '@/lib/supabase/client';
@@ -39,6 +42,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function getSupabaseStorageKey(): string | null {
+  if (runtimeFlags.mockSupabase) {
+    return 'studiolink:test-mode:session:v1';
+  }
+
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   if (!supabaseUrl) return null;
 
@@ -94,7 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe = () => {};
 
     const bootstrap = async () => {
-      const storedSession = readStoredSession();
+      if (runtimeFlags.mockSupabase) {
+        seedMockSupabaseStorage();
+      }
+
+      const storedSession = runtimeFlags.mockSupabase
+        ? await getCurrentSession()
+        : readStoredSession();
       if (isMounted) {
         setSession(storedSession);
       }
@@ -114,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    if (!hasSupabaseConfig) {
+    if (!hasSupabaseConfig && !runtimeFlags.mockSupabase) {
       setSession(null);
       setProfile(null);
       setLoading(false);
@@ -126,6 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void (async () => {
       await bootstrap();
       if (!isMounted) return;
+
+      if (runtimeFlags.mockSupabase) {
+        return;
+      }
 
       const { data } = onAuthStateChange(async (_event, nextSession) => {
         if (isMounted) {

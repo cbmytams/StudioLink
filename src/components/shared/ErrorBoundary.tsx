@@ -1,4 +1,5 @@
 import React, { type ReactNode } from 'react';
+import { disableAnalytics } from '@/config/runtimeFlags';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 
 type Props = {
@@ -28,6 +29,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    if (disableAnalytics) {
+      console.error('ErrorBoundary caught (analytics disabled):', error, info);
+      return;
+    }
+
     void import('@sentry/react')
       .then(({ captureException }) => {
         captureException(error, {

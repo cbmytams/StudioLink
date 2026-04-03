@@ -1,4 +1,5 @@
 import posthog from 'posthog-js';
+import { disableAnalytics } from '@/config/runtimeFlags';
 
 let postHogInitialized = false;
 
@@ -15,6 +16,10 @@ function isPostHogLoaded() {
 
 export function initPostHog() {
   if (typeof window === 'undefined' || postHogInitialized) return;
+  if (disableAnalytics) {
+    console.debug('[PostHog] Analytics désactivés par runtime flag');
+    return;
+  }
 
   const key = import.meta.env.VITE_POSTHOG_KEY;
   if (!key) {
@@ -51,6 +56,7 @@ export function identifyUser(userId: string, props: {
   displayName?: string;
 }) {
   if (typeof window === 'undefined') return;
+  if (disableAnalytics) return;
   try {
     if (!isPostHogLoaded()) return;
     posthog.identify(userId, props);
@@ -61,6 +67,7 @@ export function identifyUser(userId: string, props: {
 
 export function resetUser() {
   if (typeof window === 'undefined') return;
+  if (disableAnalytics) return;
   try {
     if (!isPostHogLoaded()) return;
     posthog.reset();
@@ -71,6 +78,7 @@ export function resetUser() {
 
 export function track(event: string, properties?: Record<string, unknown>) {
   if (typeof window === 'undefined') return;
+  if (disableAnalytics) return;
   try {
     if (!isPostHogLoaded()) return;
     posthog.capture(event, properties);

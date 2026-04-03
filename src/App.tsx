@@ -48,6 +48,7 @@ const NotificationsPage = lazy(() => import('@/pages/NotificationsPage'));
 const SavedPage = lazy(() => import('@/pages/SavedPage'));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const HealthCheckPage = lazy(() => import('@/pages/HealthCheck'));
+const DevMailboxPage = lazy(() => import('@/pages/DevMailboxPage'));
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'));
 const LegalMentionsPage = lazy(() => import('@/pages/legal/LegalMentionsPage'));
@@ -408,6 +409,7 @@ export default function App() {
             )}
           />
           <Route path="/health" element={<HealthCheckPage />} />
+          <Route path="/dev/mailbox" element={<DevMailboxPage />} />
 
           <Route element={<ProtectedRoute requiredType="studio"><StudioLayout /></ProtectedRoute>}>
             <Route path="/studio/dashboard" element={<StudioDashboardPage />} />

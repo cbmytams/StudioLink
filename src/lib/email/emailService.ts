@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase/client';
+import { mockEmail } from '@/config/runtimeFlags';
+import { mockEmailAdapter, realEmailAdapter } from '@/lib/email/emailAdapter';
 
 type EmailPayload = Record<string, unknown>;
 type UserRole = 'studio' | 'pro';
@@ -19,19 +20,8 @@ async function sendEmail(
   to: string,
   data: EmailPayload,
 ): Promise<void> {
-  if (!import.meta.env.VITE_SUPABASE_URL || !supabase || !to) return;
-
-  try {
-    const { error } = await supabase.functions.invoke('send-email', {
-      body: { type, to, data },
-    });
-
-    if (error) {
-      console.debug(`[Email] Non envoye (${type}):`, error.message);
-    }
-  } catch (error) {
-    console.debug('[Email] Service indisponible:', error);
-  }
+  const adapter = mockEmail ? mockEmailAdapter : realEmailAdapter;
+  await adapter.sendEmail(type, to, data);
 }
 
 export const emailService = {

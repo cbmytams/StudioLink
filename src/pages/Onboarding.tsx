@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { mockSupabase } from '@/config/runtimeFlags';
 import { useAuth } from '@/lib/supabase/auth';
 import { supabase } from '@/lib/supabase/client';
 import {
-  extractClaimSuccess,
   getInvitationContext,
 } from '@/lib/auth/invitationFlow';
 import {
@@ -26,6 +26,8 @@ import { AvatarUpload } from '@/components/ui/AvatarUpload';
 import { PageMeta } from '@/components/shared/PageMeta';
 import { useMobileFixedBottomStyle } from '@/hooks/useVisualViewport';
 import { trackOnboardingCompleted, trackOnboardingStepCompleted } from '@/lib/analytics/events';
+import { mockUpsertProfile } from '@/lib/testMode/mockSupabase';
+import { claimInvitationCode } from '@/services/invitationService';
 import type { UserType } from '@/types/backend';
 import type { Database } from '@/types/supabase';
 
@@ -51,6 +53,17 @@ type PersistedOnboardingState = {
 };
 
 async function tryProfileUpsert(payload: Database['public']['Tables']['profiles']['Insert']) {
+  if (mockSupabase) {
+    try {
+      await mockUpsertProfile(payload);
+      return null;
+    } catch (error) {
+      return {
+        message: error instanceof Error ? error.message : 'Impossible de sauvegarder le profil de test.',
+      };
+    }
+  }
+
   const { error } = await supabase
     .from('profiles')
     .upsert(payload, { onConflict: 'id' });
@@ -282,13 +295,9 @@ export default function Onboarding() {
       }
 
       if (invitationContext?.code) {
-        const { data: claimData, error: claimError } = await supabase.rpc('claim_invitation', {
-          p_code: invitationContext.code,
-          p_user_id: user.id,
-        });
-        const claimPayload = Array.isArray(claimData) ? claimData[0] : claimData;
-        if (claimError || !extractClaimSuccess(claimPayload)) {
-          throw new Error(claimError?.message ?? "Impossible de valider l'invitation.");
+        const claimed = await claimInvitationCode(invitationContext.code, user.id);
+        if (!claimed) {
+          throw new Error("Impossible de valider l'invitation.");
         }
       }
 

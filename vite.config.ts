@@ -44,6 +44,7 @@ export default defineConfig(({mode}) => {
         '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,playwright}.config.*',
         'tests/visual/**',
         'tests/mobile-final.spec.ts',
+        'tests/test-mode-smoke.spec.ts',
       ],
     },
     build: {

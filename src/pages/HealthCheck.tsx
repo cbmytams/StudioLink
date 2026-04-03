@@ -1,3 +1,5 @@
+import { disableAnalytics, mockEmail } from '@/config/runtimeFlags';
+
 type HealthPayload = {
   status: 'ok';
   timestamp: string;
@@ -5,7 +7,7 @@ type HealthPayload = {
   services: {
     analytics: boolean;
     monitoring: boolean;
-    email: 'edge-function';
+    email: 'edge-function' | 'mock';
   };
 };
 
@@ -15,9 +17,9 @@ export function buildHealthPayload(): HealthPayload {
     timestamp: new Date().toISOString(),
     version: import.meta.env.VITE_APP_VERSION ?? 'dev',
     services: {
-      analytics: Boolean(import.meta.env.VITE_POSTHOG_KEY),
-      monitoring: Boolean(import.meta.env.VITE_SENTRY_DSN),
-      email: 'edge-function',
+      analytics: disableAnalytics ? false : Boolean(import.meta.env.VITE_POSTHOG_KEY),
+      monitoring: disableAnalytics ? false : Boolean(import.meta.env.VITE_SENTRY_DSN),
+      email: mockEmail ? 'mock' : 'edge-function',
     },
   };
 }

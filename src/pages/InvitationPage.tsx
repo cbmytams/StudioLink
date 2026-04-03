@@ -4,7 +4,6 @@ import { Helmet } from 'react-helmet-async';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
-import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import {
   getDashboardPath,
@@ -12,14 +11,7 @@ import {
   resolveProfileType,
 } from '@/lib/auth/profileCompleteness';
 import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
-
-type InvitationLookup = {
-  code: string;
-  invitation_type: 'studio' | 'pro';
-  email: string | null;
-  used: boolean;
-  expires_at: string | null;
-};
+import { getInvitationByCode } from '@/services/invitationService';
 
 export default function InvitationPage() {
   const navigate = useNavigate();
@@ -69,16 +61,7 @@ export default function InvitationPage() {
 
     setLoading(true);
     try {
-      const { data, error: rpcError } = await supabase.rpc('get_invitation_by_code', {
-        p_code: normalizedCode,
-      });
-
-      if (rpcError) {
-        setError('Code invalide ou introuvable');
-        return;
-      }
-
-      const invitation = (Array.isArray(data) ? data[0] : data) as InvitationLookup | null;
+      const invitation = await getInvitationByCode(normalizedCode);
       if (!invitation) {
         setError('Code invalide ou introuvable');
         return;

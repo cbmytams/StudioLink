@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { bypassCaptcha, mockSupabase } from '@/config/runtimeFlags';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
@@ -22,17 +23,11 @@ import { toUserFacingErrorMessage } from '@/lib/errors/userFacing';
 import { trackUserLoggedIn, trackUserRegistered } from '@/lib/analytics/events';
 import { identifyUser } from '@/lib/analytics/posthog';
 import { emailService } from '@/lib/email/emailService';
+import { getCurrentProfile, signUpWithPassword } from '@/services/authService';
+import { getInvitationByCode } from '@/services/invitationService';
 
 type AuthMode = 'signin' | 'signup';
 type InvitationState = 'idle' | 'checking' | 'valid' | 'invalid' | 'missing';
-
-type InvitationLookup = {
-  code: string;
-  invitation_type: 'studio' | 'pro';
-  email: string | null;
-  used: boolean;
-  expires_at: string | null;
-};
 
 type AuthRouteState = {
   mode?: AuthMode;
@@ -188,18 +183,9 @@ export default function LoginPage() {
     setInvitationState('checking');
 
     const validateInvitation = async () => {
-      const { data, error: rpcError } = await supabase.rpc('get_invitation_by_code', {
-        p_code: invitationContext.code,
-      });
-
+      const invitation = await getInvitationByCode(invitationContext.code);
       if (!active) return;
 
-      if (rpcError) {
-        setInvitationState('invalid');
-        return;
-      }
-
-      const invitation = (Array.isArray(data) ? data[0] : data) as InvitationLookup | null;
       if (!invitation) {
         setInvitationState('invalid');
         return;
@@ -227,10 +213,19 @@ export default function LoginPage() {
   }, [invitationContext, mode]);
 
   const isSignIn = mode === 'signin';
+  const bypassedCaptchaEnabled = bypassCaptcha;
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
   const isLocalRuntime = typeof window !== 'undefined'
     && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  const captchaRequired = Boolean(turnstileSiteKey) && !isLocalRuntime;
+  const captchaRequired = !bypassedCaptchaEnabled && Boolean(turnstileSiteKey) && !isLocalRuntime;
+  const effectiveCaptchaToken = captchaRequired
+    ? (captchaToken || undefined)
+    : (bypassedCaptchaEnabled ? 'test-captcha-token' : undefined);
+
+  useEffect(() => {
+    if (!bypassedCaptchaEnabled) return;
+    setCaptchaToken('test-captcha-token');
+  }, [bypassedCaptchaEnabled]);
 
   if (step === 'confirm-email') {
     return (
@@ -301,7 +296,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isSignIn) {
-        const signInData = await signInPassword(email.trim(), password, captchaToken || undefined);
+        const signInData = await signInPassword(email.trim(), password, effectiveCaptchaToken);
         const signedInUserId = signInData.user?.id ?? signInData.session?.user?.id;
 
         if (!signedInUserId) {
@@ -310,13 +305,7 @@ export default function LoginPage() {
           return;
         }
 
-        const { data: nextProfile } = await supabase
-          .from('profiles')
-          .select('user_type, type, full_name, display_name, bio')
-          .eq('id', signedInUserId)
-          .maybeSingle();
-
-        const redirectProfile = nextProfile as RedirectProfile;
+        const redirectProfile = await getCurrentProfile(signInData.session ?? null) as RedirectProfile;
         const profileType = resolveProfileType(redirectProfile);
         const trackedRole = profileType ?? invitationContext?.type ?? null;
 
@@ -349,30 +338,35 @@ export default function LoginPage() {
         return;
       }
 
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          captchaToken: captchaToken || undefined,
+      const data = mockSupabase
+        ? await signUpWithPassword({
+          email: email.trim(),
+          password,
+          invitationCode: invitationContext.code,
+          invitationEmail: invitationContext.email,
+          userType: invitationContext.type,
+          captchaToken: effectiveCaptchaToken,
           emailRedirectTo: buildSignupEmailRedirect(window.location.origin),
-          data: {
-            invitation_code: invitationContext.code,
-            invitation_type: invitationContext.type,
-            invitation_email: invitationContext.email,
-          },
-        },
-      });
-      if (signUpError) {
-        setCaptchaToken('');
-        const message = toUserFacingErrorMessage(signUpError, 'Création impossible.');
-        setError(message);
-        showToast({
-          title: 'Création impossible',
-          description: message,
-          variant: 'destructive',
-        });
-        return;
-      }
+        })
+        : await (async () => {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: {
+              captchaToken: effectiveCaptchaToken,
+              emailRedirectTo: buildSignupEmailRedirect(window.location.origin),
+              data: {
+                invitation_code: invitationContext.code,
+                invitation_type: invitationContext.type,
+                invitation_email: invitationContext.email,
+              },
+            },
+          });
+          if (signUpError) {
+            throw signUpError;
+          }
+          return signUpData;
+        })();
 
       if (!data.user?.id) {
         setError('Création impossible: utilisateur introuvable.');
@@ -391,6 +385,9 @@ export default function LoginPage() {
       }).catch(() => undefined);
 
       if (data.session) {
+        if (mockSupabase) {
+          await signInPassword(email.trim(), password, effectiveCaptchaToken);
+        }
         trackUserRegistered(invitationContext.type);
         showToast({ title: 'Compte créé', description: 'Complète maintenant ton profil.', variant: 'default' });
         navigate('/onboarding', { replace: true });
@@ -407,7 +404,7 @@ export default function LoginPage() {
       setConfirmPassword('');
     } catch (submitError) {
       const message = toUserFacingErrorMessage(submitError, 'Une erreur est survenue.');
-      setCaptchaToken('');
+      setCaptchaToken(bypassedCaptchaEnabled ? 'test-captcha-token' : '');
       setError(message);
       showToast({
         title: isSignIn ? 'Connexion impossible' : 'Création impossible',
@@ -478,6 +475,11 @@ export default function LoginPage() {
           <p className="text-sm text-white/70">
             {isSignIn ? 'Bienvenue de retour' : signupSubtitle}
           </p>
+          {bypassedCaptchaEnabled ? (
+            <p className="mt-2 inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-100">
+              Mode test actif
+            </p>
+          ) : null}
         </div>
 
         {!isSignIn && !invitationContext ? (
