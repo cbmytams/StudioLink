@@ -21,22 +21,22 @@ export default function PrivacyPage() {
         </button>
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold text-white">Politique de confidentialité</h1>
-          <p className="text-sm text-white/60">Dernière mise à jour : 26 mars 2026</p>
+          <p className="text-sm text-white/60">Dernière mise à jour : 3 avril 2026</p>
         </header>
 
         <nav className="app-card p-4 text-sm text-white/75">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Sommaire</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            <a href="#privacy-1" className="hover:underline">1. Qui sommes-nous</a>
-            <a href="#privacy-2" className="hover:underline">2. Données collectées</a>
-            <a href="#privacy-3" className="hover:underline">3. Finalités</a>
-            <a href="#privacy-4" className="hover:underline">4. Base légale</a>
-            <a href="#privacy-5" className="hover:underline">5. Sous-traitants</a>
-            <a href="#privacy-6" className="hover:underline">6. Durée de conservation</a>
-            <a href="#privacy-7" className="hover:underline">7. Vos droits</a>
-            <a href="#privacy-8" className="hover:underline">8. Suppression de compte</a>
-            <a href="#privacy-9" className="hover:underline">9. Cookies</a>
-            <a href="#privacy-10" className="hover:underline">10. Date de mise à jour</a>
+            <a href="#privacy-1" className="inline-flex min-h-[44px] items-center hover:underline">1. Qui sommes-nous</a>
+            <a href="#privacy-2" className="inline-flex min-h-[44px] items-center hover:underline">2. Données collectées</a>
+            <a href="#privacy-3" className="inline-flex min-h-[44px] items-center hover:underline">3. Finalités</a>
+            <a href="#privacy-4" className="inline-flex min-h-[44px] items-center hover:underline">4. Base légale</a>
+            <a href="#privacy-5" className="inline-flex min-h-[44px] items-center hover:underline">5. Sous-traitants</a>
+            <a href="#privacy-6" className="inline-flex min-h-[44px] items-center hover:underline">6. Durée de conservation</a>
+            <a href="#privacy-7" className="inline-flex min-h-[44px] items-center hover:underline">7. Vos droits</a>
+            <a href="#privacy-8" className="inline-flex min-h-[44px] items-center hover:underline">8. Suppression de compte</a>
+            <a href="#privacy-9" className="inline-flex min-h-[44px] items-center hover:underline">9. Cookies</a>
+            <a href="#privacy-10" className="inline-flex min-h-[44px] items-center hover:underline">10. Date de mise à jour</a>
           </div>
         </nav>
 
@@ -105,10 +105,10 @@ export default function PrivacyPage() {
         </section>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
-          <Link className="underline underline-offset-2 hover:text-white" to="/legal/terms">
+          <Link className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-white" to="/legal/terms">
             Consulter les conditions d'utilisation
           </Link>
-          <Link className="underline underline-offset-2 hover:text-white" to="/">
+          <Link className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-white" to="/">
             Retour à l'accueil
           </Link>
         </div>

@@ -37,7 +37,7 @@
   }
   
   .glass-btn-accent {
-    @apply rounded-2xl bg-gradient-to-tr from-orange-600/90 to-orange-400/90 px-6 py-3.5 font-semibold text-white shadow-[0_8px_20px_rgba(249,115,22,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(249,115,22,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 active:scale-[0.98];
+    @apply rounded-2xl border border-orange-300/30 bg-orange-500 px-6 py-3.5 font-semibold text-white shadow-[0_8px_20px_rgba(249,115,22,0.3),inset_0_1px_1px_rgba(255,255,255,0.25)] backdrop-blur-xl transition-all duration-300 ease-out hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-200 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 active:scale-[0.98];
   }
   
   .glass-btn-circle {
@@ -52,7 +52,7 @@
     @apply text-white bg-[#0A0B10];
     min-height: 100dvh;
     background-image: 
-      radial-gradient(circle at 15% 0%, rgba(67, 56, 202, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 15% 0%, rgba(249, 115, 22, 0.16) 0%, transparent 50%),
       radial-gradient(circle at 85% 100%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 100%);
     background-attachment: fixed;

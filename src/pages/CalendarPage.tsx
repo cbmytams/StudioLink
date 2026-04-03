@@ -39,7 +39,7 @@ function getServiceColor(type: string) {
     case 'enregistrement voix':
       return 'bg-orange-500 text-white';
     case 'mastering':
-      return 'bg-purple-500 text-white';
+      return 'bg-amber-500 text-white';
     case 'beatmaking':
       return 'bg-emerald-500 text-white';
     default:
@@ -55,7 +55,7 @@ function getServiceLightColor(type: string) {
     case 'enregistrement voix':
       return 'bg-orange-500/20 text-orange-700';
     case 'mastering':
-      return 'bg-purple-500/20 text-purple-700';
+      return 'bg-amber-500/20 text-amber-700';
     case 'beatmaking':
       return 'bg-emerald-500/20 text-emerald-700';
     default:
@@ -71,7 +71,7 @@ function getServiceDotColor(type: string) {
     case 'enregistrement voix':
       return 'bg-orange-500';
     case 'mastering':
-      return 'bg-purple-500';
+      return 'bg-amber-500';
     case 'beatmaking':
       return 'bg-emerald-500';
     default:

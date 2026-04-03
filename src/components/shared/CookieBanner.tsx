@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { disableAnalytics } from '@/config/runtimeFlags';
 import { posthog } from '@/lib/analytics/posthog';
 
@@ -15,7 +15,17 @@ function readConsent(): CookieConsent {
 }
 
 export function CookieBanner() {
+  const location = useLocation();
   const [consent, setConsent] = useState<CookieConsent>(() => readConsent());
+  const isPublicRoute = [
+    '/',
+    '/login',
+    '/register',
+    '/legal/privacy',
+    '/legal/terms',
+    '/legal/mentions',
+    '/health',
+  ].includes(location.pathname);
 
   if (disableAnalytics) return null;
 
@@ -42,10 +52,16 @@ export function CookieBanner() {
   };
 
   return (
-    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-2 right-2 z-[120] md:bottom-6 md:left-auto md:right-6 md:max-w-md">
-      <div className="rounded-2xl border border-white/15 bg-[#0f0f1d]/95 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+    <div
+      className={`fixed left-3 right-3 z-[120] md:left-auto md:right-6 md:max-w-md ${
+        isPublicRoute
+          ? 'bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] md:bottom-6'
+          : 'bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] md:bottom-6'
+      }`}
+    >
+      <div className="rounded-2xl border border-white/15 bg-[#0f0f1d]/95 p-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl">
         <p className="text-sm text-white/80">
-          StudioLink utilise des cookies analytiques pour ameliorer votre experience.
+          StudioLink utilise des cookies analytiques pour améliorer votre expérience.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
@@ -64,7 +80,7 @@ export function CookieBanner() {
           </button>
           <Link
             to="/legal/privacy"
-            className="ml-auto min-h-[44px] inline-flex items-center text-xs text-white/65 underline underline-offset-2 hover:text-white"
+            className="ml-auto inline-flex min-h-[44px] items-center text-xs text-white/65 underline underline-offset-2 hover:text-white"
           >
             En savoir plus
           </Link>

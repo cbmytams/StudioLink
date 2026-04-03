@@ -8,14 +8,14 @@ type StatCardProps = {
   unit?: string;
   icon?: ReactNode;
   trend?: string | null;
-  color?: 'orange' | 'blue' | 'green' | 'violet';
+  color?: 'orange' | 'blue' | 'green' | 'amber';
 };
 
 const toneClassByColor = {
-  orange: 'from-orange-500/20 to-orange-400/5 text-orange-200',
-  blue: 'from-sky-500/20 to-sky-400/5 text-sky-200',
-  green: 'from-emerald-500/20 to-emerald-400/5 text-emerald-200',
-  violet: 'from-violet-500/20 to-violet-400/5 text-violet-200',
+  orange: 'border-orange-400/25 bg-orange-500/10 text-orange-200',
+  blue: 'border-sky-400/25 bg-sky-500/10 text-sky-200',
+  green: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-200',
+  amber: 'border-amber-400/25 bg-amber-500/10 text-amber-200',
 } as const;
 
 export function StatCard({
@@ -34,8 +34,7 @@ export function StatCard({
     <div
       id={id}
       className={cn(
-        'stat-card app-card p-5',
-        'bg-gradient-to-br',
+        'stat-card app-card p-5 transition-colors',
         toneClassByColor[color],
       )}
     >
@@ -48,7 +47,7 @@ export function StatCard({
           </div>
         </div>
         {icon ? (
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-white/75">
+          <div className="text-current/80">
             {icon}
           </div>
         ) : null}

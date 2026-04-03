@@ -213,7 +213,7 @@ export default function StudioDashboard() {
             label="Budget dépensé"
             value={formatCurrency(dashboard?.total_spent ?? 0)}
             icon={<BadgeEuro size={20} />}
-            color="violet"
+            color="amber"
           />
         </section>
 

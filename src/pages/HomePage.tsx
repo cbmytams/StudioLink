@@ -55,7 +55,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition hover:border-white/25 hover:text-white md:inline-flex"
+              className="hidden min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition hover:border-white/25 hover:text-white md:inline-flex"
             >
               Connexion
             </button>
@@ -200,14 +200,15 @@ export default function HomePage() {
 
       <footer className="border-t border-white/10 py-6 text-center text-white/35 text-xs">
         <p>© 2026 StudioLink. Tous droits réservés.</p>
+        <p className="mt-1 text-white/50">Contact : contact@studiolink-paris.fr</p>
         <div className="mt-2 flex justify-center gap-4 text-white/55">
-          <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/mentions" className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-white">
             Mentions légales
           </Link>
-          <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/terms" className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-white">
             Conditions d&apos;utilisation
           </Link>
-          <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/privacy" className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-white">
             Politique de confidentialité
           </Link>
         </div>

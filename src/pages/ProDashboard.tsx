@@ -44,14 +44,14 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[44px] w-full items-center gap-2 rounded-2xl border border-white/50 bg-white px-4 py-3 text-left transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+      className="flex min-h-[44px] w-full items-center gap-2 px-4 py-3 text-left glass-card-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
     >
       <span className="text-xl">{icon}</span>
       <div>
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500">{description}</p>
+        <p className="text-sm font-semibold tracking-wide text-white">{title}</p>
+        <p className="mt-0.5 text-xs tracking-wider text-white/50">{description}</p>
       </div>
-      <span className="ml-auto text-gray-500">›</span>
+      <span className="ml-auto text-white/30">›</span>
     </button>
   );
 }
@@ -154,7 +154,7 @@ export default function ProDashboard() {
             label="Gains totaux"
             value={formatCurrency(dashboard?.total_earned ?? 0)}
             icon={<BadgeEuro size={20} />}
-            color="violet"
+            color="amber"
           />
         </section>
 
