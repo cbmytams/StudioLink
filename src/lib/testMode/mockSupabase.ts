@@ -110,6 +110,7 @@ function toStoredAccount(input: {
   onboarding_step: number;
   created_at: string;
 }): StoredAccount {
+  // Mock session payload mirrors the subset used by the frontend runtime.
   return {
     id: input.id,
     email: normalizeEmail(input.email),
@@ -261,7 +262,7 @@ function accountToSession(account: StoredAccount): Session {
       },
       created_at: account.created_at,
     },
-  } as unknown as Session;
+  } as Session;
 }
 
 function writeMockSession(session: Session | null) {
