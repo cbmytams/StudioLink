@@ -18,8 +18,9 @@ type ReminderSession = {
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
+const CRON_SECRET_HEADER = 'x-cron-secret';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -38,9 +39,15 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const cronSecret = Deno.env.get('CRON_SECRET');
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !serviceRoleKey || !cronSecret) {
     return json({ error: 'Missing Supabase environment variables' }, 500);
+  }
+
+  const providedCronSecret = req.headers.get(CRON_SECRET_HEADER);
+  if (!providedCronSecret || providedCronSecret !== cronSecret) {
+    return json({ error: 'Forbidden' }, 403);
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);

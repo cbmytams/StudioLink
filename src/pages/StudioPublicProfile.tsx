@@ -95,7 +95,7 @@ export default function StudioPublicProfile() {
   const canContact = viewerType === 'pro';
 
   return (
-    <div className="app-shell min-h-[100dvh] pb-28">
+    <div className="app-shell min-h-[var(--size-full-dvh)] pb-28">
       <Helmet>
         <title>{studio ? `${displayName} — StudioLink` : 'Studio public — StudioLink'}</title>
         <meta name="description" content="Consultez le profil public d’un studio sur StudioLink." />
@@ -147,7 +147,7 @@ export default function StudioPublicProfile() {
         ) : null}
 
         {!loading && !error && studio ? (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-6 lg:grid-cols-[var(--layout-side-panel)]">
             <div className="space-y-5">
               <header className="app-card p-6">
               <Avatar
@@ -202,7 +202,7 @@ export default function StudioPublicProfile() {
 
             <aside className="space-y-5">
               <section className="app-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Vue rapide</p>
+                <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Vue rapide</p>
                 <div className="mt-4 space-y-3 text-sm text-white/70">
                   <div className="flex items-center justify-between gap-3">
                     <span>Localisation</span>
@@ -221,7 +221,7 @@ export default function StudioPublicProfile() {
 
               {canContact ? (
                 <section className="app-card p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Action rapide</p>
+                  <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Action rapide</p>
                   <p className="mt-3 text-sm text-white/60">
                     Ouvrez une conversation immédiatement pour échanger sur une mission active ou un besoin à venir.
                   </p>
@@ -248,7 +248,7 @@ export default function StudioPublicProfile() {
       </div>
 
       {!loading && !error && studio && canContact ? (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#10101b]/92 p-4 pb-safe backdrop-blur-xl lg:hidden">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[var(--color-surface-2)]/92 p-4 pb-safe backdrop-blur-xl lg:hidden">
           <div className="mx-auto max-w-lg">
             <button
               type="button"

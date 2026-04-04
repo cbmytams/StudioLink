@@ -2,7 +2,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoadingScreen() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-stone-50">
+    <div className="flex min-h-[var(--size-full-dvh)] items-center justify-center bg-stone-50">
       <div className="flex flex-col items-center gap-4">
         <svg
           viewBox="0 0 64 64"

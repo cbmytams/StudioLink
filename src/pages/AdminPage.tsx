@@ -360,42 +360,42 @@ export default function AdminPage() {
       </Helmet>
       <div className="app-container-wide">
         <header className="mb-6">
-          <h1 className="app-title">Panel Admin</h1>
+          <h1 className="app-title">Administration</h1>
           <p className="app-subtitle mt-1">{summary}</p>
         </header>
 
         {stats ? (
           <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3">
             {[
-              { label: 'Utilisateurs', value: stats.totalUsers },
+              { label: 'Total utilisateurs', value: stats.totalUsers },
               { label: 'Studios', value: stats.studios },
               { label: 'Pros', value: stats.pros },
               { label: 'Missions actives', value: stats.activeMissions },
-              { label: 'Candidatures pending', value: stats.pendingApplications },
-              { label: 'Sessions completees', value: stats.completedSessions },
+              { label: 'Candidatures en attente', value: stats.pendingApplications },
+              { label: 'Sessions terminées', value: stats.completedSessions },
             ].map((item) => (
               <article key={item.label} className="app-card p-4 text-center">
-                <p className="text-2xl font-semibold text-black">{item.value}</p>
-                <p className="mt-1 text-xs text-stone-500">{item.label}</p>
+                <p className="text-2xl font-semibold tabular-nums text-white">{item.value}</p>
+                <p className="mt-1 text-xs text-white/55">{item.label}</p>
               </article>
             ))}
           </section>
         ) : null}
 
         <section className="app-card p-6 mb-6">
-          <h2 className="text-base font-semibold text-black mb-4">Codes d&apos;invitation</h2>
+          <h2 className="mb-4 text-base font-semibold text-white">Codes d&apos;invitation</h2>
           <div className="mb-4">
-            <p className="text-sm text-black/70 mb-2">Type d&apos;invitation</p>
+            <p className="mb-2 text-sm text-white/70">Type d&apos;invitation</p>
             <div className="grid grid-cols-2 gap-2 max-w-xs">
               {(['studio', 'pro'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setNewType(type)}
-                  className={`min-h-[44px] rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 ${
+                  className={`min-h-[var(--size-touch)] rounded-xl px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 ${
                     newType === type
                       ? 'bg-orange-500 text-white'
-                      : 'bg-white/80 text-black/70 hover:bg-white'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10'
                   }`}
                 >
                   {type === 'studio' ? 'Studio' : 'Pro'}
@@ -411,7 +411,7 @@ export default function AdminPage() {
               value={newEmail}
               onChange={(event) => setNewEmail(event.target.value)}
               placeholder="Email destinataire (optionnel)"
-              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400 md:col-span-2"
+              className="w-full glass-input rounded-xl px-4 py-3 md:col-span-2"
             />
             <input
               id="admin-invitation-count"
@@ -422,7 +422,7 @@ export default function AdminPage() {
               value={batchCount}
               onChange={(event) => setBatchCount(Number(event.target.value) || 1)}
               placeholder="Nombre"
-              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+              className="w-full glass-input rounded-xl px-4 py-3"
             />
             <input
               id="admin-invitation-max-uses"
@@ -433,7 +433,7 @@ export default function AdminPage() {
               value={maxUses}
               onChange={(event) => setMaxUses(Number(event.target.value) || 1)}
               placeholder="Max usages"
-              className="w-full glass-input rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400"
+              className="w-full glass-input rounded-xl px-4 py-3"
             />
           </div>
 
@@ -444,19 +444,19 @@ export default function AdminPage() {
             loadingLabel="Génération..."
             className="bg-orange-500 text-white hover:bg-orange-600"
           >
-            Generer des codes
+            Générer des codes
           </Button>
 
           {error ? <p className="text-red-400 text-sm mt-3">{error}</p> : null}
         </section>
 
-        <section className="app-card overflow-hidden">
+        <section className="app-card overflow-x-auto">
           {loading ? (
             <div className="p-8 text-center">
               <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70 inline-block" />
             </div>
           ) : invitations.length === 0 ? (
-            <p className="p-8 text-center text-stone-500">Aucune invitation pour le moment.</p>
+            <p className="p-8 text-center text-white/55">Aucune invitation pour le moment.</p>
           ) : (
             <div className="divide-y divide-white/40">
               {invitations.map((invitation) => {
@@ -464,7 +464,7 @@ export default function AdminPage() {
                   invitation.expires_at && new Date(invitation.expires_at) < new Date(),
                 );
                 const statusNode = invitation.used
-                  ? <span className="text-red-400">Desactivee</span>
+                  ? <span className="text-red-400">Désactivée</span>
                   : isExpired
                     ? <span className="text-stone-400">Expirée</span>
                     : <span className="text-green-400">Active</span>;
@@ -475,7 +475,7 @@ export default function AdminPage() {
                     : '0/1';
 
                 return (
-                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_1fr_auto_auto_auto_auto] gap-3 items-center">
+                  <div key={invitation.id} className="p-4 grid grid-cols-1 md:grid-cols-[var(--layout-admin-grid)] gap-3 items-center">
                     <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
                       invitation.type === 'studio'
                         ? 'bg-cyan-100 text-cyan-700 border border-cyan-200'
@@ -485,10 +485,10 @@ export default function AdminPage() {
                     </span>
 
                     <p className="font-mono text-sm">{invitation.code}</p>
-                    <p className="text-stone-500 text-sm">{invitation.email || '-'}</p>
+                    <p className="text-sm text-white/65">{invitation.email || '-'}</p>
                     <div className="text-sm">{statusNode}</div>
-                    <p className="text-sm text-stone-500">{usageLabel}</p>
-                    <p className="text-sm text-stone-500">
+                    <p className="text-sm text-white/65">{usageLabel}</p>
+                    <p className="text-sm text-white/65">
                       {invitation.expires_at
                         ? new Date(invitation.expires_at).toLocaleDateString('fr-FR')
                         : 'Sans limite'}
@@ -498,7 +498,7 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => void handleCopy(invitation.code)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-orange-600 transition-colors hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-orange-600 transition-colors hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                       >
                         {copySuccess === invitation.code ? '✓ Copié !' : 'Copier le lien'}
                       </button>
@@ -506,15 +506,15 @@ export default function AdminPage() {
                         type="button"
                         disabled={deletingInvitationId === invitation.id || invitation.used}
                         onClick={() => void handleDeactivate(invitation.id)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-amber-600 transition-colors hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-amber-600 transition-colors hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {deletingInvitationId === invitation.id ? 'Desactivation…' : 'Desactiver'}
+                        {deletingInvitationId === invitation.id ? 'Désactivation…' : 'Désactiver'}
                       </button>
                       <button
                         type="button"
                         disabled={deletingInvitationId === invitation.id}
                         onClick={() => void handleDelete(invitation.id)}
-                        className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-sm text-red-500 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-sm text-red-500 transition-colors hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingInvitationId === invitation.id ? 'Suppression…' : 'Supprimer'}
                       </button>

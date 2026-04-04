@@ -110,11 +110,11 @@ export default function NewConversation() {
   }, [currentUserType, navigate, payload?.proId, payload?.studioId, userId]);
 
   return (
-    <div className="app-shell min-h-[100dvh]">
+    <div className="app-shell min-h-[var(--size-full-dvh)]">
       <Helmet>
         <title>Nouvelle conversation — StudioLink</title>
       </Helmet>
-      <div className="app-container-compact flex min-h-[100dvh] items-center justify-center">
+      <div className="app-container-compact flex min-h-[var(--size-full-dvh)] items-center justify-center">
         {loading ? (
           <div className="flex flex-col items-center gap-3">
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />

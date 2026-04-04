@@ -45,33 +45,67 @@ function readMetrics(): VisualViewportMetrics {
   };
 }
 
+let cachedMetrics: VisualViewportMetrics = readMetrics();
+const subscribers = new Set<(metrics: VisualViewportMetrics) => void>();
+let detachViewportListeners: (() => void) | null = null;
+
+function publishMetrics() {
+  cachedMetrics = readMetrics();
+  subscribers.forEach((listener) => listener(cachedMetrics));
+}
+
+function ensureViewportListeners() {
+  if (typeof window === 'undefined' || detachViewportListeners) return;
+
+  const visualViewport = window.visualViewport;
+  const mediaQuery = window.matchMedia('(max-width: 767px)');
+  let rafId = 0;
+
+  const schedulePublish = () => {
+    window.cancelAnimationFrame(rafId);
+    rafId = window.requestAnimationFrame(() => {
+      publishMetrics();
+    });
+  };
+
+  schedulePublish();
+
+  visualViewport?.addEventListener('resize', schedulePublish);
+  visualViewport?.addEventListener('scroll', schedulePublish);
+  window.addEventListener('resize', schedulePublish);
+  mediaQuery.addEventListener('change', schedulePublish);
+
+  detachViewportListeners = () => {
+    window.cancelAnimationFrame(rafId);
+    visualViewport?.removeEventListener('resize', schedulePublish);
+    visualViewport?.removeEventListener('scroll', schedulePublish);
+    window.removeEventListener('resize', schedulePublish);
+    mediaQuery.removeEventListener('change', schedulePublish);
+    detachViewportListeners = null;
+  };
+}
+
+function releaseViewportListenersIfIdle() {
+  if (subscribers.size === 0) {
+    detachViewportListeners?.();
+  }
+}
+
 export function useVisualViewportMetrics(): VisualViewportMetrics {
-  const [metrics, setMetrics] = useState<VisualViewportMetrics>(() => readMetrics());
+  const [metrics, setMetrics] = useState<VisualViewportMetrics>(() => cachedMetrics);
 
   useEffect(() => {
-    const update = () => setMetrics(readMetrics());
-    const visualViewport = window.visualViewport;
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const frameId = window.requestAnimationFrame(update);
-    const settleTimer = window.setTimeout(update, 120);
-    const settleTimerLate = window.setTimeout(update, 360);
-    const intervalId = window.setInterval(update, 250);
+    const listener = (nextMetrics: VisualViewportMetrics) => {
+      setMetrics(nextMetrics);
+    };
 
-    update();
-    visualViewport?.addEventListener('resize', update);
-    visualViewport?.addEventListener('scroll', update);
-    window.addEventListener('resize', update);
-    mediaQuery.addEventListener('change', update);
+    subscribers.add(listener);
+    ensureViewportListeners();
+    publishMetrics();
 
     return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearTimeout(settleTimer);
-      window.clearTimeout(settleTimerLate);
-      window.clearInterval(intervalId);
-      visualViewport?.removeEventListener('resize', update);
-      visualViewport?.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
-      mediaQuery.removeEventListener('change', update);
+      subscribers.delete(listener);
+      releaseViewportListenersIfIdle();
     };
   }, []);
 

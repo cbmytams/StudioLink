@@ -3,9 +3,11 @@ import { SEO } from '@/components/SEO';
 
 export default function TermsPage() {
   const navigate = useNavigate();
+  const summaryLinkClass = 'group inline-flex min-h-[var(--size-touch)] items-center justify-between rounded-xl px-3 py-3 text-left transition-colors duration-200 hover:bg-white/5 active:bg-[var(--color-surface-offset)]';
+  const footerLinkClass = 'inline-flex min-h-[var(--size-touch)] items-center px-2 py-3 underline underline-offset-2 transition-colors hover:text-white';
 
   return (
-    <div className="app-shell min-h-[100dvh] px-4 py-8">
+    <div className="app-shell min-h-[var(--size-full-dvh)] px-4 py-8">
       <SEO
         title="Conditions d'utilisation"
         description="Conditions d'utilisation de StudioLink Paris."
@@ -15,28 +17,28 @@ export default function TermsPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex min-h-[44px] items-center px-1 text-sm text-white/70 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+          className="inline-flex min-h-[var(--size-touch)] items-center px-2 py-3 text-sm text-white/70 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
         >
           ← Retour
         </button>
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold text-white">Conditions d'utilisation</h1>
-          <p className="text-sm text-white/60">Version du 26 mars 2026</p>
+          <p className="text-sm text-white/60">Version du 3 avril 2026</p>
         </header>
 
         <nav className="app-card p-4 text-sm text-white/75">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Sommaire</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/45">Sommaire</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            <a href="#terms-1" className="hover:underline">1. Objet</a>
-            <a href="#terms-2" className="hover:underline">2. Définitions</a>
-            <a href="#terms-3" className="hover:underline">3. Inscription</a>
-            <a href="#terms-4" className="hover:underline">4. Obligations du Studio</a>
-            <a href="#terms-5" className="hover:underline">5. Obligations du Pro</a>
-            <a href="#terms-6" className="hover:underline">6. Propriete intellectuelle</a>
-            <a href="#terms-7" className="hover:underline">7. Responsabilite</a>
-            <a href="#terms-8" className="hover:underline">8. Suspension</a>
-            <a href="#terms-9" className="hover:underline">9. Droit applicable</a>
-            <a href="#terms-10" className="hover:underline">10. Date</a>
+            <a href="#terms-1" className={summaryLinkClass}><span>1. Objet</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-2" className={summaryLinkClass}><span>2. Définitions</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-3" className={summaryLinkClass}><span>3. Inscription</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-4" className={summaryLinkClass}><span>4. Obligations du Studio</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-5" className={summaryLinkClass}><span>5. Obligations du Pro</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-6" className={summaryLinkClass}><span>6. Propriete intellectuelle</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-7" className={summaryLinkClass}><span>7. Responsabilite</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-8" className={summaryLinkClass}><span>8. Suspension</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-9" className={summaryLinkClass}><span>9. Droit applicable</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
+            <a href="#terms-10" className={summaryLinkClass}><span>10. Date</span><span aria-hidden className="text-white/40 transition-transform duration-200 group-hover:translate-x-0.5">›</span></a>
           </div>
         </nav>
 
@@ -96,10 +98,10 @@ export default function TermsPage() {
         </section>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
-          <Link className="underline underline-offset-2 hover:text-white" to="/legal/privacy">
+          <Link className={footerLinkClass} to="/legal/privacy">
             Politique de confidentialité
           </Link>
-          <Link className="underline underline-offset-2 hover:text-white" to="/">
+          <Link className={footerLinkClass} to="/">
             Retour à l'accueil
           </Link>
         </div>

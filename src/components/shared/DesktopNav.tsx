@@ -59,15 +59,15 @@ export function DesktopNav({ userType }: DesktopNavProps) {
       ];
 
   return (
-    <aside className="pointer-events-auto fixed inset-y-4 left-4 z-40 hidden w-[272px] md:flex">
-      <div className="flex h-full w-full flex-col rounded-[28px] border border-white/10 bg-black/35 p-4 shadow-[0_12px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+    <aside className="pointer-events-auto fixed inset-y-4 left-4 z-40 hidden w-[var(--layout-sidebar-width)] md:flex">
+      <div className="flex h-full w-full flex-col rounded-[var(--radius-pill)] border border-white/10 bg-black/35 p-4 shadow-[var(--shadow-nav)] backdrop-blur-xl">
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
           className="mb-4 flex w-full items-center gap-3 rounded-xl px-2 py-1 text-left transition hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
           aria-label="Retour au dashboard"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[0_8px_20px_rgba(249,115,22,0.35)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500 text-sm font-bold text-white shadow-[var(--shadow-primary)]">
             SL
           </div>
           <div>
@@ -93,7 +93,7 @@ export function DesktopNav({ userType }: DesktopNavProps) {
               className={cn(
                 'flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition',
                 active
-                  ? 'bg-orange-500 text-white shadow-[0_8px_20px_rgba(249,115,22,0.35)]'
+                  ? 'bg-orange-500 text-white shadow-[var(--shadow-primary)]'
                   : 'text-white/70 hover:bg-white/8 hover:text-white',
               )}
             >
@@ -107,7 +107,7 @@ export function DesktopNav({ userType }: DesktopNavProps) {
         <button
           type="button"
           onClick={() => navigate(userType === 'studio' ? '/studio/missions/new' : '/missions')}
-          className="mt-4 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(249,115,22,0.28)] transition hover:bg-orange-400"
+          className="mt-4 inline-flex min-h-[var(--size-touch-lg)] items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-primary-soft)] transition hover:bg-orange-400"
         >
           <PlusCircle size={16} />
           <span>{userType === 'studio' ? 'Publier une mission' : 'Explorer les missions'}</span>

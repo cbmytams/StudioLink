@@ -146,7 +146,7 @@ export function FileUpload({
           setIsDragOver(false);
           void handleFile(event.dataTransfer.files?.[0]);
         }}
-        className={`flex min-h-[96px] w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${
+        className={`flex min-h-[var(--size-upload-min-height)] w-full flex-col items-center justify-center rounded-2xl border border-dashed px-4 py-5 text-center transition-colors ${
           disabled
             ? 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-500'
             : isDragOver

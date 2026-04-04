@@ -137,7 +137,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
+    <div className="app-shell flex min-h-[var(--size-full-dvh)] items-center justify-center p-4">
       <PageMeta
         title={pageCopy.title}
         description={pageCopy.description}
@@ -186,7 +186,7 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="flex min-h-[44px] w-full items-center justify-center text-center text-sm text-white/55 transition hover:text-white"
+              className="flex min-h-[var(--size-touch)] w-full items-center justify-center text-center text-sm text-white/55 transition hover:text-white"
             >
               Retour à la connexion
             </button>
@@ -240,7 +240,7 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => navigate('/forgot-password')}
-              className="flex min-h-[44px] w-full items-center justify-center text-center text-sm text-white/55 transition hover:text-white"
+              className="flex min-h-[var(--size-touch)] w-full items-center justify-center text-center text-sm text-white/55 transition hover:text-white"
             >
               Demander un nouveau lien
             </button>

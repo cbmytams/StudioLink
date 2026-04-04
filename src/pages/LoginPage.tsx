@@ -229,7 +229,7 @@ export default function LoginPage() {
 
   if (step === 'confirm-email') {
     return (
-      <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
+      <div className="app-shell flex min-h-[var(--size-full-dvh)] items-center justify-center p-4">
         <SEO
           title="Confirmation email"
           description="Confirme ton adresse email pour activer ton compte StudioLink."
@@ -459,7 +459,7 @@ export default function LoginPage() {
   const passwordStrength = mode === 'signup' ? getPasswordStrength(password) : null;
 
   return (
-    <div className="app-shell flex min-h-[100dvh] items-center justify-center p-4">
+    <div className="auth-shell app-shell flex min-h-[var(--size-full-dvh)] items-center justify-center p-4">
       <SEO
         title={isSignIn ? 'Connexion' : 'Inscription'}
         description={isSignIn ? 'Connectez-vous à votre compte StudioLink.' : 'Créez votre compte StudioLink avec invitation.'}
@@ -468,7 +468,7 @@ export default function LoginPage() {
       />
       <GlassCard className="w-full max-w-md p-8">
         <div className="mb-10 flex flex-col items-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_40px_rgba(249,115,22,0.3)] border border-white/20">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[var(--radius-badge)] bg-gradient-to-br from-orange-500 to-orange-400 shadow-[var(--shadow-primary-glow-strong)] border border-white/20">
             <span className="text-2xl font-bold text-white tracking-tighter shadow-sm">SL</span>
           </div>
           <h1 className="text-2xl font-semibold text-white">{isSignIn ? 'Connexion' : 'Créer un compte'}</h1>
@@ -476,7 +476,7 @@ export default function LoginPage() {
             {isSignIn ? 'Bienvenue de retour' : signupSubtitle}
           </p>
           {bypassedCaptchaEnabled ? (
-            <p className="mt-2 inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-100">
+            <p className="mt-2 inline-flex rounded-full border border-emerald-300/30 bg-emerald-500/15 px-3 py-1 text-[var(--text-2xs-plus)] font-medium uppercase tracking-[var(--tracking-caps)] text-emerald-100">
               Mode test actif
             </p>
           ) : null}
@@ -502,7 +502,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => navigate('/invitation')}
-                className="mt-2 inline-flex min-h-[44px] items-center text-xs font-medium text-orange-200 underline underline-offset-2"
+                className="mt-2 inline-flex min-h-[var(--size-touch)] items-center text-xs font-medium text-orange-200 underline underline-offset-2"
               >
                 Entrer mon code d&apos;invitation
               </button>
@@ -578,7 +578,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => navigate('/forgot-password')}
-                className="min-h-[44px] px-2 text-xs text-white/55 transition hover:text-white"
+                className="min-h-[var(--size-touch)] px-2 text-xs text-white/55 transition hover:text-white"
               >
                 Mot de passe oublié ?
               </button>
@@ -618,7 +618,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => navigate('/invitation')}
-                className="ml-1 inline-flex min-h-[44px] items-center text-red-600 underline"
+                className="ml-1 inline-flex min-h-[var(--size-touch)] items-center text-red-600 underline"
               >
                 Revenir à la page invitation
               </button>
@@ -660,7 +660,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={toggleMode}
-          className="mt-6 flex min-h-[44px] w-full items-center justify-center text-center text-sm font-medium text-white/50 transition-colors hover:text-white"
+          className="mt-6 flex min-h-[var(--size-touch)] w-full items-center justify-center text-center text-sm font-medium text-white/50 transition-colors hover:text-white"
         >
           {isSignIn ? "Pas encore de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
         </button>
@@ -671,19 +671,19 @@ export default function LoginPage() {
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <Link
                 to="/legal/terms"
-                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Conditions d&apos;utilisation
               </Link>
               <Link
                 to="/legal/privacy"
-                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Confidentialité
               </Link>
               <Link
                 to="/legal/mentions"
-                className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 text-xs transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Mentions légales
               </Link>
@@ -693,19 +693,19 @@ export default function LoginPage() {
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-white/50">
             <Link
               to="/legal/mentions"
-              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
               Mentions légales
             </Link>
             <Link
               to="/legal/privacy"
-              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
               Confidentialité
             </Link>
             <Link
               to="/legal/terms"
-              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              className="inline-flex min-h-[var(--size-touch)] items-center rounded-full border border-white/20 px-3 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
               Conditions d&apos;utilisation
             </Link>

@@ -35,14 +35,14 @@ export default function HomePage() {
 
   return (
     <div className="app-shell">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b0b17]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[var(--color-surface)]/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
           <button
             type="button"
             onClick={() => navigate('/')}
             className="flex items-center gap-3 text-left"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.25)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 shadow-[var(--shadow-primary-glow)]">
               <span className="text-base font-bold tracking-tight text-white">SL</span>
             </div>
             <div>
@@ -55,7 +55,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition hover:border-white/25 hover:text-white md:inline-flex"
+              className="hidden min-h-[var(--size-touch)] rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/70 transition hover:border-white/25 hover:text-white md:inline-flex"
             >
               Connexion
             </button>
@@ -73,12 +73,12 @@ export default function HomePage() {
         description="StudioLink connecte les studios et les professionnels creatifs via une plateforme sur invitation."
         url="/"
       />
-      <section className="min-h-[calc(100dvh-84px)] flex flex-col items-center justify-center text-center px-4 py-24">
+      <section className="min-h-[var(--hero-min-height)] flex flex-col items-center justify-center text-center px-4 py-24">
         <span className="inline-block rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-orange-700 mb-6">
           🔒 Plateforme sur invitation uniquement
         </span>
 
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight text-white">
+        <h1 style={{ fontSize: 'var(--text-2xl)' }} className="mb-6 font-bold leading-tight text-white">
           La plateforme qui connecte
           <br />
           <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
@@ -101,7 +101,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm font-medium text-white/60 transition hover:text-white"
+            className="inline-flex min-h-[var(--size-touch)] items-center justify-center px-2 text-sm font-medium text-white/60 transition hover:text-white"
           >
             Déjà membre ? Se connecter
           </button>
@@ -141,11 +141,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
+      <section className="py-[var(--section-y-fluid)] md:py-24">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-10 text-white">Comment ça marche ?</h2>
-          <div className="flex flex-col md:flex-row gap-6">
-            <article className="flex-1 app-card p-6">
+          <h2 className="text-3xl md:text-4xl font-semibold text-center mb-8 text-white">Comment ça marche ?</h2>
+          <div className="flex flex-col gap-[var(--section-gap-fluid)] md:flex-row">
+            <article className="flex-1 app-card p-5">
               <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">01</p>
               <h3 className="text-xl font-semibold mb-2 text-white">Recevez votre invitation</h3>
               <p className="text-white/60 text-sm">
@@ -153,7 +153,7 @@ export default function HomePage() {
               </p>
             </article>
 
-            <article className="flex-1 app-card p-6">
+            <article className="flex-1 app-card p-5">
               <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">02</p>
               <h3 className="text-xl font-semibold mb-2 text-white">Créez votre profil</h3>
               <p className="text-white/60 text-sm">
@@ -161,7 +161,7 @@ export default function HomePage() {
               </p>
             </article>
 
-            <article className="flex-1 app-card p-6">
+            <article className="flex-1 app-card p-5">
               <p className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-3">03</p>
               <h3 className="text-xl font-semibold mb-2 text-white">Collaborez</h3>
               <p className="text-white/60 text-sm">
@@ -189,7 +189,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="inline-flex min-h-[44px] items-center justify-center px-2 text-sm text-white/50 transition-colors hover:text-white"
+                className="inline-flex min-h-[var(--size-touch)] items-center justify-center px-2 text-sm text-white/50 transition-colors hover:text-white"
               >
                 Déjà un compte ? Se connecter
               </button>
@@ -200,14 +200,15 @@ export default function HomePage() {
 
       <footer className="border-t border-white/10 py-6 text-center text-white/35 text-xs">
         <p>© 2026 StudioLink. Tous droits réservés.</p>
+        <p className="mt-1 text-white/50">Contact : contact@studiolink-paris.fr</p>
         <div className="mt-2 flex justify-center gap-4 text-white/55">
-          <Link to="/legal/mentions" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/mentions" className="inline-flex min-h-[var(--size-touch)] items-center underline underline-offset-2 hover:text-white">
             Mentions légales
           </Link>
-          <Link to="/legal/terms" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/terms" className="inline-flex min-h-[var(--size-touch)] items-center underline underline-offset-2 hover:text-white">
             Conditions d&apos;utilisation
           </Link>
-          <Link to="/legal/privacy" className="underline underline-offset-2 hover:text-white">
+          <Link to="/legal/privacy" className="inline-flex min-h-[var(--size-touch)] items-center underline underline-offset-2 hover:text-white">
             Politique de confidentialité
           </Link>
         </div>

@@ -1,10 +1,10 @@
-import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth';
 import { chatService, type ChatSession, type ChatUpload } from '@/lib/chat/chatService';
 import type { ChatFileType } from '@/types/backend';
-import { markConversationAsRead } from '@/services/notificationService';
+import { markConversationAsRead } from '@/services/conversationReadService';
 import { useToast } from '@/components/ui/Toast';
 import { classifyMissionAsset } from '@/lib/files/fileUtils';
 import { getSignedUrl, uploadDeliveryFile } from '@/lib/files/fileService';
@@ -119,6 +119,7 @@ export default function ChatPage() {
   const { isOnline } = useNetworkStatus();
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const isAtBottomRef = useRef(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const mobileComposerStyle = useMobileFixedBottomStyle(64);
 
@@ -144,7 +145,21 @@ export default function ChatPage() {
   const canCompleteSession = mode === 'session' && isStudioUser && sessionData?.status === 'confirmed';
   const canPromptRating = mode === 'session' && sessionData?.status === 'completed' && Boolean(otherParticipant) && !hasSubmittedRating;
 
+  const updateIsAtBottom = useCallback(() => {
+    const threshold = 120;
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const pageHeight = document.documentElement.scrollHeight;
+    isAtBottomRef.current = pageHeight - scrollBottom < threshold;
+  }, []);
+
   useEffect(() => {
+    updateIsAtBottom();
+    window.addEventListener('scroll', updateIsAtBottom, { passive: true });
+    return () => window.removeEventListener('scroll', updateIsAtBottom);
+  }, [updateIsAtBottom]);
+
+  useEffect(() => {
+    if (!isAtBottomRef.current) return;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -264,7 +279,8 @@ export default function ChatPage() {
         setMessages(sessionMessages);
         setHasSubmittedRating(false);
         await chatService.markMessagesAsRead(chatId);
-      } catch {
+      } catch (sessionLoadError) {
+        console.error('[ChatPage] session load failed, fallback to legacy:', sessionLoadError);
         try {
           await loadLegacyConversation();
         } catch (loadError) {
@@ -298,7 +314,9 @@ export default function ChatPage() {
             : [...previous, incoming]
         ));
         if (incoming.sender_id !== userId) {
-          void chatService.markMessagesAsRead(chatId).catch(() => undefined);
+          void chatService.markMessagesAsRead(chatId).catch((markReadError) => {
+            console.error('[ChatPage] markMessagesAsRead failed:', markReadError);
+          });
         }
       });
 
@@ -325,7 +343,9 @@ export default function ChatPage() {
               : [...previous, incoming]
           ));
           if (incoming.sender_id !== userId) {
-            void markConversationAsRead(chatId, userId).catch(() => undefined);
+            void markConversationAsRead(chatId, userId).catch((markReadError) => {
+              console.error('[ChatPage] markConversationAsRead failed:', markReadError);
+            });
           }
         },
       )
@@ -556,9 +576,78 @@ export default function ChatPage() {
     }
   };
 
+  const messageItems = useMemo(() => messages.map((message) => {
+    const mine = message.sender_id === userId;
+    const resolvedFileUrl = message.file_url
+      ? (signedAttachmentUrls[message.id] ?? message.file_url)
+      : null;
+    return (
+      <div
+        key={message.id}
+        className={`message-bubble ${mine ? 'message-bubble--own flex justify-end' : 'flex justify-start'}`}
+      >
+        <div
+          className={`max-w-[var(--chat-bubble-max-width)] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+            mine
+              ? 'rounded-tr-sm bg-orange-500 text-white'
+              : 'rounded-tl-sm bg-white text-gray-800'
+          }`}
+        >
+          {message.content ? (
+            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          ) : null}
+
+          {message.file_url ? (
+            <div className={message.content ? 'mt-2' : ''}>
+              {message.file_type === 'audio' ? (
+                resolvedFileUrl ? (
+                  <audio controls src={resolvedFileUrl} className="w-full min-w-[var(--size-chart-height)] max-w-full" />
+                ) : (
+                  <span className={`text-xs ${mine ? 'text-white/80' : 'text-gray-500'}`}>Préparation du fichier…</span>
+                )
+              ) : message.file_type === 'image' ? (
+                <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
+                  <LazyImage
+                    src={resolvedFileUrl ?? message.file_url}
+                    alt={message.file_name ?? 'Image envoyée'}
+                    width={320}
+                    height={240}
+                    className="max-h-52 w-full rounded-xl object-cover"
+                  />
+                </a>
+              ) : (
+                <a
+                  href={resolvedFileUrl ?? message.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-2 text-xs underline-offset-2 hover:underline ${
+                    mine ? 'text-white/90' : 'text-orange-600'
+                  }`}
+                >
+                  <span>📎</span>
+                  <span>{message.file_name ?? 'Télécharger le document'}</span>
+                </a>
+              )}
+            </div>
+          ) : null}
+
+          {isSessionMessage(message) ? (
+            <span
+              className={`mt-1 block text-right text-xs ${
+                mine ? 'text-orange-100' : 'text-gray-400'
+              }`}
+            >
+              {formatTime(message.created_at)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    );
+  }), [messages, signedAttachmentUrls, userId]);
+
   if (loading) {
     return (
-      <div className="app-shell min-h-[100dvh]">
+      <div className="app-shell min-h-[var(--size-full-dvh)]">
         <div className="mx-auto max-w-6xl px-4 pb-28 pt-6">
           <div className="space-y-3">
             {Array.from({ length: 6 }).map((_, idx) => (
@@ -566,11 +655,11 @@ export default function ChatPage() {
                 key={idx}
                 className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}
               >
-                <div className="h-16 w-[78%] animate-pulse rounded-2xl bg-white/10" />
+                <div className="h-16 w-[var(--skeleton-row-width)] animate-pulse rounded-2xl bg-white/10" />
               </div>
             ))}
           </div>
-          <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 border-t border-black/5 bg-[#f4ece4]/95 px-4 py-3">
+          <div className="fixed bottom-[var(--safe-offset-nav)] left-0 right-0 border-t border-black/5 bg-[var(--color-surface-soft)]/95 px-4 py-3">
             <div className="mx-auto max-w-6xl">
               <div className="h-11 animate-pulse rounded-2xl bg-white/70" />
             </div>
@@ -585,21 +674,22 @@ export default function ChatPage() {
       id="chat-container"
       data-chat-mode={mode ?? 'pending'}
       data-chat-ready={!loading && (sessionData || conversation) ? 'true' : 'false'}
-      className="app-shell min-h-[100dvh]"
+      className="app-shell min-h-[var(--size-full-dvh)]"
     >
       <PageMeta
         title="Conversation"
         description="Échangez en temps réel et partagez vos livrables dans la même discussion."
       />
 
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f4ece4]/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[var(--color-surface-soft)]/90 px-4 py-3 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-3">
           <button
             type="button"
+            aria-label="Retour aux conversations"
             onClick={handleBack}
-            className="app-muted flex min-h-[44px] min-w-[44px] items-center justify-center text-sm transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+            className="app-muted flex min-h-[var(--size-touch)] min-w-[var(--size-touch)] items-center justify-center text-sm transition-colors hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
           >
-            ←
+            <span aria-hidden="true">←</span>
           </button>
 
           <Avatar
@@ -618,7 +708,7 @@ export default function ChatPage() {
             ) : null}
             {sessionData?.status ? (
               <span
-                className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[var(--text-2xs-plus)] font-semibold ${
                   sessionData.status === 'completed'
                     ? 'bg-stone-200 text-stone-700'
                     : 'bg-green-100 text-green-700'
@@ -635,7 +725,7 @@ export default function ChatPage() {
               type="button"
               disabled={completingSession}
               onClick={() => void handleCompleteSession()}
-              className="ml-auto min-h-[44px] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60"
+              className="ml-auto min-h-[var(--size-touch)] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               {completingSession ? '...' : 'Terminer et noter'}
             </button>
@@ -644,13 +734,13 @@ export default function ChatPage() {
               id="btn-open-rating"
               type="button"
               onClick={() => setShowRatingModal(true)}
-              className="ml-auto min-h-[44px] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+              className="ml-auto min-h-[var(--size-touch)] rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
             >
               Noter la session
             </button>
           ) : null}
           {mode === 'session' && sessionData?.status === 'completed' && hasSubmittedRating ? (
-            <span className="ml-auto inline-flex rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+            <span className="ml-auto inline-flex rounded-full bg-green-100 px-2.5 py-1 text-[var(--text-2xs-plus)] font-semibold text-green-700">
               Note envoyée
             </span>
           ) : null}
@@ -658,7 +748,7 @@ export default function ChatPage() {
       </header>
 
       <div className="mx-auto max-w-6xl px-4 pb-44 pt-4">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-6 lg:grid-cols-[var(--layout-side-panel)]">
           <div>
             {error ? (
               <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
@@ -679,72 +769,7 @@ export default function ChatPage() {
                   className="px-4 py-8"
                 />
               ) : null}
-              {messages.map((message) => {
-                const mine = message.sender_id === userId;
-                const resolvedFileUrl = message.file_url
-                  ? (signedAttachmentUrls[message.id] ?? message.file_url)
-                  : null;
-                return (
-                  <div
-                    key={message.id}
-                    className={`message-bubble ${mine ? 'message-bubble--own flex justify-end' : 'flex justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                        mine
-                          ? 'rounded-tr-sm bg-orange-500 text-white'
-                          : 'rounded-tl-sm bg-white text-gray-800'
-                      }`}
-                    >
-                      {message.content ? (
-                        <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                      ) : null}
-
-                      {message.file_url ? (
-                        <div className={message.content ? 'mt-2' : ''}>
-                          {message.file_type === 'audio' ? (
-                            resolvedFileUrl ? (
-                              <audio controls src={resolvedFileUrl} className="w-full min-w-[220px] max-w-full" />
-                            ) : (
-                              <span className={`text-xs ${mine ? 'text-white/80' : 'text-gray-500'}`}>Préparation du fichier…</span>
-                            )
-                          ) : message.file_type === 'image' ? (
-                            <a href={resolvedFileUrl ?? message.file_url} target="_blank" rel="noreferrer">
-                              <LazyImage
-                                src={resolvedFileUrl ?? message.file_url}
-                                alt={message.file_name ?? 'Image envoyée'}
-                                className="max-h-52 w-full rounded-xl object-cover"
-                              />
-                            </a>
-                          ) : (
-                            <a
-                              href={resolvedFileUrl ?? message.file_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`inline-flex items-center gap-2 text-xs underline-offset-2 hover:underline ${
-                                mine ? 'text-white/90' : 'text-orange-600'
-                              }`}
-                            >
-                              <span>📎</span>
-                              <span>{message.file_name ?? 'Télécharger le document'}</span>
-                            </a>
-                          )}
-                        </div>
-                      ) : null}
-
-                      {isSessionMessage(message) ? (
-                        <span
-                          className={`mt-1 block text-right text-xs ${
-                            mine ? 'text-orange-100' : 'text-gray-400'
-                          }`}
-                        >
-                          {formatTime(message.created_at)}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
+              {messageItems}
             </div>
             <div ref={bottomRef} />
 
@@ -763,7 +788,7 @@ export default function ChatPage() {
           <aside className="hidden lg:block">
             <div className="sticky top-24 space-y-4">
               <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/40">Contexte</p>
+                <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-white/40">Contexte</p>
                 <h2 className="mt-3 text-xl font-semibold text-white">{missionTitle ?? 'Conversation'}</h2>
                 <p className="mt-2 text-sm text-white/60">{counterpartName}</p>
                 {sessionData?.status ? (
@@ -796,10 +821,10 @@ export default function ChatPage() {
 
       {conversation || sessionData ? (
         <div
-          className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 border-t border-black/5 bg-[#f4ece4]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-md"
+          className="fixed bottom-[var(--safe-offset-nav)] left-0 right-0 z-40 border-t border-black/5 bg-[var(--color-surface-soft)]/95 px-4 pb-[var(--safe-offset-compact)] pt-3 backdrop-blur-md"
           style={mobileComposerStyle}
         >
-          <div className="mx-auto max-w-6xl lg:pr-[344px]">
+          <div className="mx-auto max-w-6xl lg:pr-[var(--layout-side-panel-offset)]">
             {typingIndicator ? (
               <p className="mb-2 text-xs text-stone-500" data-testid="typing-indicator">{typingIndicator}</p>
             ) : null}
@@ -810,7 +835,7 @@ export default function ChatPage() {
                   type="button"
                   aria-label="Retirer la pièce jointe"
                   onClick={() => setAttachment(null)}
-                  className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-xs text-orange-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
+                  className="inline-flex min-h-[var(--size-touch)] items-center rounded-xl px-2 text-xs text-orange-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   Retirer
                 </button>
@@ -843,9 +868,9 @@ export default function ChatPage() {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
                 onKeyDown={handleInputKeyDown}
-                placeholder="Écrire un message..."
+                placeholder="Écrivez un message..."
                 rows={1}
-                className="min-h-[44px] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
+                className="min-h-[var(--size-touch)] max-h-32 w-full resize-none rounded-2xl border border-stone-200 bg-white px-3 py-2 text-base md:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
               <button
                 id="btn-send"
@@ -853,12 +878,12 @@ export default function ChatPage() {
                 aria-label="Envoyer le message"
                 onClick={() => void sendMessage()}
                 disabled={sending || uploadingAttachment || (!draft.trim() && !attachment)}
-                className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
+                className="flex h-11 min-w-[var(--size-touch)] items-center justify-center rounded-2xl bg-orange-500 px-3 font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 disabled:opacity-50"
               >
                 {sending ? '…' : '→'}
               </button>
             </div>
-            <p className="mx-auto mt-1 max-w-lg text-right text-[11px] text-stone-400">
+            <p className="mx-auto mt-1 max-w-lg text-right text-[var(--text-2xs-plus)] text-stone-400">
               {draft.length}/2000
             </p>
           </div>

@@ -53,35 +53,46 @@ for (const viewport of VIEWPORTS) {
       });
     }
 
-    test('touch targets >= 44px on login', async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.waitForLoadState('networkidle');
+    const ROUTES_TO_TEST = [
+      '/',
+      '/login',
+      '/register',
+      '/missions',
+      '/dashboard/studio',
+      '/dashboard/pro',
+      '/settings',
+      '/notifications',
+    ];
 
-      const smallTargets = await page.evaluate(() => {
-        const interactive = document.querySelectorAll(
-          'button, a, input, [role="button"]',
-        );
-        const small: string[] = [];
-        interactive.forEach((el) => {
-          const rect = el.getBoundingClientRect();
-          const styles = window.getComputedStyle(el);
-          if (styles.display === 'none' || styles.visibility === 'hidden') return;
-          if (rect.height < 44 || rect.width < 44) {
-            small.push(
-              `${el.tagName} "${
-                (el as HTMLElement).innerText?.substring(0, 30)
-                || el.getAttribute('aria-label')
-                || el.getAttribute('type')
-              }" — ${Math.round(rect.width)}x${Math.round(rect.height)}px`,
-            );
-          }
+    for (const route of ROUTES_TO_TEST) {
+      test(`touch targets >= 44px on ${route}`, async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 812 });
+        await page.goto(`${BASE_URL}${route}`);
+        await page.waitForLoadState('networkidle');
+
+        const smallTargets = await page.evaluate(() => {
+          const elements = document.querySelectorAll(
+            'a, button, [role="button"], input, select',
+          );
+
+          return Array.from(elements)
+            .filter((element) => {
+              const rect = element.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0 && (rect.height < 44 || rect.width < 44);
+            })
+            .map((element) => {
+              const rect = element.getBoundingClientRect();
+              return {
+                tag: element.tagName,
+                text: (element as HTMLElement).innerText?.slice(0, 30) ?? '',
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+              };
+            });
         });
-        return small;
-      });
 
-      if (smallTargets.length > 0) {
-        console.warn('Touch targets < 44px:', smallTargets);
-      }
-    });
+        expect(smallTargets, `Small targets on ${route}`).toHaveLength(0);
+      });
+    }
   });
 }

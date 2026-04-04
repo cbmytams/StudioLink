@@ -55,16 +55,16 @@ function normalizeMissionStatus(status: string | null): Mission['status'] {
 }
 
 function missionStatusClass(status: Mission['status']): string {
-  if (status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
-  if (status === 'in_progress') return 'bg-blue-100 text-blue-700 border border-blue-200';
-  if (status === 'closed') return 'bg-red-100 text-red-700 border border-red-200';
-  return 'bg-green-100 text-green-700 border border-green-200';
+  if (status === 'completed') return 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-100';
+  if (status === 'in_progress') return 'border border-sky-300/30 bg-sky-400/15 text-sky-100';
+  if (status === 'closed') return 'border border-rose-300/30 bg-rose-400/15 text-rose-100';
+  return 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-100';
 }
 
 function applicationStatusClass(status: Application['status']): string {
-  if (status === 'accepted') return 'bg-green-100 text-green-700';
-  if (status === 'rejected') return 'bg-red-100 text-red-700';
-  return 'bg-yellow-100 text-yellow-700';
+  if (status === 'accepted') return 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-100';
+  if (status === 'rejected') return 'border border-rose-300/30 bg-rose-400/15 text-rose-100';
+  return 'border border-amber-300/30 bg-amber-400/15 text-amber-100';
 }
 
 export default function ManageApplications() {
@@ -308,7 +308,7 @@ export default function ManageApplications() {
   if (loading) {
     return (
       <div className="app-shell">
-        <div className="app-container flex min-h-[100dvh] items-center justify-center">
+        <div className="app-container flex min-h-[var(--size-full-dvh)] items-center justify-center">
           <span className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
         </div>
       </div>
@@ -325,7 +325,7 @@ export default function ManageApplications() {
         <button
           type="button"
           onClick={() => navigate('/studio/dashboard')}
-          className="mb-4 text-sm app-muted transition-colors hover:text-black"
+          className="mb-4 inline-flex min-h-[var(--size-touch)] items-center px-1 text-sm app-muted transition-colors hover:text-white"
         >
           ← Mes missions
         </button>
@@ -349,7 +349,7 @@ export default function ManageApplications() {
           {mission?.status === 'in_progress' && selectedPro ? (
             <span
               id="selected-pro-badge"
-              className="mt-3 inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700"
+              className="mt-3 inline-flex rounded-full border border-sky-300/30 bg-sky-400/15 px-3 py-1 text-xs font-medium text-sky-100"
             >
               Pro sélectionné : {getPublicProfileDisplayName(selectedPro.pro)}
             </span>
@@ -398,7 +398,7 @@ export default function ManageApplications() {
                       <button
                         type="button"
                         onClick={() => navigate(`/pro/public/${application.pro_id}`)}
-                        className="mt-0.5 block text-xs text-orange-600 hover:underline"
+                        className="mt-0.5 inline-flex min-h-[var(--size-touch)] items-center text-xs text-orange-300 hover:underline"
                       >
                         Voir le profil complet →
                       </button>
@@ -427,11 +427,11 @@ export default function ManageApplications() {
                 ) : null}
 
                 {application.cover_letter ? (
-                  <p className="mt-2 text-sm text-stone-600">{application.cover_letter}</p>
+                  <p className="mt-2 text-sm text-white/75">{application.cover_letter}</p>
                 ) : null}
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <p className="text-stone-700">
+                  <p className="text-white/75">
                     Tarif proposé : {application.proposed_rate ? `${application.proposed_rate}€/j` : 'Non renseigné'}
                   </p>
                   <p className="app-muted">
@@ -446,7 +446,7 @@ export default function ManageApplications() {
                       type="button"
                       onClick={() => void handleAccept(application)}
                       disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-xl bg-green-600 px-4 text-sm font-medium text-white transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isCurrentAction ? (
                         <>
@@ -462,17 +462,17 @@ export default function ManageApplications() {
                       type="button"
                       onClick={() => void handleReject(application.id)}
                       disabled={Boolean(actionLoading)}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-lg border border-red-300 bg-white px-4 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-xl border border-red-300/30 bg-red-500/10 px-4 text-sm font-medium text-red-100 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Refuser ✗
                     </button>
                   </div>
                 ) : application.status === 'accepted' ? (
-                  <p className="mt-4 text-xs font-medium text-green-600">
+                  <p className="mt-4 text-xs font-medium text-emerald-200">
                     Ce candidat a déjà été sélectionné pour la mission.
                   </p>
                 ) : (
-                  <p className="mt-4 text-xs font-medium text-stone-500">
+                  <p className="mt-4 text-xs font-medium text-white/55">
                     Cette candidature a déjà été traitée.
                   </p>
                 )}
@@ -504,7 +504,7 @@ export default function ManageApplications() {
               type="button"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
-              className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75 transition hover:bg-white/10 disabled:opacity-50"
             >
               ← Précédent
             </button>
@@ -515,7 +515,7 @@ export default function ManageApplications() {
               type="button"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((previous) => Math.min(totalPages, previous + 1))}
-              className="rounded-lg border border-black/10 bg-white/70 px-3 py-2 text-sm text-black/70 transition hover:bg-white disabled:opacity-50"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75 transition hover:bg-white/10 disabled:opacity-50"
             >
               Suivant →
             </button>

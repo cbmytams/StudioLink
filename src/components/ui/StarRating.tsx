@@ -36,7 +36,7 @@ export function StarRating({ value, onChange }: StarRatingProps) {
             whileHover={{ scale: 1.12 }}
             whileTap={{ scale: 0.92 }}
             transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-            className="min-h-[44px] min-w-[44px] rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+            className="min-h-[var(--size-touch)] min-w-[var(--size-touch)] rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
           >
             <Star
               size={32}

@@ -25,7 +25,7 @@ export function EmptyState({
   return (
     <div
       id="empty-state"
-      className={`rounded-[2rem] border px-6 py-10 text-center ${
+      className={`rounded-[var(--radius-xl)] border px-6 py-10 text-center ${
         isLight
           ? 'border-dashed border-stone-200 bg-white/80'
           : 'border-dashed border-white/15 bg-white/5'
@@ -50,7 +50,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={action.onClick}
-          className={`mt-5 inline-flex min-h-[44px] items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
+          className={`mt-5 inline-flex min-h-[var(--size-touch)] items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition hover:bg-orange-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40 ${
             isLight
               ? 'border-orange-200 bg-orange-50 text-orange-700'
               : 'border-orange-400/20 bg-orange-400/10 text-orange-100'

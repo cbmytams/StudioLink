@@ -7,7 +7,7 @@ export function NetworkBanner() {
 
   return (
     <div
-      className={`fixed left-0 right-0 top-0 z-[130] px-4 py-2 text-center text-sm font-medium text-white transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-modal px-4 py-2 text-center text-sm font-medium text-white transition-all duration-300 ${
         isOnline ? 'bg-green-500' : 'bg-red-500'
       }`}
     >

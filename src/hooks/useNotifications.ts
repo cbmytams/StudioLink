@@ -1,6 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { notificationService } from '@/services/notificationService';
+import {
+  getNotifications,
+  markAllAsRead,
+  markAsRead,
+} from '@/lib/notifications/notificationService';
 import { supabase } from '@/lib/supabase/client';
 import type { NotificationRecord } from '@/types/backend';
 
@@ -26,7 +30,7 @@ export function useNotifications(userId?: string) {
     queryKey: ['notifications', userId],
     queryFn: async () => {
       if (!userId) return [];
-      return notificationService.getNotifications(userId);
+      return getNotifications(userId);
     },
     enabled: Boolean(userId),
   });
@@ -94,7 +98,7 @@ export function useUnreadCount(userId?: string) {
 export function useMarkAsRead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => notificationService.markAsRead(id),
+    mutationFn: (id: string) => markAsRead(id),
     onSuccess: (_data, id) => {
       queryClient.setQueriesData<NotificationRecord[]>(
         { queryKey: ['notifications'] },
@@ -109,7 +113,7 @@ export function useMarkAllRead(userId?: string) {
   return useMutation({
     mutationFn: async () => {
       if (!userId) return;
-      await notificationService.markAllRead(userId);
+      await markAllAsRead(userId);
     },
     onSuccess: () => {
       queryClient.setQueriesData<NotificationRecord[]>(

@@ -456,7 +456,11 @@ export default function ProProfile() {
           ) : (
             <section className="app-card-soft p-4 space-y-4">
               <div>
+                <label htmlFor="pro-full-name" className="mb-1 block text-xs font-medium text-black/70">
+                  Nom complet
+                </label>
                 <input
+                  id="pro-full-name"
                   value={fullName}
                   onChange={(event) => {
                     setFullName(event.target.value);
@@ -559,7 +563,11 @@ export default function ProProfile() {
 
             {portfolioItems.length < 6 ? (
               <div className="space-y-2">
+                <label htmlFor="portfolio-title" className="sr-only">
+                  Titre du projet
+                </label>
                 <input
+                  id="portfolio-title"
                   value={portfolioTitle}
                   onChange={(event) => setPortfolioTitle(event.target.value)}
                   placeholder="Titre du projet"
