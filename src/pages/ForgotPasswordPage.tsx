@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
         description: 'Tu peux maintenant te reconnecter avec ton nouveau mot de passe.',
         variant: 'default',
       });
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
     } catch (resetError) {
       const nextError = toUserFacingErrorMessage(resetError, 'Impossible de mettre à jour le mot de passe.');
       setError(nextError);

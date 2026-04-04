@@ -16,6 +16,7 @@ export function GlassCard({
   radius = "large",
   ...props 
 }: GlassCardProps) {
+  void variant;
   return (
     <div
       className={cn(

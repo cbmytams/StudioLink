@@ -46,7 +46,6 @@ type EditableProfile = {
   onboarding_completed?: boolean | null;
 } | null;
 
-type PersistValue = string | number | boolean | string[] | null;
 type PersistedOnboardingState = {
   step: number;
   draft: Partial<OnboardingDraft>;
@@ -114,7 +113,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
     }
   }, [navigate, user]);
 
@@ -122,7 +121,7 @@ export default function Onboarding() {
     if (!user) return;
 
     if (profileData && !isProfileIncomplete(profileData)) {
-      navigate(getDashboardPath(resolveProfileType(profileData)), { replace: true });
+      void navigate(getDashboardPath(resolveProfileType(profileData)), { replace: true });
       return;
     }
 
@@ -309,7 +308,7 @@ export default function Onboarding() {
       await refreshProfile().catch(() => undefined);
       trackOnboardingCompleted(draft.role || 'unknown', 4);
       showToast({ title: 'Profil complété', variant: 'default' });
-      navigate(getDashboardPath(draft.role as UserType), { replace: true });
+      void navigate(getDashboardPath(draft.role as UserType), { replace: true });
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : 'Impossible de finaliser le profil.';
       setError(message);

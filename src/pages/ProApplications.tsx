@@ -247,7 +247,7 @@ export default function ProApplications() {
   const handleOpenChat = async (missionId: string, existingSessionId?: string) => {
     try {
       const sessionId = existingSessionId ?? (await chatService.getOrCreateSession(missionId)).id;
-      navigate(`/chat/${sessionId}`);
+      void navigate(`/chat/${sessionId}`);
     } catch (chatError) {
       const message = toUserFacingErrorMessage(chatError, "Impossible d'ouvrir le chat.");
       setError(message);
@@ -370,10 +370,10 @@ export default function ProApplications() {
                     type="button"
                     onClick={() => {
                       if (application.offer?.id) {
-                        navigate(`/pro/offer/${application.offer.id}`);
+                        void navigate(`/pro/offer/${application.offer.id}`);
                         return;
                       }
-                      navigate(`/mission/${application.mission_id}`);
+                      void navigate(`/mission/${application.mission_id}`);
                     }}
                     className="w-full text-left"
                   >

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { MissionCard } from '@/components/search/MissionCard';
 import { SEO } from '@/components/SEO';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -39,7 +38,6 @@ function formatCount(count: number): string {
 }
 
 export default function MissionsPage() {
-  const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id ?? null;
   const [appliedMissionIds, setAppliedMissionIds] = useState<Set<string>>(new Set());

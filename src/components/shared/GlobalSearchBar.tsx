@@ -29,7 +29,7 @@ export function GlobalSearchBar({ userType, variant = 'floating' }: GlobalSearch
     const params = new URLSearchParams();
     const value = query.trim();
     if (value) params.set('q', value);
-    navigate(`${targetPath(userType)}${params.toString() ? `?${params.toString()}` : ''}`);
+    void navigate(`${targetPath(userType)}${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   if (hiddenOnCurrentRoute) {

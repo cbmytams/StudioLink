@@ -29,6 +29,7 @@ function formatRelativeTime(dateIso: string): string {
 }
 
 export function NotificationBell(_props: NotificationBellProps) {
+  void _props;
   const navigate = useNavigate();
   const { session } = useAuth();
   const userId = session?.user?.id ?? null;
@@ -72,7 +73,7 @@ export function NotificationBell(_props: NotificationBellProps) {
       }
     } finally {
       setOpen(false);
-      navigate(getNotificationTarget(notification));
+      void navigate(getNotificationTarget(notification));
     }
   };
 
@@ -157,7 +158,7 @@ export function NotificationBell(_props: NotificationBellProps) {
           aria-label="Voir toutes les notifications"
           onClick={() => {
             setOpen(false);
-            navigate('/notifications');
+            void navigate('/notifications');
           }}
           className="min-h-[var(--size-touch-lg)] w-full rounded-2xl border border-white/60 bg-white/80 px-3 py-2 text-sm font-medium text-gray-800 transition hover:bg-white"
         >

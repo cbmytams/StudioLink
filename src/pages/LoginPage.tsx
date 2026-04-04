@@ -161,11 +161,11 @@ export default function LoginPage() {
     }
 
     if (isProfileIncomplete(authProfile)) {
-      navigate('/onboarding', { replace: true });
+      void navigate('/onboarding', { replace: true });
       return;
     }
 
-    navigate(getDashboardPath(profileType), { replace: true });
+    void navigate(getDashboardPath(profileType), { replace: true });
   }, [authLoading, navigate, profile, session]);
 
   useEffect(() => {
@@ -248,7 +248,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setStep('form');
-              navigate('/login', { replace: true });
+              void navigate('/login', { replace: true });
             }}
             className="glass-btn-primary w-full"
           >
@@ -300,7 +300,7 @@ export default function LoginPage() {
         const signedInUserId = signInData.user?.id ?? signInData.session?.user?.id;
 
         if (!signedInUserId) {
-          navigate('/onboarding', { replace: true });
+          void navigate('/onboarding', { replace: true });
           showToast({ title: 'Connexion réussie', variant: 'default' });
           return;
         }
@@ -320,11 +320,11 @@ export default function LoginPage() {
 
         showToast({ title: 'Connexion réussie', variant: 'default' });
         if (!redirectProfile || isProfileIncomplete(redirectProfile)) {
-          navigate('/onboarding', { replace: true });
+          void navigate('/onboarding', { replace: true });
           return;
         }
 
-        navigate(getDashboardPath(profileType), { replace: true });
+        void navigate(getDashboardPath(profileType), { replace: true });
         return;
       }
 
@@ -390,7 +390,7 @@ export default function LoginPage() {
         }
         trackUserRegistered(invitationContext.type);
         showToast({ title: 'Compte créé', description: 'Complète maintenant ton profil.', variant: 'default' });
-        navigate('/onboarding', { replace: true });
+        void navigate('/onboarding', { replace: true });
         return;
       }
 
@@ -424,7 +424,7 @@ export default function LoginPage() {
 
     if (isSignIn) {
       if (invitationContext) {
-        navigate('/login?mode=signup', {
+        void navigate('/login?mode=signup', {
           replace: true,
           state: {
             mode: 'signup',
@@ -435,11 +435,11 @@ export default function LoginPage() {
         });
         return;
       }
-      navigate('/register', { replace: true });
+      void navigate('/register', { replace: true });
       return;
     }
 
-    navigate('/login', { replace: true });
+    void navigate('/login', { replace: true });
   };
 
   const signupBlocked = mode === 'signup' && (invitationState === 'missing' || invitationState === 'invalid');

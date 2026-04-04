@@ -234,7 +234,7 @@ export default function ManageApplications() {
       });
 
       if (result.sessionId) {
-        navigate(`/chat/${result.sessionId}`);
+        void navigate(`/chat/${result.sessionId}`);
       }
     } catch (actionError) {
       const message = toUserFacingErrorMessage(actionError, "Impossible d'accepter la candidature");

@@ -22,7 +22,7 @@ export default function AuthCallback() {
 
     const run = async () => {
       if (!supabase) {
-        navigate('/login', { replace: true });
+        void navigate('/login', { replace: true });
         return;
       }
 
@@ -39,13 +39,13 @@ export default function AuthCallback() {
 
         if (!sessionData.session) {
           if (!cancelled) {
-            navigate('/login', { replace: true });
+            void navigate('/login', { replace: true });
           }
           return;
         }
 
         if (nextPath && !cancelled) {
-          navigate(nextPath, { replace: true });
+          void navigate(nextPath, { replace: true });
           return;
         }
 
@@ -64,10 +64,10 @@ export default function AuthCallback() {
             bio?: string | null;
           } | null;
           if (isProfileIncomplete(callbackProfile)) {
-            navigate('/onboarding', { replace: true });
+            void navigate('/onboarding', { replace: true });
             return;
           }
-          navigate(getDashboardPath(resolveProfileType(callbackProfile)), { replace: true });
+          void navigate(getDashboardPath(resolveProfileType(callbackProfile)), { replace: true });
         }
       } catch (callbackError) {
         if (!cancelled) {

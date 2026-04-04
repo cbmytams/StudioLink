@@ -81,7 +81,7 @@ export default function SettingsPage() {
           variant: 'destructive',
         });
       }
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
     }
   };
 
@@ -133,7 +133,7 @@ export default function SettingsPage() {
       setDeletePassword('');
       setDeleteConfirmation('');
       showToast({ title: 'Compte supprimé', variant: 'default' });
-      navigate('/', { replace: true });
+      void navigate('/', { replace: true });
     } catch (deleteError) {
       const message = toUserFacingErrorMessage(deleteError, 'Suppression impossible.');
       setError(message);

@@ -26,10 +26,10 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading && user) {
       if (isProfileIncomplete(homeProfile)) {
-        navigate('/onboarding');
+        void navigate('/onboarding');
         return;
       }
-      navigate(getDashboardPath(profileType));
+      void navigate(getDashboardPath(profileType));
     }
   }, [homeProfile, loading, navigate, profileType, user]);
 

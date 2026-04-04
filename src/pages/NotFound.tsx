@@ -29,8 +29,8 @@ export default function NotFound({
   const profileType = resolveProfileType(profile as AuthProfile);
 
   const handleBack = () => {
-    if (user) navigate(getDashboardPath(profileType));
-    else navigate('/');
+    if (user) void navigate(getDashboardPath(profileType));
+    else void navigate('/');
   };
 
   return (

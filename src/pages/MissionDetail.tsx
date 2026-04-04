@@ -289,7 +289,7 @@ export default function MissionDetail() {
 
   const handleOpenApplyModal = () => {
     if (!userId) {
-      navigate('/login');
+      void navigate('/login');
       return;
     }
     setIsApplyModalOpen(true);

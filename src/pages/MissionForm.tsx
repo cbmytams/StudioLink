@@ -263,10 +263,6 @@ export default function MissionForm() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const submitLabel = useMemo(() => {
-    if (saving) return isEdit ? 'Enregistrement en cours…' : 'Création en cours…';
-    return isEdit ? 'Enregistrer les modifications' : 'Créer la mission';
-  }, [isEdit, saving]);
   const publishLabel = useMemo(() => {
     if (saving) return 'Publication…';
     return isEdit ? 'Mettre à jour et publier' : 'Publier la mission';
@@ -380,7 +376,7 @@ export default function MissionForm() {
           description: 'Ajoute des fichiers de référence si besoin, puis reviens au dashboard.',
           variant: 'default',
         });
-        navigate(`/studio/missions/${createdMissionId}/edit`, { replace: true });
+        void navigate(`/studio/missions/${createdMissionId}/edit`, { replace: true });
       }
     } catch (submitError) {
       if (await handleAuthError(submitError, navigate)) return;

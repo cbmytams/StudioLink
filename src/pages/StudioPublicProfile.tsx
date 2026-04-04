@@ -229,10 +229,10 @@ export default function StudioPublicProfile() {
                     type="button"
                     onClick={() => {
                       if (!user) {
-                        navigate('/login');
+                        void navigate('/login');
                         return;
                       }
-                      navigate('/studio/new-conversation', {
+                      void navigate('/studio/new-conversation', {
                         state: { studioId: studio.id, studioName: displayName },
                       });
                     }}
@@ -254,10 +254,10 @@ export default function StudioPublicProfile() {
               type="button"
               onClick={() => {
                 if (!user) {
-                  navigate('/login');
+                  void navigate('/login');
                   return;
                 }
-                navigate('/studio/new-conversation', {
+                void navigate('/studio/new-conversation', {
                   state: { studioId: studio.id, studioName: displayName },
                 });
               }}

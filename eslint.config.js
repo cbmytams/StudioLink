@@ -37,7 +37,8 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/explicit-function-return-type": "warn",
+      // Disabled for this codebase: it generates noise without meaningful safety gains.
+      "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-floating-promises": "warn",
     },
   },

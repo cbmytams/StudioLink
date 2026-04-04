@@ -259,7 +259,7 @@ export default function ChatPage() {
       }
 
       if (!chatId) {
-        navigate(conversationListRoute, { replace: true });
+        void navigate(conversationListRoute, { replace: true });
         return;
       }
 
@@ -531,10 +531,10 @@ export default function ChatPage() {
 
   const handleBack = () => {
     if (window.history.length > 1) {
-      navigate(-1);
+      void navigate(-1);
       return;
     }
-    navigate(conversationListRoute);
+    void navigate(conversationListRoute);
   };
 
   const handleCompleteSession = async () => {

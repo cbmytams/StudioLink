@@ -28,7 +28,7 @@ export default function InvitationPage() {
   useEffect(() => {
     if (authLoading || !session) return;
     if (!profile) {
-      navigate('/onboarding', { replace: true });
+      void navigate('/onboarding', { replace: true });
       return;
     }
 
@@ -42,11 +42,11 @@ export default function InvitationPage() {
     const profileType = resolveProfileType(invitationProfile);
 
     if (isProfileIncomplete(invitationProfile)) {
-      navigate('/onboarding', { replace: true });
+      void navigate('/onboarding', { replace: true });
       return;
     }
 
-    navigate(getDashboardPath(profileType), { replace: true });
+    void navigate(getDashboardPath(profileType), { replace: true });
   }, [authLoading, navigate, profile, session]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -83,7 +83,7 @@ export default function InvitationPage() {
         sessionStorage.setItem('invitationEmail', invitation.email);
       }
 
-      navigate('/login?mode=signup', {
+      void navigate('/login?mode=signup', {
         replace: true,
         state: {
           mode: 'signup',

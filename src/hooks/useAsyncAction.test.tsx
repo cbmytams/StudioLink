@@ -37,7 +37,7 @@ afterEach(() => {
 });
 
 test('executes async action and updates loading state', async () => {
-  const task = async (_value: number) => 42;
+  const task = async () => 42;
 
   act(() => {
     root.render(<HookProbe task={task} />);

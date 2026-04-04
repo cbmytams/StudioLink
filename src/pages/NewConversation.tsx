@@ -79,7 +79,7 @@ export default function NewConversation() {
         if (existing.error) throw existing.error;
         if (existing.data?.id) {
           if (!active) return;
-          navigate(`/chat/${existing.data.id}`, { replace: true });
+          void navigate(`/chat/${existing.data.id}`, { replace: true });
           return;
         }
 
@@ -95,7 +95,7 @@ export default function NewConversation() {
         if (create.error) throw create.error;
 
         if (!active) return;
-        navigate(`/chat/${(create.data as ConversationLookup).id}`, { replace: true });
+        void navigate(`/chat/${(create.data as ConversationLookup).id}`, { replace: true });
       } catch (createError) {
         if (!active) return;
         setError(createError instanceof Error ? createError.message : 'Impossible de créer la conversation.');

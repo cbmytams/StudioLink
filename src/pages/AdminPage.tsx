@@ -92,7 +92,7 @@ export default function AdminPage() {
     if (authLoading) return;
 
     if (!user) {
-      navigate('/login', { replace: true });
+      void navigate('/login', { replace: true });
       return;
     }
 
@@ -113,7 +113,7 @@ export default function AdminPage() {
         );
       const emailFallbackAuthorized = ADMIN_FALLBACK_EMAILS.includes(user.email?.toLowerCase() ?? '');
       if ((rpcError || !isAdmin) && !emailFallbackAuthorized) {
-        navigate('/', { replace: true });
+        void navigate('/', { replace: true });
         return;
       }
 

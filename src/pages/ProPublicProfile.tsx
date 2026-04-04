@@ -192,10 +192,10 @@ export default function ProPublicProfile() {
                     type="button"
                     onClick={() => {
                       if (!user) {
-                        navigate('/login');
+                        void navigate('/login');
                         return;
                       }
-                      navigate('/studio/new-conversation', {
+                      void navigate('/studio/new-conversation', {
                         state: { proId: profile.id, proName: profile.display_name },
                       });
                     }}
@@ -217,10 +217,10 @@ export default function ProPublicProfile() {
               type="button"
               onClick={() => {
                 if (!user) {
-                  navigate('/login');
+                  void navigate('/login');
                   return;
                 }
-                navigate('/studio/new-conversation', {
+                void navigate('/studio/new-conversation', {
                   state: { proId: profile.id, proName: profile.display_name },
                 });
               }}

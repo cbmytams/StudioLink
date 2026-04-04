@@ -143,7 +143,7 @@ export default function NotificationsPage() {
                         if (!notification.read) {
                           void markAsReadMutation.mutateAsync(notification.id);
                         }
-                        navigate(getNotificationTarget(notification));
+                        void navigate(getNotificationTarget(notification));
                       }}
                       className={`notification-item w-full rounded-2xl border p-4 text-left transition-colors hover:bg-orange-50 ${
                         notification.read

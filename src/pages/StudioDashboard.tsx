@@ -88,7 +88,7 @@ export default function StudioDashboard() {
 
     try {
       const chatSessionId = sessionId ?? (await chatService.getOrCreateSession(missionId)).id;
-      navigate(`/chat/${chatSessionId}`);
+      void navigate(`/chat/${chatSessionId}`);
     } catch (openError) {
       setChatError(
         openError instanceof Error ? openError.message : "Impossible d'ouvrir le chat.",
